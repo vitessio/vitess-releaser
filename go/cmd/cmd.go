@@ -1,9 +1,15 @@
-package releaser
+package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
+	beforerelease "systay/vitess-releaser/go/cmd/before_release"
+
+	"github.com/spf13/cobra"
+)
+
+var (
+	releaseVersion string
 )
 
 var rootCmd = &cobra.Command{
@@ -15,17 +21,14 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-var preCmd = &cobra.Command{
-	Use:   "pre",
-	Short: "Prepares a release",
-	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(42)
-	},
-}
-
 func init() {
-	rootCmd.AddCommand(preCmd)
+	rootCmd.PersistentFlags().StringVarP(&releaseVersion, "release", "r", "", "Number of the major release on which we want to create a new release.")
+	err := rootCmd.MarkPersistentFlagRequired("release")
+	if err != nil {
+		panic(err)
+	}
+
+	rootCmd.AddCommand(beforerelease.BeforeRelease())
 }
 
 func Execute() {
