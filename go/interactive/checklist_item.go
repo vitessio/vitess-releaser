@@ -51,7 +51,7 @@ func (d checkListItemDelegate) Render(w io.Writer, m list.Model, index int, list
 
 	str := fmt.Sprintf("%d. %s", index+1, i.name)
 	if i.done {
-		str = fmt.Sprintf("%s: done ✅", str)
+		str = fmt.Sprintf("%s: done ✅ ", str)
 	}
 
 	fn := itemStyle.Render

@@ -82,7 +82,7 @@ func MainScreen() {
 	const defaultWidth = 40
 
 	l := list.New(items, mainMenuItemDelegate{}, defaultWidth, listHeight)
-	l.Title = "What do you want for dinner?"
+	l.Title = "Vitess releaser, press enter choose the release step."
 	l.SetShowStatusBar(false)
 	l.SetFilteringEnabled(false)
 	l.Styles.Title = titleStyle

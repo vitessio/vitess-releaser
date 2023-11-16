@@ -44,7 +44,6 @@ func (m *checkList) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "enter":
 			i, ok := m.list.SelectedItem().(*checkListItem)
 			if ok {
-
 				i.done = true
 			}
 
@@ -68,13 +67,12 @@ func getCheckList(items []list.Item) *checkList {
 	const defaultWidth = 40
 
 	l := list.New(items, checkListItemDelegate{}, defaultWidth, listHeight)
-	l.Title = "What do you want for dinner?"
+	l.Title = "Press enter to execute the given step."
 	l.SetShowStatusBar(false)
 	l.SetFilteringEnabled(false)
 	l.Styles.Title = titleStyle
 	l.Styles.PaginationStyle = paginationStyle
 	l.Styles.HelpStyle = helpStyle
 
-	m := &checkList{list: l}
-	return m
+	return &checkList{list: l}
 }
