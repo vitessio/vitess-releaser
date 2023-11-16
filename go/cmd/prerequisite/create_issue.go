@@ -21,10 +21,10 @@ import (
 	"fmt"
 	"log"
 	"text/template"
+	"vitess.io/vitess-releaser/go/cmd/model"
 
 	"github.com/spf13/cobra"
 	"vitess.io/vitess-releaser/go/cmd/flags"
-	"vitess.io/vitess-releaser/go/git"
 	"vitess.io/vitess-releaser/go/github"
 	"vitess.io/vitess-releaser/go/vitess"
 )
@@ -68,7 +68,7 @@ var createIssue = &cobra.Command{
 	Use:   "create-issue",
 	Short: "Create the release issue",
 	Run: func(cmd *cobra.Command, args []string) {
-		preCheck()
+		model.CorrectCleanRepo()
 
 		majorRelease := cmd.Flags().Lookup(flags.MajorRelease).Value.String()
 		newRelease := vitess.FindNextRelease(majorRelease)
@@ -90,13 +90,4 @@ var createIssue = &cobra.Command{
 		link := newIssue.Create()
 		fmt.Println("Link to the new GitHub Issue: ", link)
 	},
-}
-
-func preCheck() {
-	if !git.CheckCurrentRepo("vitessio/vitess.git") {
-		log.Fatal("the tool should be run from the vitessio/vitess repository directory")
-	}
-	if !git.CleanLocalState() {
-		log.Fatal("the vitess repository should have a clean state")
-	}
 }

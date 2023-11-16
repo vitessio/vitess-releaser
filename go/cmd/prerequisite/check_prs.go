@@ -24,6 +24,7 @@ import (
 	"log"
 	"strings"
 	"vitess.io/vitess-releaser/go/cmd/flags"
+	"vitess.io/vitess-releaser/go/cmd/model"
 )
 
 type PR struct {
@@ -36,7 +37,7 @@ var checkPRs = &cobra.Command{
 	Use:     "check-prs",
 	Aliases: []string{"pr"},
 	Run: func(cmd *cobra.Command, args []string) {
-		preCheck()
+		model.CorrectCleanRepo()
 
 		majorRelease := cmd.Flags().Lookup(flags.MajorRelease).Value.String()
 		byteRes, _, err := gh.Exec("pr", "list", "--json", "title,baseRefName,url")

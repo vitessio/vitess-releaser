@@ -19,6 +19,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"vitess.io/vitess-releaser/go/cmd/interactive"
 
 	"vitess.io/vitess-releaser/go/cmd/flags"
 	"vitess.io/vitess-releaser/go/cmd/prerequisite"
@@ -44,6 +45,7 @@ func init() {
 	}
 
 	rootCmd.AddCommand(prerequisite.Prerequisite())
+	rootCmd.AddCommand(interactive.Command())
 }
 
 func Execute() {
