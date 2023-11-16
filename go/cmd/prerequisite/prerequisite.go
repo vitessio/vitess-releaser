@@ -22,11 +22,12 @@ import (
 
 func Prerequisite() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "prerequisite",
-		Short: "Runs the prerequisites of a release",
-		Run:   func(cmd *cobra.Command, args []string) {},
+		Use:     "prerequisite",
+		Aliases: []string{"pre"},
+		Short:   "Runs the prerequisites of a release",
 	}
 
 	cmd.AddCommand(createIssue)
+	cmd.AddCommand(checkPRs)
 	return cmd
 }

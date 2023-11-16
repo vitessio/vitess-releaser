@@ -34,9 +34,6 @@ var rootCmd = &cobra.Command{
 	Use:   "vitess-releaser",
 	Short: "vitess-releaser - a tool for releasing vitess",
 	Long:  "vitess-releaser - a tool for releasing vitess",
-	Run: func(cmd *cobra.Command, args []string) {
-
-	},
 }
 
 func init() {
