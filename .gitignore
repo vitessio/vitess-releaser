@@ -1,0 +1,16 @@
+# intellij files
+*.iml
+.idea
+
+# vscode
+.vscode/
+__debug_bin
+
+# MacOS
+.DS_Store
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
