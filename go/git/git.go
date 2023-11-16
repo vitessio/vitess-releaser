@@ -25,7 +25,7 @@ import (
 func CheckCurrentRepo(repoWanted string) bool {
 	out, err := exec.Command("git", "remote", "-v").CombinedOutput()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("%s: %s", err, out)
 	}
 	outStr := string(out)
 	return strings.Contains(outStr, repoWanted)
@@ -34,7 +34,14 @@ func CheckCurrentRepo(repoWanted string) bool {
 func CleanLocalState() bool {
 	out, err := exec.Command("git", "status", "-s").CombinedOutput()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("%s: %s", err, out)
 	}
 	return len(out) == 0
+}
+
+func Checkout(branch string) {
+	out, err := exec.Command("git", "checkout", branch).CombinedOutput()
+	if err != nil {
+		log.Fatalf("%s: %s", err, out)
+	}
 }

@@ -19,21 +19,33 @@ package beforerelease
 import (
 	"fmt"
 
-	"vitess.io/vitess-releaser/go/git"
-
 	"github.com/spf13/cobra"
+	"vitess.io/vitess-releaser/go/cmd/flags"
+	"vitess.io/vitess-releaser/go/git"
+	"vitess.io/vitess-releaser/go/vitess"
 )
 
+
+// Create issue:
+// - Make sure we are in the vitess repo
+// - Make sure the git state is clean
+// - Figure out the new release number
+// - Create the issue for the corresponding release number
 var createIssue = &cobra.Command{
 	Use:   "create-issue",
-	Short: "",
+	Short: "Create the release issue",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if !git.CheckCurrentRepo("vitessio/vitess.git") {
-			return fmt.Errorf("The tool should be run from the vitessio/vitess repository directory")
+			return fmt.Errorf("the tool should be run from the vitessio/vitess repository directory")
 		}
 		if !git.CleanLocalState() {
-			return fmt.Errorf("The vitess repository should have a clean state")
+			return fmt.Errorf("the vitess repository should have a clean state")
 		}
+
+		majorRelease := cmd.Flags().Lookup(flags.MajorRelease).Value.String()
+		newRelease := vitess.FindNextRelease(majorRelease)
+
+		fmt.Println(newRelease)
 		return nil
 	},
 }

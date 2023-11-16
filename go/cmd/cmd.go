@@ -21,6 +21,7 @@ import (
 	"os"
 
 	beforerelease "vitess.io/vitess-releaser/go/cmd/before_release"
+	"vitess.io/vitess-releaser/go/cmd/flags"
 
 	"github.com/spf13/cobra"
 )
@@ -39,8 +40,8 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVarP(&releaseVersion, "release", "r", "", "Number of the major release on which we want to create a new release.")
-	err := rootCmd.MarkPersistentFlagRequired("release")
+	rootCmd.PersistentFlags().StringVarP(&releaseVersion, flags.MajorRelease, "r", "", "Number of the major release on which we want to create a new release.")
+	err := rootCmd.MarkPersistentFlagRequired(flags.MajorRelease)
 	if err != nil {
 		panic(err)
 	}
