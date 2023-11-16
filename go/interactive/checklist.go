@@ -22,6 +22,8 @@ import (
 )
 
 type checkList struct {
+	parent   tea.Model
+
 	list     list.Model
 	quitting bool
 }
@@ -38,6 +40,8 @@ func (m *checkList) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		switch keypress := msg.String(); keypress {
+		case "q":
+			return m.parent, nil
 		case "ctrl+c":
 			m.quitting = true
 			return m, tea.Quit
@@ -58,12 +62,12 @@ func (m *checkList) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m *checkList) View() string {
 	if m.quitting {
-		return quitTextStyle.Render("Not hungry? That’s cool.")
+		return quitTextStyle.Render("Goodbye.")
 	}
 	return "\n" + m.list.View()
 }
 
-func getCheckList(items []list.Item) *checkList {
+func getCheckList(parent tea.Model, items []list.Item) *checkList {
 	const defaultWidth = 40
 
 	l := list.New(items, checkListItemDelegate{}, defaultWidth, listHeight)
@@ -74,5 +78,8 @@ func getCheckList(items []list.Item) *checkList {
 	l.Styles.PaginationStyle = paginationStyle
 	l.Styles.HelpStyle = helpStyle
 
-	return &checkList{list: l}
+	return &checkList{
+		parent: parent,
+		list: l,
+	}
 }

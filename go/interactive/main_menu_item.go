@@ -39,8 +39,8 @@ func newItem(name string, items []list.Item) mainMenuItem {
 
 func (i mainMenuItem) FilterValue() string { return "" }
 
-func (i mainMenuItem) act() tea.Model {
-	return getCheckList(i.items)
+func (i mainMenuItem) act(parent tea.Model) tea.Model {
+	return getCheckList(parent, i.items)
 }
 
 type mainMenuItemDelegate struct{}

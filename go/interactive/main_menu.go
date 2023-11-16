@@ -26,7 +26,6 @@ import (
 
 type mainMenu struct {
 	list     list.Model
-	choice   string
 	quitting bool
 }
 
@@ -48,11 +47,10 @@ func (m mainMenu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "enter":
 			i, ok := m.list.SelectedItem().(mainMenuItem)
-			if ok {
-				m.choice = i.name
+			if !ok {
+				return m, nil
 			}
-
-			return i.act(), nil
+			return i.act(m), nil
 		}
 	}
 
@@ -62,18 +60,19 @@ func (m mainMenu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m mainMenu) View() string {
-	if m.choice != "" {
-		return quitTextStyle.Render(fmt.Sprintf("%s? Sounds good to me.", m.choice))
-	}
 	if m.quitting {
-		return quitTextStyle.Render("Not hungry? That’s cool.")
+		return quitTextStyle.Render("Goodbye.")
 	}
 	return "\n" + m.list.View()
 }
 
 func MainScreen() {
 	items := []list.Item{
-		newItem("Prerequisite", []list.Item{newCheckListItem("Create Release Issue")}),
+		newItem("Prerequisite", []list.Item{
+			newCheckListItem("Create Release Issue"),
+			newCheckListItem("Announce the release on Slack"),
+			newCheckListItem("Ensure all Pull Requests have been merged"),
+		}),
 		newItem("Pre-Release", nil),
 		newItem("Release", nil),
 		newItem("Post-Release", nil),
