@@ -34,7 +34,7 @@ type Issue struct {
 func (i *Issue) Create() string {
 	stdOut, _, err := gh.Exec(
 		"issue", "create",
-		"--repo", "frouioui/vitess",
+		"--repo", "vitessio/vitess",
 		"--title", i.Title,
 		"--body", i.Body,
 		"--label", strings.Join(i.Labels, ","),

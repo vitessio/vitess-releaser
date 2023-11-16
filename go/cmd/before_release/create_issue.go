@@ -59,10 +59,6 @@ const (
 `
 )
 
-type releaseIssue struct {
-	Release string
-}
-
 // Create issue:
 // - Make sure we are in the vitess repo
 // - Make sure the git state is clean
@@ -71,13 +67,13 @@ type releaseIssue struct {
 var createIssue = &cobra.Command{
 	Use:   "create-issue",
 	Short: "Create the release issue",
-	RunE: func(cmd *cobra.Command, args []string) error {
+	Run: func(cmd *cobra.Command, args []string) {
 		if !git.CheckCurrentRepo("vitessio/vitess.git") {
-			return fmt.Errorf("the tool should be run from the vitessio/vitess repository directory")
+			log.Fatal("the tool should be run from the vitessio/vitess repository directory")
 		}
-		// if !git.CleanLocalState() {
-		// 	return fmt.Errorf("the vitess repository should have a clean state")
-		// }
+		if !git.CleanLocalState() {
+			log.Fatal("the vitess repository should have a clean state")
+		}
 
 		majorRelease := cmd.Flags().Lookup(flags.MajorRelease).Value.String()
 		newRelease := vitess.FindNextRelease(majorRelease)
@@ -98,6 +94,5 @@ var createIssue = &cobra.Command{
 
 		link := newIssue.Create()
 		fmt.Println("Link to the new GitHub Issue: ", link)
-		return nil
 	},
 }
