@@ -22,6 +22,7 @@ import (
 	"github.com/spf13/cobra"
 	"vitess.io/vitess-releaser/go/cmd/flags"
 	"vitess.io/vitess-releaser/go/git"
+	"vitess.io/vitess-releaser/go/github"
 	"vitess.io/vitess-releaser/go/vitess"
 )
 
@@ -45,7 +46,14 @@ var createIssue = &cobra.Command{
 		majorRelease := cmd.Flags().Lookup(flags.MajorRelease).Value.String()
 		newRelease := vitess.FindNextRelease(majorRelease)
 
-		fmt.Println(newRelease)
+		newIssue := github.Issue{
+			Title:  fmt.Sprintf("Release of v%s", newRelease),
+			Body:   "This is a test.",
+			Labels: []string{"Component: General", "Type: Release"},
+
+		}
+
+		newIssue.CreateIssue()
 		return nil
 	},
 }
