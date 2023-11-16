@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"os"
 
-	beforerelease "vitess.io/vitess-releaser/go/cmd/before_release"
 	"vitess.io/vitess-releaser/go/cmd/flags"
+	"vitess.io/vitess-releaser/go/cmd/prerequisite"
 
 	"github.com/spf13/cobra"
 )
@@ -46,7 +46,7 @@ func init() {
 		panic(err)
 	}
 
-	rootCmd.AddCommand(beforerelease.BeforeRelease())
+	rootCmd.AddCommand(prerequisite.Prerequisite())
 }
 
 func Execute() {

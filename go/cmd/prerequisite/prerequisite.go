@@ -14,16 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package beforerelease
+package prerequisite
 
 import (
 	"github.com/spf13/cobra"
 )
 
-func BeforeRelease() *cobra.Command {
+func Prerequisite() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "before-release",
-		Short: "Prepares a release",
+		Use:   "prerequisite",
+		Short: "Runs the prerequisites of a release",
 		Run:   func(cmd *cobra.Command, args []string) {},
 	}
 
