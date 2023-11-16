@@ -27,6 +27,8 @@ import (
 type mainMenu struct {
 	list     list.Model
 	quitting bool
+
+	am *actionManager
 }
 
 func (m mainMenu) Init() tea.Cmd {
@@ -66,12 +68,14 @@ func (m mainMenu) View() string {
 	return "\n" + m.list.View()
 }
 
-func MainScreen() {
+func MainScreen(majorRelease string) {
+	am := &actionManager{majorRelease: majorRelease}
+
 	items := []list.Item{
 		newItem("Prerequisite", []list.Item{
-			newCheckListItem("Create Release Issue"),
-			newCheckListItem("Announce the release on Slack"),
-			newCheckListItem("Ensure all Pull Requests have been merged"),
+			newCheckListItem("Create Release Issue", am.createReleaseIssue),
+			newCheckListItem("Announce the release on Slack", nil),
+			newCheckListItem("Ensure all Pull Requests have been merged", nil),
 		}),
 		newItem("Pre-Release", nil),
 		newItem("Release", nil),
@@ -88,7 +92,10 @@ func MainScreen() {
 	l.Styles.PaginationStyle = paginationStyle
 	l.Styles.HelpStyle = helpStyle
 
-	m := mainMenu{list: l}
+	m := mainMenu{
+		am:   am,
+		list: l,
+	}
 
 	if _, err := tea.NewProgram(m).Run(); err != nil {
 		fmt.Println("Error running program:", err)

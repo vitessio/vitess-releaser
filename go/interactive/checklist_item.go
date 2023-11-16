@@ -25,14 +25,26 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+type status int
+
+const (
+	statusNone status = iota
+	statusDone
+)
+
 type checkListItem struct {
-	name string
-	done bool
+	status
+	name   string
+	action actionFn
+
+	out string
+	err error
 }
 
-func newCheckListItem(name string) *checkListItem {
+func newCheckListItem(name string, action actionFn) *checkListItem {
 	return &checkListItem{
-		name: name,
+		name:    name,
+		action:  action,
 	}
 }
 
@@ -50,8 +62,14 @@ func (d checkListItemDelegate) Render(w io.Writer, m list.Model, index int, list
 	}
 
 	str := fmt.Sprintf("%d. %s", index+1, i.name)
-	if i.done {
+	if i.err != nil {
+		str = fmt.Sprintf("%s: error: %s", str, i.err.Error())
+	}
+	if i.status == statusDone {
 		str = fmt.Sprintf("%s: done ✅ ", str)
+	}
+	if i.out != "" {
+		str = fmt.Sprintf("%s => %s", str, i.out)
 	}
 
 	fn := itemStyle.Render

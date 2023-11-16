@@ -17,22 +17,17 @@ limitations under the License.
 package interactive
 
 import (
-	"github.com/spf13/cobra"
-	"vitess.io/vitess-releaser/go/cmd/flags"
-	"vitess.io/vitess-releaser/go/interactive"
-	"vitess.io/vitess-releaser/go/releaser/vitess"
+	"vitess.io/vitess-releaser/go/releaser/prerequisite"
 )
 
-func Command() *cobra.Command {
-	return &cobra.Command{
-		Use:     "interactive",
-		Aliases: []string{"i"},
-		Short:   "Runs the releaser in interactive mode",
-		Run: func(cmd *cobra.Command, args []string) {
-			vitess.CorrectCleanRepo()
+type actionFn func() (string, error)
 
-			majorRelease := cmd.Flags().Lookup(flags.MajorRelease).Value.String()
-			interactive.MainScreen(majorRelease)
-		},
-	}
+type actionManager struct {
+	majorRelease string
 }
+
+func (am *actionManager) createReleaseIssue() (string, error) {
+	issueURL := prerequisite.CreateReleaseIssue(am.majorRelease)
+	return issueURL, nil
+}
+

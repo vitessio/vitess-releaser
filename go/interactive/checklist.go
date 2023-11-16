@@ -22,7 +22,7 @@ import (
 )
 
 type checkList struct {
-	parent   tea.Model
+	parent tea.Model
 
 	list     list.Model
 	quitting bool
@@ -47,8 +47,17 @@ func (m *checkList) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case "enter":
 			i, ok := m.list.SelectedItem().(*checkListItem)
-			if ok {
-				i.done = true
+			if ok && i.status == statusNone {
+				if i.action != nil {
+					out, err := i.action()
+					if err != nil {
+						i.status = statusNone
+						i.err = err
+						return m, nil
+					}
+					i.out = out
+				}
+				i.status = statusDone
 			}
 
 			return m, nil
@@ -68,7 +77,7 @@ func (m *checkList) View() string {
 }
 
 func getCheckList(parent tea.Model, items []list.Item) *checkList {
-	const defaultWidth = 40
+	const defaultWidth = 90
 
 	l := list.New(items, checkListItemDelegate{}, defaultWidth, listHeight)
 	l.Title = "Press enter to execute the given step."
@@ -80,6 +89,6 @@ func getCheckList(parent tea.Model, items []list.Item) *checkList {
 
 	return &checkList{
 		parent: parent,
-		list: l,
+		list:   l,
 	}
 }
