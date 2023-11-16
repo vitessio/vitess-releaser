@@ -1,7 +1,7 @@
 package main
 
 import (
-	"systay/vitess-releaser/go/cmd"
+	"vitess.io/vitess-releaser/go/cmd"
 )
 
 func main() {

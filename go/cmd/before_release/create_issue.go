@@ -2,7 +2,8 @@ package beforerelease
 
 import (
 	"fmt"
-	"systay/vitess-releaser/go/git"
+
+	"vitess.io/vitess-releaser/go/git"
 
 	"github.com/spf13/cobra"
 )

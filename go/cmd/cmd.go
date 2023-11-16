@@ -3,7 +3,8 @@ package cmd
 import (
 	"fmt"
 	"os"
-	beforerelease "systay/vitess-releaser/go/cmd/before_release"
+
+	beforerelease "vitess.io/vitess-releaser/go/cmd/before_release"
 
 	"github.com/spf13/cobra"
 )
