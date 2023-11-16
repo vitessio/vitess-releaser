@@ -22,7 +22,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"vitess.io/vitess-releaser/go/git"
+	"vitess.io/vitess-releaser/go/releaser/git"
 )
 
 // FindNextRelease finds the next release that needs to be released for the given
@@ -73,4 +73,13 @@ func getCurrentRelease() string {
 
 func releaseToMajor(release string) string {
 	return release[:strings.Index(release, ".")]
+}
+
+func CorrectCleanRepo() {
+	if !git.CheckCurrentRepo("vitessio/vitess.git") {
+		log.Fatal("the tool should be run from the vitessio/vitess repository directory")
+	}
+	if !git.CleanLocalState() {
+		log.Fatal("the vitess repository should have a clean state")
+	}
 }

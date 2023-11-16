@@ -1,23 +1,20 @@
 package interactive
 
 import (
-	"fmt"
-
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 type checkList struct {
 	list     list.Model
-	choice   string
 	quitting bool
 }
 
-func (m checkList) Init() tea.Cmd {
+func (m *checkList) Init() tea.Cmd {
 	return nil
 }
 
-func (m checkList) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *checkList) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.list.SetWidth(msg.Width)
@@ -28,13 +25,14 @@ func (m checkList) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c":
 			m.quitting = true
 			return m, tea.Quit
-
 		case "enter":
-			i, ok := m.list.SelectedItem().(checkListItem)
+			i, ok := m.list.SelectedItem().(*checkListItem)
 			if ok {
-				m.choice = i.name
+
+				i.done = true
 			}
-			return m, tea.Quit
+
+			return m, nil
 		}
 	}
 
@@ -43,18 +41,15 @@ func (m checkList) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m checkList) View() string {
-	if m.choice != "" {
-		return quitTextStyle.Render(fmt.Sprintf("%s? Sounds good to me.", m.choice))
-	}
+func (m *checkList) View() string {
 	if m.quitting {
 		return quitTextStyle.Render("Not hungry? That’s cool.")
 	}
 	return "\n" + m.list.View()
 }
 
-func getCheckList(items []list.Item) checkList {
-	const defaultWidth = 20
+func getCheckList(items []list.Item) *checkList {
+	const defaultWidth = 40
 
 	l := list.New(items, checkListItemDelegate{}, defaultWidth, listHeight)
 	l.Title = "What do you want for dinner?"
@@ -64,6 +59,6 @@ func getCheckList(items []list.Item) checkList {
 	l.Styles.PaginationStyle = paginationStyle
 	l.Styles.HelpStyle = helpStyle
 
-	m := checkList{list: l}
+	m := &checkList{list: l}
 	return m
 }

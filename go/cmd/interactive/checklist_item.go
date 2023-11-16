@@ -14,13 +14,13 @@ type checkListItem struct {
 	done bool
 }
 
-func newCheckListItem(name string) checkListItem {
-	return checkListItem{
+func newCheckListItem(name string) *checkListItem {
+	return &checkListItem{
 		name: name,
 	}
 }
 
-func (i checkListItem) FilterValue() string { return "" }
+func (i *checkListItem) FilterValue() string { return "" }
 
 type checkListItemDelegate struct{}
 
@@ -28,7 +28,7 @@ func (d checkListItemDelegate) Height() int                             { return
 func (d checkListItemDelegate) Spacing() int                            { return 0 }
 func (d checkListItemDelegate) Update(_ tea.Msg, _ *list.Model) tea.Cmd { return nil }
 func (d checkListItemDelegate) Render(w io.Writer, m list.Model, index int, listItem list.Item) {
-	i, ok := listItem.(checkListItem)
+	i, ok := listItem.(*checkListItem)
 	if !ok {
 		return
 	}

@@ -17,46 +17,11 @@ limitations under the License.
 package prerequisite
 
 import (
-	"bytes"
 	"fmt"
-	"log"
-	"text/template"
-	"vitess.io/vitess-releaser/go/cmd/model"
 
 	"github.com/spf13/cobra"
 	"vitess.io/vitess-releaser/go/cmd/flags"
-	"vitess.io/vitess-releaser/go/github"
-	"vitess.io/vitess-releaser/go/vitess"
-)
-
-const (
-	releaseIssueTemplate = `This release is scheduled for: TODO: '.Date' here .
-
-### Prerequisites for Release
-
-- [ ] Notify the community on Slack.
-- [ ] Make sure the release notes summary is prepared and clean.
-- [ ] Make sure backport Pull Requests are merged, list below.
-
-### Pre-Release
-
-- [ ] Follow Code-Freeze / Pre-Release instructions from release documentation.
-- [ ] Create new GitHub Milestone.
-- [ ] Create Pre-Release Pull Request.
-
-### Release
-
-- [ ] Follow release instructions.
-- [ ] Merge release notes on main.
-- [ ] Make sure Docker Images are available.
-- [ ] Close previous GitHub Milestone.
-
-### Post-Release
-
-- [ ] Announce new release:
-  - [ ] Slack
-  - [ ] Twitter
-`
+	"vitess.io/vitess-releaser/go/releaser/prerequisite"
 )
 
 // Create issue:
@@ -68,26 +33,8 @@ var createIssue = &cobra.Command{
 	Use:   "create-issue",
 	Short: "Create the release issue",
 	Run: func(cmd *cobra.Command, args []string) {
-		model.CorrectCleanRepo()
-
 		majorRelease := cmd.Flags().Lookup(flags.MajorRelease).Value.String()
-		newRelease := vitess.FindNextRelease(majorRelease)
-
-		tmpl := template.Must(template.New("release-issue").Parse(releaseIssueTemplate))
-		b := bytes.NewBuffer(nil)
-		err := tmpl.Execute(b, nil)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		newIssue := github.Issue{
-			Title:    fmt.Sprintf("Release of v%s", newRelease),
-			Body:     b.String(),
-			Labels:   []string{"Component: General", "Type: Release"},
-			Assignee: "@me",
-		}
-
-		link := newIssue.Create()
+		link := prerequisite.CreateReleaseIssue(majorRelease)
 		fmt.Println("Link to the new GitHub Issue: ", link)
 	},
 }

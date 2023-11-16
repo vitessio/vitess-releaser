@@ -63,7 +63,7 @@ func mainScreen() {
 		newItem("Post-Release", nil),
 	}
 
-	const defaultWidth = 20
+	const defaultWidth = 40
 
 	l := list.New(items, mainMenuItemDelegate{}, defaultWidth, listHeight)
 	l.Title = "What do you want for dinner?"
