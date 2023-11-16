@@ -71,7 +71,7 @@ func (m mainMenu) View() string {
 	return "\n" + m.list.View()
 }
 
-func mainScreen() {
+func MainScreen() {
 	items := []list.Item{
 		newItem("Prerequisite", []list.Item{newCheckListItem("Create Release Issue")}),
 		newItem("Pre-Release", nil),
