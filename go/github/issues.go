@@ -17,7 +17,6 @@ limitations under the License.
 package github
 
 import (
-	"fmt"
 	"log"
 	"strings"
 
@@ -25,22 +24,24 @@ import (
 )
 
 type Issue struct {
-	Title  string
-	Body   string
-	Labels []string
+	Title    string
+	Body     string
+	Labels   []string
+	Assignee string
 }
 
-func (i *Issue) CreateIssue() {
+// Create will open the issue on GitHub and return the link of the newly created issue
+func (i *Issue) Create() string {
 	stdOut, _, err := gh.Exec(
 		"issue", "create",
 		"--repo", "frouioui/vitess",
 		"--title", i.Title,
 		"--body", i.Body,
 		"--label", strings.Join(i.Labels, ","),
-		"--assignee", "@me",
+		"--assignee", i.Assignee,
 	)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(stdOut.String())
+	return strings.ReplaceAll(stdOut.String(), "\n", "")
 }

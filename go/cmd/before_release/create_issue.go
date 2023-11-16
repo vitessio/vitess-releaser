@@ -26,7 +26,6 @@ import (
 	"vitess.io/vitess-releaser/go/vitess"
 )
 
-
 // Create issue:
 // - Make sure we are in the vitess repo
 // - Make sure the git state is clean
@@ -39,21 +38,22 @@ var createIssue = &cobra.Command{
 		if !git.CheckCurrentRepo("vitessio/vitess.git") {
 			return fmt.Errorf("the tool should be run from the vitessio/vitess repository directory")
 		}
-		if !git.CleanLocalState() {
-			return fmt.Errorf("the vitess repository should have a clean state")
-		}
+		// if !git.CleanLocalState() {
+		// 	return fmt.Errorf("the vitess repository should have a clean state")
+		// }
 
 		majorRelease := cmd.Flags().Lookup(flags.MajorRelease).Value.String()
 		newRelease := vitess.FindNextRelease(majorRelease)
 
 		newIssue := github.Issue{
-			Title:  fmt.Sprintf("Release of v%s", newRelease),
-			Body:   "This is a test.",
-			Labels: []string{"Component: General", "Type: Release"},
-
+			Title:    fmt.Sprintf("Release of v%s", newRelease),
+			Body:     "This is a test.",
+			Labels:   []string{"Component: General", "Type: Release"},
+			Assignee: "@me",
 		}
 
-		newIssue.CreateIssue()
+		link := newIssue.Create()
+		fmt.Println("Link to the new GitHub Issue: ", link)
 		return nil
 	},
 }
