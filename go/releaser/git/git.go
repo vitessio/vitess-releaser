@@ -45,3 +45,10 @@ func Checkout(branch string) {
 		log.Fatalf("%s: %s", err, out)
 	}
 }
+
+func Pull(remote, branch string) {
+	out, err := exec.Command("git", "pull", remote, branch).CombinedOutput()
+	if err != nil {
+		log.Fatalf("%s: %s", err, out)
+	}
+}

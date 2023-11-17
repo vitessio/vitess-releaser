@@ -19,21 +19,19 @@ package pre_release
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
-	"vitess.io/vitess-releaser/go/releaser/pre_release"
+	"vitess.io/vitess-releaser/go/releaser/git"
+	"vitess.io/vitess-releaser/go/releaser/state"
+	"vitess.io/vitess-releaser/go/releaser/vitess"
 )
 
-// Code Freeze:
-// - Checkout the proper branch
-// - Find the remote of vitessio/vitess.git
-// - Git pull from the remote
-// - Run the code freeze script
-// - Get the PR URL and prompt it to the user
-var codeFreeze = &cobra.Command{
-	Use: "code-freeze",
-	Short: "Does the code-freeze of a release",
-	Run: func(cmd *cobra.Command, args []string) {
-		out := pre_release.CodeFreeze()
-		fmt.Println(out)
-	},
+func CodeFreeze() string {
+	vitess.CorrectCleanRepo()
+
+	_, branchName := vitess.FindNextRelease(state.MajorRelease)
+
+	remote := fmt.Sprintf("git@github.com:%s.git", state.VitessRepo)
+	git.Pull(remote, branchName)
+
+
+	return ""
 }
