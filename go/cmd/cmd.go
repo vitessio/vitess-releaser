@@ -21,6 +21,7 @@ import (
 	"os"
 
 	"vitess.io/vitess-releaser/go/cmd/interactive"
+	"vitess.io/vitess-releaser/go/cmd/pre_release"
 	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/state"
 
@@ -50,6 +51,7 @@ func init() {
 	}
 
 	rootCmd.AddCommand(prerequisite.Prerequisite())
+	rootCmd.AddCommand(pre_release.PreRelease())
 	rootCmd.AddCommand(interactive.Command())
 }
 

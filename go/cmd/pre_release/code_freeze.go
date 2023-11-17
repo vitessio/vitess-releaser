@@ -14,26 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package prerequisite
+package pre_release
 
-import (
-	"fmt"
+import "github.com/spf13/cobra"
 
-	"github.com/spf13/cobra"
-	"vitess.io/vitess-releaser/go/releaser/prerequisite"
-	"vitess.io/vitess-releaser/go/releaser/state"
-)
-
-// Create issue:
-// - Make sure we are in the vitess repo
-// - Make sure the git state is clean
-// - Figure out the new release number
-// - Create the issue for the corresponding release number
-var createIssue = &cobra.Command{
-	Use:   "create-issue",
-	Short: "Create the release issue",
+var codeFreeze = &cobra.Command{
+	Use: "code-freeze",
+	Short: "Does the code-freeze of a release",
 	Run: func(cmd *cobra.Command, args []string) {
-		link := prerequisite.CreateReleaseIssue(state.MajorRelease)
-		fmt.Println("Link to the new GitHub Issue: ", link)
+
 	},
 }
