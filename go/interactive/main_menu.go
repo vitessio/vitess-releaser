@@ -18,12 +18,13 @@ package interactive
 
 import (
 	"fmt"
-	"github.com/charmbracelet/lipgloss"
 	"os"
-	"vitess.io/vitess-releaser/go/releaser/prerequisite"
-	"vitess.io/vitess-releaser/go/releaser/state"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
+
+	"vitess.io/vitess-releaser/go/releaser/prerequisite"
+	"vitess.io/vitess-releaser/go/releaser/state"
 )
 
 type (

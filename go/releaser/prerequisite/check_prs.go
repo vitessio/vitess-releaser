@@ -20,9 +20,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"vitess.io/vitess-releaser/go/releaser/state"
 
 	"github.com/cli/go-gh/v2"
+
+	"vitess.io/vitess-releaser/go/releaser/state"
 	"vitess.io/vitess-releaser/go/releaser/vitess"
 )
 

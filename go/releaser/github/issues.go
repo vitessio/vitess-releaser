@@ -19,9 +19,11 @@ package github
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cli/go-gh"
 	"log"
 	"strings"
+
+	"github.com/cli/go-gh"
+
 	"vitess.io/vitess-releaser/go/releaser/state"
 )
 

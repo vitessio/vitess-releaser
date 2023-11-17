@@ -2,8 +2,9 @@ package github
 
 import (
 	"encoding/json"
-	"github.com/cli/go-gh"
 	"log"
+
+	"github.com/cli/go-gh"
 )
 
 func CurrentUser() string {
