@@ -21,8 +21,9 @@ import (
 	"log"
 	"os/exec"
 	"strings"
+	"vitess.io/vitess-releaser/go/releaser/state"
 
-	"vitess.io/vitess-releaser/go/git"
+	"vitess.io/vitess-releaser/go/releaser/git"
 )
 
 // FindNextRelease finds the next release that needs to be released for the given
@@ -73,4 +74,13 @@ func getCurrentRelease() string {
 
 func releaseToMajor(release string) string {
 	return release[:strings.Index(release, ".")]
+}
+
+func CorrectCleanRepo() {
+	if !git.CheckCurrentRepo(state.VitessRepo + ".git") {
+		log.Fatalf("the tool should be run from the %s repository directory", state.VitessRepo)
+	}
+	if !git.CleanLocalState() {
+		log.Fatal("the vitess repository should have a clean state")
+	}
 }

@@ -14,13 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package interactive
 
 import (
-	"vitess.io/vitess-releaser/go/cmd"
+	"vitess.io/vitess-releaser/go/releaser/prerequisite"
+	"vitess.io/vitess-releaser/go/releaser/state"
 )
 
-func main() {
+type actionManager struct {
+}
 
-	cmd.Execute()
+func (am *actionManager) createReleaseIssue() (string, error) {
+	issueURL := prerequisite.CreateReleaseIssue(state.MajorRelease)
+	return issueURL, nil
 }

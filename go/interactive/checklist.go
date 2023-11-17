@@ -1,0 +1,90 @@
+/*
+Copyright 2023 The Vitess Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreedto in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package interactive
+
+import (
+	"github.com/charmbracelet/bubbles/list"
+	tea "github.com/charmbracelet/bubbletea"
+)
+
+type checkList struct {
+	parent tea.Model
+
+	list     list.Model
+	quitting bool
+}
+
+func (m *checkList) Init() tea.Cmd {
+	return nil
+}
+
+func (m *checkList) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.list.SetWidth(msg.Width)
+		return m, nil
+
+	case tea.KeyMsg:
+		switch keypress := msg.String(); keypress {
+		case "q":
+			return m.parent, nil
+		case "ctrl+c":
+			m.quitting = true
+			return m, tea.Quit
+		case "enter":
+			item := m.list.SelectedItem().(*checkListItem)
+
+			if item.action == nil {
+				return m, nil
+			}
+			state, model := item.action()
+			item.state = state
+			if model != nil {
+				return model, nil
+			}
+			return m, nil
+		}
+	}
+
+	var cmd tea.Cmd
+	m.list, cmd = m.list.Update(msg)
+	return m, cmd
+}
+
+func (m *checkList) View() string {
+	if m.quitting {
+		return quitTextStyle.Render("Goodbye.")
+	}
+	return "\n" + m.list.View()
+}
+
+func getCheckList(parent tea.Model, items []list.Item) *checkList {
+	const defaultWidth = 90
+
+	l := list.New(items, checkListItemDelegate{}, defaultWidth, listHeight)
+	l.Title = "Press enter to execute the given step."
+	l.SetShowStatusBar(false)
+	l.SetFilteringEnabled(false)
+	l.Styles.Title = titleStyle
+	l.Styles.PaginationStyle = paginationStyle
+	l.Styles.HelpStyle = helpStyle
+
+	return &checkList{
+		parent: parent,
+		list:   l,
+	}
+}

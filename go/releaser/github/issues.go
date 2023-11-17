@@ -17,10 +17,12 @@ limitations under the License.
 package github
 
 import (
+	"encoding/json"
+	"fmt"
+	"github.com/cli/go-gh"
 	"log"
 	"strings"
-
-	"github.com/cli/go-gh"
+	"vitess.io/vitess-releaser/go/releaser/state"
 )
 
 type Issue struct {
@@ -34,7 +36,7 @@ type Issue struct {
 func (i *Issue) Create() string {
 	stdOut, _, err := gh.Exec(
 		"issue", "create",
-		"--repo", "vitessio/vitess",
+		"--repo", state.VitessRepo,
 		"--title", i.Title,
 		"--body", i.Body,
 		"--label", strings.Join(i.Labels, ","),
@@ -44,4 +46,26 @@ func (i *Issue) Create() string {
 		log.Fatal(err)
 	}
 	return strings.ReplaceAll(stdOut.String(), "\n", "")
+}
+
+func GetReleaseIssue(majorVersion string) string {
+	res, _, err := gh.Exec("issue", "list", "-l", "Type: Release", "--json", "title,url")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	issues := []map[string]string{}
+	err = json.Unmarshal(res.Bytes(), &issues)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	for _, issue := range issues {
+		title := issue["title"]
+		if strings.HasPrefix(title, fmt.Sprintf("Release of v%s", state.MajorRelease)) {
+			return issue["url"]
+		}
+	}
+
+	return ""
 }

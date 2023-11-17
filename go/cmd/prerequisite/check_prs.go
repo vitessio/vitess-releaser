@@ -17,51 +17,26 @@ limitations under the License.
 package prerequisite
 
 import (
-	"encoding/json"
 	"fmt"
-	"github.com/cli/go-gh/v2"
-	"github.com/spf13/cobra"
 	"log"
 	"strings"
-	"vitess.io/vitess-releaser/go/cmd/flags"
-)
 
-type PR struct {
-	BaseRefName string `json:"baseRefName"`
-	Title       string `json:"title"`
-	Url         string `json:"url"`
-}
+	"github.com/spf13/cobra"
+	"vitess.io/vitess-releaser/go/cmd/flags"
+	"vitess.io/vitess-releaser/go/releaser/prerequisite"
+)
 
 var checkPRs = &cobra.Command{
 	Use:     "check-prs",
 	Aliases: []string{"pr"},
 	Run: func(cmd *cobra.Command, args []string) {
-		preCheck()
-
 		majorRelease := cmd.Flags().Lookup(flags.MajorRelease).Value.String()
-		byteRes, _, err := gh.Exec("pr", "list", "--json", "title,baseRefName,url")
-		if err != nil {
-			log.Fatalf(err.Error())
-		}
-		var prs []PR
-		err = json.Unmarshal(byteRes.Bytes(), &prs)
-		if err != nil {
-			log.Fatalf(err.Error())
-		}
 
-		var mustClose []string
-
-		branchName := fmt.Sprintf("release-%s.0", majorRelease)
-		for _, pr := range prs {
-			if pr.BaseRefName == branchName {
-				mustClose = append(mustClose, fmt.Sprintf(" -> %s  %s", pr.Url, pr.Title))
-			}
-		}
+		mustClose := prerequisite.CheckPRs(majorRelease)
 
 		if len(mustClose) == 0 {
 			return
 		}
-
 		log.Fatalf(fmt.Sprintf("Still open PRs against the release branch:\n%s", strings.Join(mustClose, "\n")))
 	},
 }
