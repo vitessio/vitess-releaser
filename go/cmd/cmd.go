@@ -19,7 +19,10 @@ package cmd
 import (
 	"fmt"
 	"os"
+
 	"vitess.io/vitess-releaser/go/cmd/interactive"
+	"vitess.io/vitess-releaser/go/releaser/github"
+	"vitess.io/vitess-releaser/go/releaser/state"
 
 	"vitess.io/vitess-releaser/go/cmd/flags"
 	"vitess.io/vitess-releaser/go/cmd/prerequisite"
@@ -29,7 +32,7 @@ import (
 
 var (
 	releaseVersion string
-	live           bool = true
+	live           = true
 )
 
 var rootCmd = &cobra.Command{
@@ -51,6 +54,18 @@ func init() {
 }
 
 func Execute() {
+	err := rootCmd.ParseFlags(os.Args)
+	if err != nil {
+		panic(err)
+	}
+
+	if live {
+		state.VitessRepo = "vitessio/vitess"
+	} else {
+		state.VitessRepo = github.CurrentUser() + "/vitess"
+	}
+	state.MajorRelease = releaseVersion
+
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "Whoops. There was an error while executing your CLI '%s'", err)
 		os.Exit(1)
