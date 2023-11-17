@@ -18,167 +18,111 @@ package interactive
 
 import (
 	"fmt"
+	"github.com/charmbracelet/lipgloss"
 	"os"
-	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/prerequisite"
 	"vitess.io/vitess-releaser/go/releaser/state"
 
-	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 type (
-	mainMenu struct {
-		list    list.Model
-		items   []*menuItem
-		loading bool
-
-		am            *actionManager
-		height, width int
+	// model is a screen with a current active window,
+	// with the idea that new windows can come to the front,
+	// but the old ones are still there behind
+	model struct {
+		active tea.Model
+		stack  []tea.Model
 	}
-
-	menuItem struct {
-		name, state string
-		act         func(msg tea.Msg) (tea.Model, tea.Cmd)
+	_pop  struct{}
+	_push struct {
+		m tea.Model
 	}
 )
 
-func (m *menuItem) Init() tea.Cmd {
-	return nil
+var pop tea.Cmd = func() tea.Msg { return _pop{} }
+
+func (m model) Init() tea.Cmd {
+	return tea.EnterAltScreen
 }
 
-func (m *menuItem) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	return m.act(msg)
-}
-
-func (m *menuItem) View() string {
-	return m.name + " " + m.state
-}
-
-func (m mainMenu) Init() tea.Cmd {
-	return tea.Batch(
-		tea.EnterAltScreen,
-		func() tea.Msg {
-			github.GetReleaseIssue(state.MajorRelease)
-			return nil
-		})
-}
-
-func (m mainMenu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.WindowSizeMsg:
-		m.height = msg.Height
-		m.width = msg.Width
-		m.list.SetWidth(msg.Width)
-		return m, nil
-
-	case tea.KeyMsg:
-		switch keypress := msg.String(); keypress {
-		case "ctrl+c":
+	case _pop:
+		if len(m.stack) == 0 {
 			return m, tea.Quit
-
-		case "enter":
-			i, ok := m.list.SelectedItem().(mainMenuItem)
-			if !ok {
-				return m, nil
-			}
-			return i.act(m), nil
 		}
+		lastIndex := len(m.stack) - 1
+		m.active = m.stack[lastIndex]
+		m.stack = m.stack[:lastIndex]
+		return m, nil
+	case _push:
+		m.stack = append(m.stack, m.active)
+		m.active = msg.m
+		return m, nil
 	}
 
-	var cmd tea.Cmd
-	m.list, cmd = m.list.Update(msg)
+	newActive, cmd := m.active.Update(msg)
+	m.active = newActive
 	return m, cmd
 }
 
-func (m mainMenu) View() string {
-	if m.loading {
-		return quitTextStyle.Render("Loading...")
-	}
-
-	var items []string
-	for _, item := range m.items {
-		items = append(items, item.View())
-	}
-
-	return "\n" +
-		m.list.View() +
-		"\n\n" +
-		"Repo: " +
-		state.VitessRepo
+func (m model) View() string {
+	return lipgloss.JoinVertical(
+		lipgloss.Left,
+		m.active.View(),
+		"Vitess Releaser",
+		fmt.Sprintf("Repo: %s Major Version: %s", state.VitessRepo, state.MajorRelease),
+	)
 }
 
-func MainScreen() {
-	am := &actionManager{}
-	m := mainMenu{
-		am: am,
-		items: []*menuItem{
-			{
-				name:  "apa",
-				state: "oh noes",
-				act:   nil,
-			},
-			{
-				name:  "fes",
-				state: "oh noes",
-				act:   nil,
-			},
-		},
+func push(m tea.Model) tea.Cmd {
+	return func() tea.Msg {
+		return _push{m: m}
 	}
+}
+func MainScreen() {
+	prereq := newMenu(
+		"Prerequisites",
+		[]string{"Task", "Info"},
+		[]menuItem{
+			menuItem{name: "Create Release Issue", act: createIssue},
+			menuItem{name: "Announce the release on Slack", act: nil},
+			menuItem{name: "Ensure all Pull Requests have been merged", act: checkPRs},
+		},
+	)
 
-	items := getMenuItems(m)
+	m := newMenu("Main", []string{"Task", "Info"}, []menuItem{
+		{
+			name:  "Prerequisites",
+			state: "",
+			act: func(mi menuItem) (menuItem, tea.Cmd) {
+				return mi, push(prereq)
+			},
+		}, {
+			name: "Pre Release",
+			act:  nil,
+		}, {
+			name: "Release",
+			act:  nil,
+		},
+	})
 
-	const defaultWidth = 40
-
-	l := list.New(items, mainMenuItemDelegate{}, defaultWidth, listHeight)
-	l.Title = "Vitess releaser, press enter choose the release step."
-	l.SetShowStatusBar(false)
-	l.SetFilteringEnabled(false)
-	l.Styles.Title = titleStyle
-	l.Styles.PaginationStyle = paginationStyle
-	l.Styles.HelpStyle = helpStyle
-	m.list = l
-
-	if _, err := tea.NewProgram(m).Run(); err != nil {
+	if _, err := tea.NewProgram(model{active: m}).Run(); err != nil {
 		fmt.Println("Error running program:", err)
 		os.Exit(1)
 	}
 }
 
-func getMenuItems(m mainMenu) []list.Item {
-	i := []list.Item{
-		newCheckListItem("Create Release Issue", func() (string, tea.Model) {
-			link := prerequisite.CreateReleaseIssue(state.MajorRelease)
-			return link, nil
-		}),
-		newCheckListItem("Announce the release on Slack", nil),
-		newCheckListItem("Ensure all Pull Requests have been merged", func() (string, tea.Model) {
-			prs := prerequisite.CheckPRs(state.MajorRelease)
-			if len(prs) == 0 {
-				return "[x]", nil
-			}
-			return "", &closePRs{
-				parent: m,
-				prs:    prs,
-			}
-		}),
-	}
-	items := []list.Item{
-		newItem("Prerequisite", i),
-		newItem("Pre-Release", nil),
-		newItem("Release", nil),
-		newItem("Post-Release", nil),
-	}
-	return items
-}
-
-func checkPRs(returnTo tea.Model) (string, tea.Model) {
+func createIssue(item menuItem) (menuItem, tea.Cmd) {
 	prs := prerequisite.CheckPRs(state.MajorRelease)
+	var cmd tea.Cmd
 	if len(prs) == 0 {
-		return "[x]", nil
+		item.state = "[x]"
+	} else {
+		cmd = push(&closePRs{
+			prs: prs,
+		})
 	}
-	return "", &closePRs{
-		parent: returnTo,
-		prs:    prs,
-	}
+	return item, cmd
 }
