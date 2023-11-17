@@ -19,32 +19,62 @@ package interactive
 import (
 	"fmt"
 	"os"
+	"vitess.io/vitess-releaser/go/releaser/github"
+	"vitess.io/vitess-releaser/go/releaser/prerequisite"
+	"vitess.io/vitess-releaser/go/releaser/state"
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-type mainMenu struct {
-	list     list.Model
-	quitting bool
+type (
+	mainMenu struct {
+		list    list.Model
+		items   []*menuItem
+		loading bool
 
-	am *actionManager
+		am            *actionManager
+		height, width int
+	}
+
+	menuItem struct {
+		name, state string
+		act         func(msg tea.Msg) (tea.Model, tea.Cmd)
+	}
+)
+
+func (m *menuItem) Init() tea.Cmd {
+	return nil
+}
+
+func (m *menuItem) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	return m.act(msg)
+}
+
+func (m *menuItem) View() string {
+	return m.name + " " + m.state
 }
 
 func (m mainMenu) Init() tea.Cmd {
-	return nil
+	return tea.Batch(
+		tea.EnterAltScreen,
+		func() tea.Msg {
+			github.GetReleaseIssue(state.MajorRelease)
+			return nil
+		})
 }
 
 func (m mainMenu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
+		m.height = msg.Height
+		m.width = msg.Width
 		m.list.SetWidth(msg.Width)
 		return m, nil
 
 	case tea.KeyMsg:
 		switch keypress := msg.String(); keypress {
 		case "ctrl+c":
-			m.quitting = true
 			return m, tea.Quit
 
 		case "enter":
@@ -62,25 +92,41 @@ func (m mainMenu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m mainMenu) View() string {
-	if m.quitting {
-		return quitTextStyle.Render("Goodbye.")
+	if m.loading {
+		return quitTextStyle.Render("Loading...")
 	}
-	return "\n" + m.list.View()
+
+	var items []string
+	for _, item := range m.items {
+		items = append(items, item.View())
+	}
+
+	return "\n" +
+		m.list.View() +
+		"\n\n" +
+		"Repo: " +
+		state.VitessRepo
 }
 
-func MainScreen(majorRelease string) {
-	am := &actionManager{majorRelease: majorRelease}
-
-	items := []list.Item{
-		newItem("Prerequisite", []list.Item{
-			newCheckListItem("Create Release Issue", am.createReleaseIssue),
-			newCheckListItem("Announce the release on Slack", nil),
-			newCheckListItem("Ensure all Pull Requests have been merged", nil),
-		}),
-		newItem("Pre-Release", nil),
-		newItem("Release", nil),
-		newItem("Post-Release", nil),
+func MainScreen() {
+	am := &actionManager{}
+	m := mainMenu{
+		am: am,
+		items: []*menuItem{
+			{
+				name:  "apa",
+				state: "oh noes",
+				act:   nil,
+			},
+			{
+				name:  "fes",
+				state: "oh noes",
+				act:   nil,
+			},
+		},
 	}
+
+	items := getMenuItems(m)
 
 	const defaultWidth = 40
 
@@ -91,14 +137,48 @@ func MainScreen(majorRelease string) {
 	l.Styles.Title = titleStyle
 	l.Styles.PaginationStyle = paginationStyle
 	l.Styles.HelpStyle = helpStyle
-
-	m := mainMenu{
-		am:   am,
-		list: l,
-	}
+	m.list = l
 
 	if _, err := tea.NewProgram(m).Run(); err != nil {
 		fmt.Println("Error running program:", err)
 		os.Exit(1)
+	}
+}
+
+func getMenuItems(m mainMenu) []list.Item {
+	i := []list.Item{
+		newCheckListItem("Create Release Issue", func() (string, tea.Model) {
+			link := prerequisite.CreateReleaseIssue(state.MajorRelease)
+			return link, nil
+		}),
+		newCheckListItem("Announce the release on Slack", nil),
+		newCheckListItem("Ensure all Pull Requests have been merged", func() (string, tea.Model) {
+			prs := prerequisite.CheckPRs(state.MajorRelease)
+			if len(prs) == 0 {
+				return "[x]", nil
+			}
+			return "", &closePRs{
+				parent: m,
+				prs:    prs,
+			}
+		}),
+	}
+	items := []list.Item{
+		newItem("Prerequisite", i),
+		newItem("Pre-Release", nil),
+		newItem("Release", nil),
+		newItem("Post-Release", nil),
+	}
+	return items
+}
+
+func checkPRs(returnTo tea.Model) (string, tea.Model) {
+	prs := prerequisite.CheckPRs(state.MajorRelease)
+	if len(prs) == 0 {
+		return "[x]", nil
+	}
+	return "", &closePRs{
+		parent: returnTo,
+		prs:    prs,
 	}
 }

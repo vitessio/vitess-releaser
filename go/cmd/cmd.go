@@ -29,6 +29,7 @@ import (
 
 var (
 	releaseVersion string
+	live           bool = true
 )
 
 var rootCmd = &cobra.Command{
@@ -39,6 +40,7 @@ var rootCmd = &cobra.Command{
 
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&releaseVersion, flags.MajorRelease, "r", "", "Number of the major release on which we want to create a new release.")
+	rootCmd.PersistentFlags().BoolVar(&live, flags.RunLive, false, "If live is true, will run against vitessio/vitess. Otherwise everything is done against your personal repository")
 	err := rootCmd.MarkPersistentFlagRequired(flags.MajorRelease)
 	if err != nil {
 		panic(err)

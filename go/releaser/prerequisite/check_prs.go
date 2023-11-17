@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"vitess.io/vitess-releaser/go/releaser/state"
 
 	"github.com/cli/go-gh/v2"
 	"vitess.io/vitess-releaser/go/releaser/vitess"
@@ -34,7 +35,7 @@ type PR struct {
 func CheckPRs(majorRelease string) []string {
 	vitess.CorrectCleanRepo()
 
-	byteRes, _, err := gh.Exec("pr", "list", "--json", "title,baseRefName,url")
+	byteRes, _, err := gh.Exec("pr", "list", "--json", "title,baseRefName,url", "--repo", state.VitessRepo)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}

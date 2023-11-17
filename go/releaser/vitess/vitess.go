@@ -21,6 +21,7 @@ import (
 	"log"
 	"os/exec"
 	"strings"
+	"vitess.io/vitess-releaser/go/releaser/state"
 
 	"vitess.io/vitess-releaser/go/releaser/git"
 )
@@ -76,8 +77,8 @@ func releaseToMajor(release string) string {
 }
 
 func CorrectCleanRepo() {
-	if !git.CheckCurrentRepo("vitessio/vitess.git") {
-		log.Fatal("the tool should be run from the vitessio/vitess repository directory")
+	if !git.CheckCurrentRepo(state.VitessRepo + ".git") {
+		log.Fatalf("the tool should be run from the %s repository directory", state.VitessRepo)
 	}
 	if !git.CleanLocalState() {
 		log.Fatal("the vitess repository should have a clean state")

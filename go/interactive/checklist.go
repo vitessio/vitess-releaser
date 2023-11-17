@@ -46,20 +46,16 @@ func (m *checkList) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.quitting = true
 			return m, tea.Quit
 		case "enter":
-			i, ok := m.list.SelectedItem().(*checkListItem)
-			if ok && i.status == statusNone {
-				if i.action != nil {
-					out, err := i.action()
-					if err != nil {
-						i.status = statusNone
-						i.err = err
-						return m, nil
-					}
-					i.out = out
-				}
-				i.status = statusDone
-			}
+			item := m.list.SelectedItem().(*checkListItem)
 
+			if item.action == nil {
+				return m, nil
+			}
+			state, model := item.action()
+			item.state = state
+			if model != nil {
+				return model, nil
+			}
 			return m, nil
 		}
 	}

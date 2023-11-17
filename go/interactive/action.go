@@ -18,16 +18,13 @@ package interactive
 
 import (
 	"vitess.io/vitess-releaser/go/releaser/prerequisite"
+	"vitess.io/vitess-releaser/go/releaser/state"
 )
 
-type actionFn func() (string, error)
-
 type actionManager struct {
-	majorRelease string
 }
 
 func (am *actionManager) createReleaseIssue() (string, error) {
-	issueURL := prerequisite.CreateReleaseIssue(am.majorRelease)
+	issueURL := prerequisite.CreateReleaseIssue(state.MajorRelease)
 	return issueURL, nil
 }
-

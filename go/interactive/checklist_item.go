@@ -34,17 +34,19 @@ const (
 
 type checkListItem struct {
 	status
-	name   string
-	action actionFn
+	name, state string
+
+	// action allows a menu item to change it's state and/or change to a new model
+	action func() (string, tea.Model)
 
 	out string
 	err error
 }
 
-func newCheckListItem(name string, action actionFn) *checkListItem {
+func newCheckListItem(name string, action func() (string, tea.Model)) *checkListItem {
 	return &checkListItem{
-		name:    name,
-		action:  action,
+		name:   name,
+		action: action,
 	}
 }
 
@@ -56,21 +58,9 @@ func (d checkListItemDelegate) Height() int                             { return
 func (d checkListItemDelegate) Spacing() int                            { return 0 }
 func (d checkListItemDelegate) Update(_ tea.Msg, _ *list.Model) tea.Cmd { return nil }
 func (d checkListItemDelegate) Render(w io.Writer, m list.Model, index int, listItem list.Item) {
-	i, ok := listItem.(*checkListItem)
-	if !ok {
-		return
-	}
+	item := listItem.(*checkListItem)
 
-	str := fmt.Sprintf("%d. %s", index+1, i.name)
-	if i.err != nil {
-		str = fmt.Sprintf("%s: error: %s", str, i.err.Error())
-	}
-	if i.status == statusDone {
-		str = fmt.Sprintf("%s: done ✅ ", str)
-	}
-	if i.out != "" {
-		str = fmt.Sprintf("%s => %s", str, i.out)
-	}
+	str := fmt.Sprintf("%d. %s %s", index+1, item.name, item.state)
 
 	fn := itemStyle.Render
 	if index == m.Index() {
