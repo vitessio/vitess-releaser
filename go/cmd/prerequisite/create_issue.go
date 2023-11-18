@@ -20,8 +20,8 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"vitess.io/vitess-releaser/go/cmd/flags"
 	"vitess.io/vitess-releaser/go/releaser/prerequisite"
+	"vitess.io/vitess-releaser/go/releaser/state"
 )
 
 // Create issue:
@@ -33,8 +33,7 @@ var createIssue = &cobra.Command{
 	Use:   "create-issue",
 	Short: "Create the release issue",
 	Run: func(cmd *cobra.Command, args []string) {
-		majorRelease := cmd.Flags().Lookup(flags.MajorRelease).Value.String()
-		link := prerequisite.CreateReleaseIssue(majorRelease)
+		link := prerequisite.CreateReleaseIssue(state.MajorRelease)
 		fmt.Println("Link to the new GitHub Issue: ", link)
 	},
 }

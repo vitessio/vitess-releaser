@@ -18,10 +18,7 @@ package interactive
 
 import (
 	"github.com/spf13/cobra"
-	"vitess.io/vitess-releaser/go/cmd/flags"
 	"vitess.io/vitess-releaser/go/interactive"
-	"vitess.io/vitess-releaser/go/releaser/github"
-	"vitess.io/vitess-releaser/go/releaser/state"
 	"vitess.io/vitess-releaser/go/releaser/vitess"
 )
 
@@ -31,18 +28,6 @@ func Command() *cobra.Command {
 		Aliases: []string{"i"},
 		Short:   "Runs the releaser in interactive mode",
 		Run: func(cmd *cobra.Command, args []string) {
-			majorRelease := cmd.Flags().Lookup(flags.MajorRelease).Value.String()
-			isLive, err := cmd.Flags().GetBool(flags.RunLive)
-			if err != nil {
-				panic(err.Error())
-			}
-
-			if isLive {
-				state.VitessRepo = "vitessio/vitess"
-			} else {
-				state.VitessRepo = github.CurrentUser() + "/vitess"
-			}
-			state.MajorRelease = majorRelease
 			vitess.CorrectCleanRepo()
 			interactive.MainScreen()
 		},

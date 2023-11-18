@@ -14,12 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package pre_release
 
-import (
-	"vitess.io/vitess-releaser/go/cmd"
-)
+import "github.com/spf13/cobra"
 
-func main() {
-	cmd.Execute()
+func PreRelease() *cobra.Command {
+	cmd := &cobra.Command{
+		Use: "pre-release",
+		Short: "Runs the pre-release steps of a release",
+	}
+
+	cmd.AddCommand(codeFreeze)
+	return cmd
 }

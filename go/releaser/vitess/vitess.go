@@ -21,6 +21,7 @@ import (
 	"log"
 	"os/exec"
 	"strings"
+
 	"vitess.io/vitess-releaser/go/releaser/state"
 
 	"vitess.io/vitess-releaser/go/releaser/git"
@@ -35,14 +36,14 @@ import (
 // Secondly, if the release we want to use is not on the main branch, it checks out
 // to a release branch matching the given major release number. The SNAPSHOT version
 // on that release branch is then returned.
-func FindNextRelease(majorRelease string) string {
+func FindNextRelease(majorRelease string) (string, string) {
 	git.Checkout("main")
 
 	currentRelease := getCurrentRelease()
 	major := releaseToMajor(currentRelease)
 
 	if major == majorRelease {
-		return currentRelease
+		return currentRelease, "main"
 	}
 
 	// main branch does not match, let's try release branches
@@ -57,7 +58,7 @@ func FindNextRelease(majorRelease string) string {
 	if major != majorRelease {
 		log.Fatalf("on branch '%s', could not find the corresponding major release '%s'", branchName, majorRelease)
 	}
-	return currentRelease
+	return currentRelease, branchName
 }
 
 func getCurrentRelease() string {

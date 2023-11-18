@@ -14,12 +14,36 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package github
 
 import (
-	"vitess.io/vitess-releaser/go/cmd"
+	"log"
+	"strings"
+
+	"github.com/cli/go-gh"
+	"vitess.io/vitess-releaser/go/releaser/state"
 )
 
-func main() {
-	cmd.Execute()
+type PR struct {
+	Title  string
+	Body   string
+	Branch string
+	Base   string
+	Labels []string
+}
+
+func (p *PR) Create() string {
+	stdOut, _, err := gh.Exec(
+		"pr", "create",
+		"--repo", state.VitessRepo,
+		"--title", p.Title,
+		"--body", p.Body,
+		"--label", strings.Join(p.Labels, ","),
+		"--head", p.Branch,
+		"--base", p.Base,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return strings.ReplaceAll(stdOut.String(), "\n", "")
 }
