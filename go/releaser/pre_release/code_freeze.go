@@ -36,6 +36,9 @@ const (
 	codeFreezeWorkflowFile = "./.github/workflows/code_freeze.yml"
 )
 
+// CodeFreeze will freeze the branch of the next release we want to release.
+// The function returns the URL of the code freeze Pull Request, this Pull
+// Request must be forced-merged by a Vitess maintainer, this step cannot be automated.
 func CodeFreeze() string {
 	vitess.CorrectCleanRepo()
 
