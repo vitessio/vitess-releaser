@@ -22,7 +22,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/cli/go-gh"
+	gh "github.com/cli/go-gh"
 
 	"vitess.io/vitess-releaser/go/releaser/state"
 )

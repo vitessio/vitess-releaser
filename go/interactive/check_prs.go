@@ -25,21 +25,38 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/state"
 )
 
-func checkPRs(item menuItem) (menuItem, tea.Cmd) {
-	if item.state == "Done!" {
-		return item, nil
+type openPRs []string
+
+func checkPRsMenuItem() menuItem {
+	return menuItem{
+		name:   "Ensure all Pull Requests have been merged",
+		act:    checkPRsAct,
+		update: checkPRsUpdate,
 	}
-	prs := prerequisite.CheckPRs(state.MajorRelease)
-	var cmd tea.Cmd
+}
+
+func checkPRsAct(mi menuItem) (menuItem, tea.Cmd) {
+	mi.state = "Checking pull requests..."
+	return mi, func() tea.Msg {
+		prs := prerequisite.CheckPRs(state.MajorRelease)
+		return openPRs(prs)
+	}
+}
+
+func checkPRsUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
+	prs, ok := msg.(openPRs)
+	if !ok {
+		return mi, nil
+	}
 	if len(prs) == 0 {
-		item.state = "Done!"
-	} else {
-		cmd = push(warningDialog{
-			title:   "These PRs still need to be closed before we can continue",
-			message: prs,
-		})
+		mi.state = "Done"
+		return mi, nil
 	}
-	return item, cmd
+
+	return mi, push(warningDialog{
+		title:   "These PRs still need to be closed before we can continue",
+		message: prs,
+	})
 }
 
 type warningDialog struct {

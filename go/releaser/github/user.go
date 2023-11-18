@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/cli/go-gh"
+	gh "github.com/cli/go-gh"
 )
 
 func CurrentUser() string {

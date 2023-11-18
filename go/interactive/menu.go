@@ -22,12 +22,31 @@ import (
 	tbl "github.com/charmbracelet/lipgloss/table"
 )
 
-type menu struct {
-	items   []menuItem
-	title   string
-	idx     int
-	columns []string
-	width   int
+type (
+	menu struct {
+		items   []menuItem
+		title   string
+		idx     int
+		columns []string
+		width   int
+	}
+	menuItem struct {
+		name   string
+		state  string
+		act    func(menuItem) (menuItem, tea.Cmd)
+		init   func() tea.Cmd
+		update func(menuItem, tea.Msg) (menuItem, tea.Cmd)
+	}
+)
+
+var columns = []string{"Task", "Info"}
+
+func newMenu(title string, items ...menuItem) menu {
+	return menu{
+		columns: columns,
+		title:   title,
+		items:   items,
+	}
 }
 
 func (m menu) At(row, cell int) string {
@@ -35,10 +54,17 @@ func (m menu) At(row, cell int) string {
 	if cell == 1 {
 		return item.state
 	}
-	prefix := "   "
-	if m.idx == row {
+
+	var prefix string
+	switch {
+	case m.idx != row:
+		prefix = "   " // this is not the line we are standing on
+	case item.act == nil:
+		prefix = "  :" // we are standing on this line, but it has no action
+	default:
 		prefix = "-> "
 	}
+
 	return prefix + item.name
 }
 
@@ -48,14 +74,6 @@ func (m menu) Rows() int {
 
 func (m menu) Columns() int {
 	return 2
-}
-
-type menuItem struct {
-	name   string
-	state  string
-	act    func(menuItem) (menuItem, tea.Cmd)
-	init   func() tea.Cmd
-	update func(menuItem, tea.Msg) (menuItem, tea.Cmd)
 }
 
 func (m menu) Init() tea.Cmd {
@@ -86,8 +104,11 @@ func (m menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.idx = (m.idx + 1) % size
 		case "enter":
 			selected := m.items[m.idx]
-			newItem, cmd := selected.act(selected)
-			m.items[m.idx] = newItem
+			if selected.act == nil {
+				return m, nil
+			}
+			var cmd tea.Cmd
+			m.items[m.idx], cmd = selected.act(selected)
 			return m, cmd
 		}
 	default:
@@ -96,9 +117,12 @@ func (m menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if mi.update != nil {
 				newMi, cmd := mi.update(mi, msg)
 				m.items[idx] = newMi
-				cmds = append(cmds, cmd)
+				if cmd != nil {
+					cmds = append(cmds, cmd)
+				}
 			}
 		}
+		return m, tea.Batch(cmds...)
 	}
 
 	return m, nil
@@ -126,14 +150,4 @@ func (m menu) View() string {
 		m.title,
 		list,
 	)
-}
-
-var columns = []string{"Task", "Info"}
-
-func newMenu(title string, items ...menuItem) menu {
-	return menu{
-		columns: columns,
-		title:   title,
-		items:   items,
-	}
 }

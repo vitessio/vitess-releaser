@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/cli/go-gh/v2"
+	gh "github.com/cli/go-gh/v2"
 
 	"vitess.io/vitess-releaser/go/releaser/state"
 	"vitess.io/vitess-releaser/go/releaser/vitess"
