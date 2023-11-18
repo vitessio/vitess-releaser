@@ -51,12 +51,23 @@ func (m menu) Columns() int {
 }
 
 type menuItem struct {
-	name  string
-	state string
-	act   func(menuItem) (menuItem, tea.Cmd)
+	name   string
+	state  string
+	act    func(menuItem) (menuItem, tea.Cmd)
+	init   func() tea.Cmd
+	update func(menuItem, tea.Msg) (menuItem, tea.Cmd)
 }
 
-func (m menu) Init() tea.Cmd { return nil }
+func (m menu) Init() tea.Cmd {
+	var cmds []tea.Cmd
+	for idx, mi := range m.items {
+		if mi.init != nil {
+			cmds = append(cmds, mi.init())
+			m.items[idx].init = nil
+		}
+	}
+	return tea.Batch(cmds...)
+}
 
 func (m menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	size := len(m.items)
@@ -78,6 +89,15 @@ func (m menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			newItem, cmd := selected.act(selected)
 			m.items[m.idx] = newItem
 			return m, cmd
+		}
+	default:
+		var cmds []tea.Cmd
+		for idx, mi := range m.items {
+			if mi.update != nil {
+				newMi, cmd := mi.update(mi, msg)
+				m.items[idx] = newMi
+				cmds = append(cmds, cmd)
+			}
 		}
 	}
 

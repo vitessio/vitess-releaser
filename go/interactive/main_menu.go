@@ -21,6 +21,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"os"
+	"vitess.io/vitess-releaser/go/releaser/github"
+	"vitess.io/vitess-releaser/go/releaser/pre_release"
 	"vitess.io/vitess-releaser/go/releaser/state"
 )
 
@@ -32,6 +34,7 @@ type (
 		active tea.Model
 		stack  []tea.Model
 		width  int
+		height int
 	}
 	_pop  struct{}
 	_push struct {
@@ -42,7 +45,24 @@ type (
 var pop tea.Cmd = func() tea.Msg { return _pop{} }
 
 func (m model) Init() tea.Cmd {
-	return tea.EnterAltScreen
+	var cmds []tea.Cmd
+	for _, m := range m.stack {
+		cmds = append(cmds, m.Init())
+	}
+	cmds = append(cmds, m.active.Init())
+	cmds = append(cmds, tea.EnterAltScreen)
+	return tea.Batch(cmds...)
+}
+
+func (m model) sizeActive() (model, tea.Cmd) {
+	initCmd := m.active.Init()
+	var sizeCmd tea.Cmd
+	m.active, sizeCmd = m.active.Update(tea.WindowSizeMsg{
+		Width:  m.width,
+		Height: m.height,
+	})
+
+	return m, tea.Batch(initCmd, sizeCmd)
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -54,13 +74,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		lastIndex := len(m.stack) - 1
 		m.active = m.stack[lastIndex]
 		m.stack = m.stack[:lastIndex]
-		return m, nil
+		return m.sizeActive()
 	case _push:
 		m.stack = append(m.stack, m.active)
 		m.active = msg.m
-		return m, nil
+		return m.sizeActive()
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
+		m.height = msg.Height
 	}
 
 	newActive, cmd := m.active.Update(msg)
@@ -69,6 +90,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
+	_, isMenu := m.active.(menu)
+	if !isMenu {
+		return m.active.View()
+	}
 	title := "Vitess Releaser"
 	if m.width == 0 {
 		m.width = 100
@@ -90,20 +115,18 @@ func push(m tea.Model) tea.Cmd {
 		return _push{m: m}
 	}
 }
+
 func MainScreen() {
 	prereq := newMenu(
 		"Prerequisites",
-		menuItem{name: "Create Release Issue", act: createIssue},
+		menuItem{name: "Create Release Issue", act: createIssue, init: issueInit, update: issueUpdate},
 		menuItem{name: "Announce the release on Slack", act: nil},
 		menuItem{name: "Ensure all Pull Requests have been merged", act: checkPRs},
 	)
 
 	prerelease :=
 		newMenu("Pre Release",
-			menuItem{
-				name: "Code freeze",
-				act:  nil,
-			},
+			menuItem{name: "Code freeze", act: codeFreeze},
 		)
 
 	m := newMenu("Main",
@@ -130,6 +153,28 @@ func subMenu(sub menu) func(mi menuItem) (menuItem, tea.Cmd) {
 	return func(mi menuItem) (menuItem, tea.Cmd) { return mi, push(sub) }
 }
 
+type releaseIssue string
+
+func issueInit() tea.Cmd {
+	return func() tea.Msg {
+		url := github.GetReleaseIssue(state.MajorRelease)
+		return releaseIssue(url)
+	}
+}
+
+func issueUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
+	url, ok := msg.(releaseIssue)
+	if !ok {
+		return mi, nil
+	}
+	if len(url) == 0 {
+		mi.state = "TODO"
+	} else {
+		mi.state = "DONE"
+	}
+	return mi, nil
+}
+
 func createIssue(item menuItem) (menuItem, tea.Cmd) {
 	// url := prerequisite.CreateReleaseIssue(state.MajorRelease)
 	var cmd tea.Cmd
@@ -144,15 +189,12 @@ func createIssue(item menuItem) (menuItem, tea.Cmd) {
 	return item, cmd
 }
 
-// func codeFreeze(item menuItem) (menuItem, tea.Cmd) {
-// 	url := pre_release.CodeFreeze()
-// 	var cmd tea.Cmd
-// 	if len(prs) == 0 {
-// 		item.state = "[x]"
-// 	} else {
-// 		cmd = push(&closePRs{
-// 			prs: prs,
-// 		})
-// 	}
-// 	return item, cmd
-// }
+func codeFreeze(item menuItem) (menuItem, tea.Cmd) {
+	url := pre_release.CodeFreeze()
+	item.state = url
+
+	return item, push(warningDialog{
+		title:   "Code Freeze PR Created",
+		message: []string{"This PR has to be force merged by someone with access"},
+	})
+}

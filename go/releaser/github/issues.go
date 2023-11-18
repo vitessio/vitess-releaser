@@ -51,12 +51,16 @@ func (i *Issue) Create() string {
 }
 
 func GetReleaseIssue(majorVersion string) string {
-	res, _, err := gh.Exec("issue", "list", "-l", "Type: Release", "--json", "title,url")
+	res, _, err := gh.Exec(
+		"issue", "list",
+		"-l", "Type: Release",
+		"--json", "title,url",
+	)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	issues := []map[string]string{}
+	var issues []map[string]string
 	err = json.Unmarshal(res.Bytes(), &issues)
 	if err != nil {
 		log.Fatal(err.Error())

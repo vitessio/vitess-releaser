@@ -75,7 +75,7 @@ func (c warningDialog) View() string {
 	}
 
 	lines := []string{c.title, ""}
-	lines = append(lines, table.New().Data(table.NewStringData(rows...)).Render())
+	lines = append(lines, table.New().Data(table.NewStringData(rows...)).Width(c.width).Render())
 	lines = append(lines, "", "Press any key to continue")
 
 	return lipgloss.JoinVertical(lipgloss.Center, lines...)
