@@ -18,9 +18,11 @@ package interactive
 
 import (
 	"fmt"
+	"os"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"os"
+
 	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/pre_release"
 	"vitess.io/vitess-releaser/go/releaser/state"

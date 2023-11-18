@@ -16,11 +16,13 @@ limitations under the License.
 
 package pre_release
 
-import "github.com/spf13/cobra"
+import (
+	"github.com/spf13/cobra"
+)
 
 func PreRelease() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "pre-release",
+		Use:   "pre-release",
 		Short: "Runs the pre-release steps of a release",
 	}
 

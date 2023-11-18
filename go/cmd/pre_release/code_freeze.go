@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+
 	"vitess.io/vitess-releaser/go/releaser/pre_release"
 )
 
@@ -30,7 +31,7 @@ import (
 // - Run the code freeze script
 // - Get the PR URL and prompt it to the user
 var codeFreeze = &cobra.Command{
-	Use: "code-freeze",
+	Use:   "code-freeze",
 	Short: "Does the code-freeze of a release",
 	Run: func(cmd *cobra.Command, args []string) {
 		out := pre_release.CodeFreeze()

@@ -126,7 +126,6 @@ func (m menu) View() string {
 		m.title,
 		list,
 	)
-
 }
 
 var columns = []string{"Task", "Info"}
