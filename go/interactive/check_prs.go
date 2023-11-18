@@ -34,23 +34,27 @@ func checkPRs(item menuItem) (menuItem, tea.Cmd) {
 	if len(prs) == 0 {
 		item.state = "Done!"
 	} else {
-		cmd = push(closePRs{prs: prs})
+		cmd = push(warningDialog{
+			title:   "These PRs still need to be closed before we can continue",
+			message: prs,
+		})
 	}
 	return item, cmd
 }
 
-type closePRs struct {
+type warningDialog struct {
 	height, width int
-	prs           []string
+	title         string
+	message       []string
 }
 
-var _ tea.Model = closePRs{}
+var _ tea.Model = warningDialog{}
 
-func (c closePRs) Init() tea.Cmd {
+func (c warningDialog) Init() tea.Cmd {
 	return nil
 }
 
-func (c closePRs) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (c warningDialog) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		c.height = msg.Height
@@ -64,15 +68,15 @@ func (c closePRs) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return c, nil
 }
 
-func (c closePRs) View() string {
+func (c warningDialog) View() string {
 	var rows [][]string
-	for _, s := range c.prs {
+	for _, s := range c.message {
 		rows = append(rows, []string{s})
 	}
 
-	return lipgloss.JoinVertical(lipgloss.Center,
-		"These PRs still need to be closed before we can continue",
-		table.New().Rows(rows...).Render(),
-		"Press any key to continue",
-	)
+	lines := []string{c.title, ""}
+	lines = append(lines, table.New().Data(table.NewStringData(rows...)).Render())
+	lines = append(lines, "", "Press any key to continue")
+
+	return lipgloss.JoinVertical(lipgloss.Center, lines...)
 }

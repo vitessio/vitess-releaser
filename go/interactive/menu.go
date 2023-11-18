@@ -27,6 +27,7 @@ type menu struct {
 	title   string
 	idx     int
 	columns []string
+	width   int
 }
 
 func (m menu) At(row, cell int) string {
@@ -60,6 +61,8 @@ func (m menu) Init() tea.Cmd { return nil }
 func (m menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	size := len(m.items)
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "esc", "q":
@@ -81,22 +84,10 @@ func (m menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-const (
-	hotPink  = lipgloss.Color("#FF06B7")
-	darkGray = lipgloss.Color("#767676")
-	black    = lipgloss.Color("#00000")
-)
-
-var (
-	cellStyle     = lipgloss.NewStyle().Foreground(darkGray)
-	selectedStyle = lipgloss.NewStyle().Foreground(hotPink)
-	headerStyle   = lipgloss.NewStyle().Foreground(black)
-)
-
 func (m menu) View() string {
 	list := tbl.
 		New().
-		Width(100).
+		Width(m.width).
 		Headers(m.columns...).
 		Data(m).
 		StyleFunc(func(row, _ int) lipgloss.Style {
@@ -118,7 +109,9 @@ func (m menu) View() string {
 
 }
 
-func newMenu(title string, columns []string, items []menuItem) menu {
+var columns = []string{"Task", "Info"}
+
+func newMenu(title string, items ...menuItem) menu {
 	return menu{
 		columns: columns,
 		title:   title,

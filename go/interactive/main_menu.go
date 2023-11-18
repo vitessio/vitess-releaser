@@ -18,12 +18,9 @@ package interactive
 
 import (
 	"fmt"
-	"os"
-
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-
-	"vitess.io/vitess-releaser/go/releaser/prerequisite"
+	"os"
 	"vitess.io/vitess-releaser/go/releaser/state"
 )
 
@@ -34,6 +31,7 @@ type (
 	model struct {
 		active tea.Model
 		stack  []tea.Model
+		width  int
 	}
 	_pop  struct{}
 	_push struct {
@@ -61,6 +59,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.stack = append(m.stack, m.active)
 		m.active = msg.m
 		return m, nil
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
 	}
 
 	newActive, cmd := m.active.Update(msg)
@@ -69,11 +69,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
+	title := "Vitess Releaser"
+	if m.width == 0 {
+		m.width = 100
+	}
+	lft := bgStyle.Render(title)
+	width := m.width - len(title)
+	s := bgStyle.Copy().Width(width).Align(lipgloss.Right)
+	rgt := fmt.Sprintf("Repo: %s Releasing Branch: %s", state.VitessRepo, state.MajorRelease)
+	statusBar := lft + s.Render(rgt)
 	return lipgloss.JoinVertical(
-		lipgloss.Left,
+		lipgloss.Right,
 		m.active.View(),
-		"Vitess Releaser",
-		fmt.Sprintf("Repo: %s Major Version: %s", state.VitessRepo, state.MajorRelease),
+		statusBar,
 	)
 }
 
@@ -85,29 +93,32 @@ func push(m tea.Model) tea.Cmd {
 func MainScreen() {
 	prereq := newMenu(
 		"Prerequisites",
-		[]string{"Task", "Info"},
-		[]menuItem{
-			menuItem{name: "Create Release Issue", act: createIssue},
-			menuItem{name: "Announce the release on Slack", act: nil},
-			menuItem{name: "Ensure all Pull Requests have been merged", act: checkPRs},
-		},
+		menuItem{name: "Create Release Issue", act: createIssue},
+		menuItem{name: "Announce the release on Slack", act: nil},
+		menuItem{name: "Ensure all Pull Requests have been merged", act: checkPRs},
 	)
 
-	m := newMenu("Main", []string{"Task", "Info"}, []menuItem{
-		{
+	prerelease :=
+		newMenu("Pre Release",
+			menuItem{
+				name: "Code freeze",
+				act:  nil,
+			},
+		)
+
+	m := newMenu("Main",
+		menuItem{
 			name:  "Prerequisites",
 			state: "",
-			act: func(mi menuItem) (menuItem, tea.Cmd) {
-				return mi, push(prereq)
-			},
-		}, {
+			act:   subMenu(prereq)},
+		menuItem{
 			name: "Pre Release",
-			act:  nil,
-		}, {
+			act:  subMenu(prerelease)},
+		menuItem{
 			name: "Release",
 			act:  nil,
 		},
-	})
+	)
 
 	if _, err := tea.NewProgram(model{active: m}).Run(); err != nil {
 		fmt.Println("Error running program:", err)
@@ -115,15 +126,33 @@ func MainScreen() {
 	}
 }
 
+func subMenu(sub menu) func(mi menuItem) (menuItem, tea.Cmd) {
+	return func(mi menuItem) (menuItem, tea.Cmd) { return mi, push(sub) }
+}
+
 func createIssue(item menuItem) (menuItem, tea.Cmd) {
-	prs := prerequisite.CheckPRs(state.MajorRelease)
+	// url := prerequisite.CreateReleaseIssue(state.MajorRelease)
 	var cmd tea.Cmd
-	if len(prs) == 0 {
-		item.state = "[x]"
-	} else {
-		cmd = push(&closePRs{
-			prs: prs,
-		})
-	}
+	// if len(prs) == 0 {
+	// 	item.state = "[x]"
+	// } else {
+	// 	cmd = push(&warningDialog{
+	// 		title:   "These PRs still need to be closed before we can continue",
+	// 		message: strings.Join(prs, "\n"),
+	// 	})
+	// }
 	return item, cmd
 }
+
+// func codeFreeze(item menuItem) (menuItem, tea.Cmd) {
+// 	url := pre_release.CodeFreeze()
+// 	var cmd tea.Cmd
+// 	if len(prs) == 0 {
+// 		item.state = "[x]"
+// 	} else {
+// 		cmd = push(&closePRs{
+// 			prs: prs,
+// 		})
+// 	}
+// 	return item, cmd
+// }
