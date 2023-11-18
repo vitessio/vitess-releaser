@@ -50,11 +50,12 @@ func (i *Issue) Create() string {
 	return strings.ReplaceAll(stdOut.String(), "\n", "")
 }
 
-func GetReleaseIssue(majorVersion string) string {
+func GetReleaseIssue() string {
 	res, _, err := gh.Exec(
 		"issue", "list",
 		"-l", "Type: Release",
 		"--json", "title,url",
+		"--repo", state.VitessRepo,
 	)
 	if err != nil {
 		log.Fatal(err.Error())

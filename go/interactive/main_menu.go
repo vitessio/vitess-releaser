@@ -56,8 +56,9 @@ func (m model) Init() tea.Cmd {
 	return tea.Batch(cmds...)
 }
 
-func (m model) sizeActive() (model, tea.Cmd) {
-	initCmd := m.active.Init()
+func (m model) newActive(d tea.Model) (model, tea.Cmd) {
+	m.active = d
+	initCmd := d.Init() // we call Init() every time a model becomes active
 	var sizeCmd tea.Cmd
 	m.active, sizeCmd = m.active.Update(tea.WindowSizeMsg{
 		Width:  m.width,
@@ -74,13 +75,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 		lastIndex := len(m.stack) - 1
-		m.active = m.stack[lastIndex]
+		popped := m.stack[lastIndex]
 		m.stack = m.stack[:lastIndex]
-		return m.sizeActive()
+		return m.newActive(popped)
 	case _push:
 		m.stack = append(m.stack, m.active)
-		m.active = msg.m
-		return m.sizeActive()
+		return m.newActive(msg.m)
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
@@ -159,7 +159,7 @@ type releaseIssue string
 
 func issueInit() tea.Cmd {
 	return func() tea.Msg {
-		url := github.GetReleaseIssue(state.MajorRelease)
+		url := github.GetReleaseIssue()
 		return releaseIssue(url)
 	}
 }
