@@ -14,23 +14,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package interactive
+package pre_release
 
 import (
-	"github.com/spf13/cobra"
+	"fmt"
 
-	"vitess.io/vitess-releaser/go/interactive"
-	"vitess.io/vitess-releaser/go/releaser/vitess"
+	"github.com/spf13/cobra"
+	"vitess.io/vitess-releaser/go/releaser/pre_release"
 )
 
-func Command() *cobra.Command {
-	return &cobra.Command{
-		Use:     "interactive",
-		Aliases: []string{"i"},
-		Short:   "Runs the releaser in interactive mode",
-		Run: func(cmd *cobra.Command, args []string) {
-			vitess.CorrectCleanRepo()
-			interactive.MainScreen()
-		},
-	}
+// Code Freeze:
+// - Checkout the proper branch
+// - Find the remote of vitessio/vitess.git
+// - Git pull from the remote
+// - Run the code freeze script
+// - Get the PR URL and prompt it to the user
+var codeFreeze = &cobra.Command{
+	Use: "code-freeze",
+	Short: "Does the code-freeze of a release",
+	Run: func(cmd *cobra.Command, args []string) {
+		out := pre_release.CodeFreeze()
+		fmt.Println("Please force merge the Pull Request created for code freeze:", out)
+	},
 }

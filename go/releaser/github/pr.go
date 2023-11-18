@@ -14,23 +14,36 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package interactive
+package github
 
 import (
-	"github.com/spf13/cobra"
+	"log"
+	"strings"
 
-	"vitess.io/vitess-releaser/go/interactive"
-	"vitess.io/vitess-releaser/go/releaser/vitess"
+	"github.com/cli/go-gh"
+	"vitess.io/vitess-releaser/go/releaser/state"
 )
 
-func Command() *cobra.Command {
-	return &cobra.Command{
-		Use:     "interactive",
-		Aliases: []string{"i"},
-		Short:   "Runs the releaser in interactive mode",
-		Run: func(cmd *cobra.Command, args []string) {
-			vitess.CorrectCleanRepo()
-			interactive.MainScreen()
-		},
+type PR struct {
+	Title  string
+	Body   string
+	Branch string
+	Base   string
+	Labels []string
+}
+
+func (p *PR) Create() string {
+	stdOut, _, err := gh.Exec(
+		"pr", "create",
+		"--repo", state.VitessRepo,
+		"--title", p.Title,
+		"--body", p.Body,
+		"--label", strings.Join(p.Labels, ","),
+		"--head", p.Branch,
+		"--base", p.Base,
+	)
+	if err != nil {
+		log.Fatal(err)
 	}
+	return strings.ReplaceAll(stdOut.String(), "\n", "")
 }

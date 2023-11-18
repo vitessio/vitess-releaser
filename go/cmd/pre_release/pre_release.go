@@ -14,23 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package interactive
+package pre_release
 
-import (
-	"github.com/spf13/cobra"
+import "github.com/spf13/cobra"
 
-	"vitess.io/vitess-releaser/go/interactive"
-	"vitess.io/vitess-releaser/go/releaser/vitess"
-)
-
-func Command() *cobra.Command {
-	return &cobra.Command{
-		Use:     "interactive",
-		Aliases: []string{"i"},
-		Short:   "Runs the releaser in interactive mode",
-		Run: func(cmd *cobra.Command, args []string) {
-			vitess.CorrectCleanRepo()
-			interactive.MainScreen()
-		},
+func PreRelease() *cobra.Command {
+	cmd := &cobra.Command{
+		Use: "pre-release",
+		Short: "Runs the pre-release steps of a release",
 	}
+
+	cmd.AddCommand(codeFreeze)
+	return cmd
 }

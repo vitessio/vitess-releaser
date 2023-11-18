@@ -59,7 +59,7 @@ const (
 func CreateReleaseIssue(majorRelease string) string {
 	vitess.CorrectCleanRepo()
 
-	newRelease := vitess.FindNextRelease(majorRelease)
+	newRelease, _ := vitess.FindNextRelease(majorRelease)
 
 	tmpl := template.Must(template.New("release-issue").Parse(releaseIssueTemplate))
 	b := bytes.NewBuffer(nil)
