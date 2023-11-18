@@ -20,15 +20,14 @@ import (
 	"fmt"
 	"os"
 
-	"vitess.io/vitess-releaser/go/cmd/interactive"
+	"github.com/spf13/cobra"
 	"vitess.io/vitess-releaser/go/cmd/pre_release"
 	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/state"
 
 	"vitess.io/vitess-releaser/go/cmd/flags"
+	"vitess.io/vitess-releaser/go/cmd/interactive"
 	"vitess.io/vitess-releaser/go/cmd/prerequisite"
-
-	"github.com/spf13/cobra"
 )
 
 var (

@@ -18,22 +18,39 @@ package interactive
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
+
+	"vitess.io/vitess-releaser/go/releaser/prerequisite"
+	"vitess.io/vitess-releaser/go/releaser/state"
 )
 
+func checkPRs(item menuItem) (menuItem, tea.Cmd) {
+	if item.state == "Done!" {
+		return item, nil
+	}
+	prs := prerequisite.CheckPRs(state.MajorRelease)
+	var cmd tea.Cmd
+	if len(prs) == 0 {
+		item.state = "Done!"
+	} else {
+		cmd = push(closePRs{prs: prs})
+	}
+	return item, cmd
+}
+
 type closePRs struct {
-	parent        tea.Model
 	height, width int
 	prs           []string
 }
 
-var _ tea.Model = (*closePRs)(nil)
+var _ tea.Model = closePRs{}
 
-func (c *closePRs) Init() tea.Cmd {
+func (c closePRs) Init() tea.Cmd {
 	return nil
 }
 
-func (c *closePRs) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (c closePRs) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		c.height = msg.Height
@@ -41,22 +58,21 @@ func (c *closePRs) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return c, nil
 
 	case tea.KeyMsg:
-		return c.parent, nil
+		return c, pop
 	}
 
-	return nil, nil
+	return c, nil
 }
 
-func (c *closePRs) View() string {
+func (c closePRs) View() string {
 	var rows [][]string
 	for _, s := range c.prs {
 		rows = append(rows, []string{s})
 	}
 
-	return "\n\n" +
-		"These PRs still need to be closed before we can continue" +
-		"\n\n" +
-		table.New().Rows(rows...).Render() +
-		"\n\n" +
-		"Press any key to continue"
+	return lipgloss.JoinVertical(lipgloss.Center,
+		"These PRs still need to be closed before we can continue",
+		table.New().Rows(rows...).Render(),
+		"Press any key to continue",
+	)
 }

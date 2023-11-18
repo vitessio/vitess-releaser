@@ -22,9 +22,8 @@ import (
 	"os/exec"
 	"strings"
 
-	"vitess.io/vitess-releaser/go/releaser/state"
-
 	"vitess.io/vitess-releaser/go/releaser/git"
+	"vitess.io/vitess-releaser/go/releaser/state"
 )
 
 // FindNextRelease finds the next release that needs to be released for the given

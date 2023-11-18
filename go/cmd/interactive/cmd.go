@@ -18,6 +18,7 @@ package interactive
 
 import (
 	"github.com/spf13/cobra"
+
 	"vitess.io/vitess-releaser/go/interactive"
 	"vitess.io/vitess-releaser/go/releaser/vitess"
 )
