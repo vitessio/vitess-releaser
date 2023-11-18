@@ -51,7 +51,7 @@ func CodeFreeze() string {
 	git.Push(remote, newBranchName)
 
 	pr := github.PR{
-		Title:  fmt.Sprintf("Code Freeze of `%s`", branchName),
+		Title:  fmt.Sprintf("[%s] Code Freeze for `v%s`", branchName, nextRelease),
 		Body:   fmt.Sprintf("This Pull Request freezes the branch `%s` for `v%s`", branchName, nextRelease),
 		Branch: newBranchName,
 		Base:   branchName,
