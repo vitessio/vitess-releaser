@@ -56,7 +56,6 @@ const (
 `
 )
 
-
 func CreateReleaseIssue(majorRelease string) string {
 	vitess.CorrectCleanRepo()
 

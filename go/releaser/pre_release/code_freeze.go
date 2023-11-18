@@ -18,20 +18,84 @@ package pre_release
 
 import (
 	"fmt"
+	"log"
+	"os/exec"
 
 	"vitess.io/vitess-releaser/go/releaser/git"
+	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/state"
 	"vitess.io/vitess-releaser/go/releaser/vitess"
+)
+
+type codeFreezeStatus int
+
+const (
+	codeFreezeDeactivated codeFreezeStatus = iota
+	codeFreezeActivated
+
+	codeFreezeWorkflowFile = "./.github/workflows/code_freeze.yml"
 )
 
 func CodeFreeze() string {
 	vitess.CorrectCleanRepo()
 
-	_, branchName := vitess.FindNextRelease(state.MajorRelease)
+	nextRelease, branchName := vitess.FindNextRelease(state.MajorRelease)
 
-	remote := fmt.Sprintf("git@github.com:%s.git", state.VitessRepo)
+	remote := git.FindRemoteName(state.VitessRepo)
 	git.Pull(remote, branchName)
 
+	newBranchName := findNewBranchForCodeFreeze(remote, branchName)
+	activateCodeFreeze()
 
-	return ""
+	git.CommitAll(fmt.Sprintf("Code Freeze of %s", branchName))
+	git.Push(remote, newBranchName)
+
+	pr := github.PR{
+		Title:  fmt.Sprintf("Code Freeze of `%s`", branchName),
+		Body:   fmt.Sprintf("This Pull Request freezes the branch `%s` for `v%s`", branchName, nextRelease),
+		Branch: newBranchName,
+		Base:   branchName,
+		Labels: []string{"Component: General", "Type: Release"},
+	}
+	return pr.Create()
+}
+
+func findNewBranchForCodeFreeze(remote, baseBranch string) string {
+	remoteAndBase := fmt.Sprintf("%s/%s", remote, baseBranch)
+
+	var newBranch string
+	for i := 1; ; i++ {
+		newBranch = fmt.Sprintf("%s-code-freeze-%d", baseBranch, i)
+		err := git.CreateBranchAndCheckout(newBranch, remoteAndBase)
+		if err != nil {
+			if err == git.ErrBranchExists {
+				continue
+			}
+			log.Fatal(err)
+		}
+		break
+	}
+	return newBranch
+}
+
+func activateCodeFreeze() {
+	changeCodeFreezeWorkflow(codeFreezeActivated)
+}
+
+func deactivateCodeFreeze() {
+	changeCodeFreezeWorkflow(codeFreezeDeactivated)
+}
+
+func changeCodeFreezeWorkflow(s codeFreezeStatus) {
+	// sed -i.bak -E "s/exit (.*)/exit 0/g" $code_freeze_workflow
+	out, err := exec.Command("sed", "-i.bak", "-E", fmt.Sprintf("s/exit (.*)/exit %d/g", s), codeFreezeWorkflowFile).CombinedOutput()
+	if err != nil {
+		log.Fatalf("%s: %s", err, out)
+	}
+
+	// remove backup file left by the sed command
+	out, err = exec.Command("rm", "-f", fmt.Sprintf("%s.bak", codeFreezeWorkflowFile)).CombinedOutput()
+	if err != nil {
+		log.Fatalf("%s: %s", err, out)
+	}
 }
