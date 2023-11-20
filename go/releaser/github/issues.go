@@ -22,7 +22,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/cli/go-gh"
+	gh "github.com/cli/go-gh"
 
 	"vitess.io/vitess-releaser/go/releaser/state"
 )
@@ -50,13 +50,18 @@ func (i *Issue) Create() string {
 	return strings.ReplaceAll(stdOut.String(), "\n", "")
 }
 
-func GetReleaseIssue(majorVersion string) string {
-	res, _, err := gh.Exec("issue", "list", "-l", "Type: Release", "--json", "title,url")
+func GetReleaseIssue() string {
+	res, _, err := gh.Exec(
+		"issue", "list",
+		"-l", "Type: Release",
+		"--json", "title,url",
+		"--repo", state.VitessRepo,
+	)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	issues := []map[string]string{}
+	var issues []map[string]string
 	err = json.Unmarshal(res.Bytes(), &issues)
 	if err != nil {
 		log.Fatal(err.Error())

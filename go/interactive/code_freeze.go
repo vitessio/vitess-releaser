@@ -14,27 +14,37 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pre_release
+package interactive
 
 import (
-	"fmt"
-
-	"github.com/spf13/cobra"
+	tea "github.com/charmbracelet/bubbletea"
 
 	"vitess.io/vitess-releaser/go/releaser/pre_release"
 )
 
-// Code Freeze:
-// - Checkout the proper branch
-// - Find the remote of vitessio/vitess.git
-// - Git pull from the remote
-// - Run the code freeze script
-// - Get the PR URL and prompt it to the user
-var codeFreeze = &cobra.Command{
-	Use:   "code-freeze",
-	Short: "Does the code-freeze of a release",
-	Run: func(cmd *cobra.Command, args []string) {
-		out := pre_release.CodeFreeze()
-		fmt.Println("Please force merge the Pull Request created for code freeze:", out)
-	},
+func codeFreezeMenuItem() menuItem {
+	return menuItem{
+		name:   "Code freeze",
+		act:    codeFreezeAct,
+		init:   nil,
+		update: codeFreezeUpdate,
+	}
+}
+
+type codeFreezeUrl string
+
+func codeFreezeUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
+	url, ok := msg.(codeFreezeUrl)
+	if !ok {
+		return mi, nil
+	}
+	mi.state = string(url)
+	return mi, nil
+}
+
+func codeFreezeAct(mi menuItem) (menuItem, tea.Cmd) {
+	mi.state = "running..."
+	return mi, func() tea.Msg {
+		return codeFreezeUrl(pre_release.CodeFreeze())
+	}
 }

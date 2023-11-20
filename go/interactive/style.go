@@ -17,17 +17,21 @@ limitations under the License.
 package interactive
 
 import (
-	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/lipgloss"
 )
 
 const listHeight = 14
 
 var (
-	titleStyle        = lipgloss.NewStyle().MarginLeft(2)
-	itemStyle         = lipgloss.NewStyle().PaddingLeft(4)
-	selectedItemStyle = lipgloss.NewStyle().PaddingLeft(2).Foreground(lipgloss.Color("#df6832"))
-	paginationStyle   = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
-	helpStyle         = list.DefaultStyles().HelpStyle.PaddingLeft(4).PaddingBottom(1)
-	quitTextStyle     = lipgloss.NewStyle().Margin(1, 0, 2, 4)
+	cellStyle     = lipgloss.NewStyle().Foreground(darkGray)
+	selectedStyle = lipgloss.NewStyle().Foreground(hotPink)
+	headerStyle   = lipgloss.NewStyle().Foreground(black)
+	bgStyle       = lipgloss.NewStyle().Background(darkGray).Foreground(lightGray)
+)
+
+const (
+	hotPink   = lipgloss.Color("#FF06B7")
+	darkGray  = lipgloss.Color("#767676")
+	black     = lipgloss.Color("#00000")
+	lightGray = lipgloss.Color("#cccccc")
 )

@@ -17,6 +17,7 @@ limitations under the License.
 package pre_release
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os/exec"
@@ -43,15 +44,18 @@ func CodeFreeze() string {
 	vitess.CorrectCleanRepo()
 
 	nextRelease, branchName := vitess.FindNextRelease(state.MajorRelease)
+	log.Printf("next release is %s on %s", nextRelease, branchName)
 
 	remote := git.FindRemoteName(state.VitessRepo)
 	git.Pull(remote, branchName)
 
 	newBranchName := findNewBranchForCodeFreeze(remote, branchName)
+	log.Printf("code freeze branch is %s", newBranchName)
 	activateCodeFreeze()
 
 	git.CommitAll(fmt.Sprintf("Code Freeze of %s", branchName))
 	git.Push(remote, newBranchName)
+	log.Printf("pushed code freeze changes to workflow")
 
 	pr := github.PR{
 		Title:  fmt.Sprintf("[%s] Code Freeze for `v%s`", branchName, nextRelease),
@@ -71,7 +75,7 @@ func findNewBranchForCodeFreeze(remote, baseBranch string) string {
 		newBranch = fmt.Sprintf("%s-code-freeze-%d", baseBranch, i)
 		err := git.CreateBranchAndCheckout(newBranch, remoteAndBase)
 		if err != nil {
-			if err == git.ErrBranchExists {
+			if errors.Is(err, git.ErrBranchExists) {
 				continue
 			}
 			log.Fatal(err)

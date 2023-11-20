@@ -25,32 +25,53 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/state"
 )
 
-func checkPRs(item menuItem) (menuItem, tea.Cmd) {
-	if item.state == "Done!" {
-		return item, nil
+type openPRs []string
+
+func checkPRsMenuItem() menuItem {
+	return menuItem{
+		name:   "Ensure all Pull Requests have been merged",
+		act:    checkPRsAct,
+		update: checkPRsUpdate,
 	}
-	prs := prerequisite.CheckPRs(state.MajorRelease)
-	var cmd tea.Cmd
+}
+
+func checkPRsAct(mi menuItem) (menuItem, tea.Cmd) {
+	mi.state = "Checking pull requests..."
+	return mi, func() tea.Msg {
+		prs := prerequisite.CheckPRs(state.MajorRelease)
+		return openPRs(prs)
+	}
+}
+
+func checkPRsUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
+	prs, ok := msg.(openPRs)
+	if !ok {
+		return mi, nil
+	}
 	if len(prs) == 0 {
-		item.state = "Done!"
-	} else {
-		cmd = push(closePRs{prs: prs})
+		mi.state = "Done"
+		return mi, nil
 	}
-	return item, cmd
+
+	return mi, push(warningDialog{
+		title:   "These PRs still need to be closed before we can continue",
+		message: prs,
+	})
 }
 
-type closePRs struct {
+type warningDialog struct {
 	height, width int
-	prs           []string
+	title         string
+	message       []string
 }
 
-var _ tea.Model = closePRs{}
+var _ tea.Model = warningDialog{}
 
-func (c closePRs) Init() tea.Cmd {
+func (c warningDialog) Init() tea.Cmd {
 	return nil
 }
 
-func (c closePRs) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (c warningDialog) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		c.height = msg.Height
@@ -64,15 +85,15 @@ func (c closePRs) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return c, nil
 }
 
-func (c closePRs) View() string {
+func (c warningDialog) View() string {
 	var rows [][]string
-	for _, s := range c.prs {
+	for _, s := range c.message {
 		rows = append(rows, []string{s})
 	}
 
-	return lipgloss.JoinVertical(lipgloss.Center,
-		"These PRs still need to be closed before we can continue",
-		table.New().Rows(rows...).Render(),
-		"Press any key to continue",
-	)
+	lines := []string{c.title, ""}
+	lines = append(lines, table.New().Data(table.NewStringData(rows...)).Width(c.width).Render())
+	lines = append(lines, "", "Press any key to continue")
+
+	return lipgloss.JoinVertical(lipgloss.Center, lines...)
 }

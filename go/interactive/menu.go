@@ -22,11 +22,31 @@ import (
 	tbl "github.com/charmbracelet/lipgloss/table"
 )
 
-type menu struct {
-	items   []menuItem
-	title   string
-	idx     int
-	columns []string
+type (
+	menu struct {
+		items   []menuItem
+		title   string
+		idx     int
+		columns []string
+		width   int
+	}
+	menuItem struct {
+		name   string
+		state  string
+		act    func(menuItem) (menuItem, tea.Cmd)
+		init   func() tea.Cmd
+		update func(menuItem, tea.Msg) (menuItem, tea.Cmd)
+	}
+)
+
+var columns = []string{"Task", "Info"}
+
+func newMenu(title string, items ...menuItem) menu {
+	return menu{
+		columns: columns,
+		title:   title,
+		items:   items,
+	}
 }
 
 func (m menu) At(row, cell int) string {
@@ -34,10 +54,17 @@ func (m menu) At(row, cell int) string {
 	if cell == 1 {
 		return item.state
 	}
-	prefix := "   "
-	if m.idx == row {
+
+	var prefix string
+	switch {
+	case m.idx != row:
+		prefix = "   " // this is not the line we are standing on
+	case item.act == nil:
+		prefix = "  :" // we are standing on this line, but it has no action
+	default:
 		prefix = "-> "
 	}
+
 	return prefix + item.name
 }
 
@@ -49,17 +76,22 @@ func (m menu) Columns() int {
 	return 2
 }
 
-type menuItem struct {
-	name  string
-	state string
-	act   func(menuItem) (menuItem, tea.Cmd)
+func (m menu) Init() tea.Cmd {
+	var cmds []tea.Cmd
+	for idx, mi := range m.items {
+		if mi.init != nil {
+			cmds = append(cmds, mi.init())
+			m.items[idx].init = nil
+		}
+	}
+	return tea.Batch(cmds...)
 }
-
-func (m menu) Init() tea.Cmd { return nil }
 
 func (m menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	size := len(m.items)
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "esc", "q":
@@ -72,31 +104,34 @@ func (m menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.idx = (m.idx + 1) % size
 		case "enter":
 			selected := m.items[m.idx]
-			newItem, cmd := selected.act(selected)
-			m.items[m.idx] = newItem
+			if selected.act == nil {
+				return m, nil
+			}
+			var cmd tea.Cmd
+			m.items[m.idx], cmd = selected.act(selected)
 			return m, cmd
 		}
+	default:
+		var cmds []tea.Cmd
+		for idx, mi := range m.items {
+			if mi.update != nil {
+				newMi, cmd := mi.update(mi, msg)
+				m.items[idx] = newMi
+				if cmd != nil {
+					cmds = append(cmds, cmd)
+				}
+			}
+		}
+		return m, tea.Batch(cmds...)
 	}
 
 	return m, nil
 }
 
-const (
-	hotPink  = lipgloss.Color("#FF06B7")
-	darkGray = lipgloss.Color("#767676")
-	black    = lipgloss.Color("#00000")
-)
-
-var (
-	cellStyle     = lipgloss.NewStyle().Foreground(darkGray)
-	selectedStyle = lipgloss.NewStyle().Foreground(hotPink)
-	headerStyle   = lipgloss.NewStyle().Foreground(black)
-)
-
 func (m menu) View() string {
 	list := tbl.
 		New().
-		Width(100).
+		Width(m.width).
 		Headers(m.columns...).
 		Data(m).
 		StyleFunc(func(row, _ int) lipgloss.Style {
@@ -115,13 +150,4 @@ func (m menu) View() string {
 		m.title,
 		list,
 	)
-
-}
-
-func newMenu(title string, columns []string, items []menuItem) menu {
-	return menu{
-		columns: columns,
-		title:   title,
-		items:   items,
-	}
 }

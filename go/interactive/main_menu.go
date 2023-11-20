@@ -21,109 +21,40 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
-
-	"vitess.io/vitess-releaser/go/releaser/prerequisite"
-	"vitess.io/vitess-releaser/go/releaser/state"
 )
 
-type (
-	// model is a screen with a current active window,
-	// with the idea that new windows can come to the front,
-	// but the old ones are still there behind
-	model struct {
-		active tea.Model
-		stack  []tea.Model
-	}
-	_pop  struct{}
-	_push struct {
-		m tea.Model
-	}
-)
-
-var pop tea.Cmd = func() tea.Msg { return _pop{} }
-
-func (m model) Init() tea.Cmd {
-	return tea.EnterAltScreen
-}
-
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case _pop:
-		if len(m.stack) == 0 {
-			return m, tea.Quit
-		}
-		lastIndex := len(m.stack) - 1
-		m.active = m.stack[lastIndex]
-		m.stack = m.stack[:lastIndex]
-		return m, nil
-	case _push:
-		m.stack = append(m.stack, m.active)
-		m.active = msg.m
-		return m, nil
-	}
-
-	newActive, cmd := m.active.Update(msg)
-	m.active = newActive
-	return m, cmd
-}
-
-func (m model) View() string {
-	return lipgloss.JoinVertical(
-		lipgloss.Left,
-		m.active.View(),
-		"Vitess Releaser",
-		fmt.Sprintf("Repo: %s Major Version: %s", state.VitessRepo, state.MajorRelease),
-	)
-}
-
-func push(m tea.Model) tea.Cmd {
-	return func() tea.Msg {
-		return _push{m: m}
-	}
-}
 func MainScreen() {
 	prereq := newMenu(
 		"Prerequisites",
-		[]string{"Task", "Info"},
-		[]menuItem{
-			menuItem{name: "Create Release Issue", act: createIssue},
-			menuItem{name: "Announce the release on Slack", act: nil},
-			menuItem{name: "Ensure all Pull Requests have been merged", act: checkPRs},
-		},
+		menuItem{name: "Announce the release on Slack", act: nil},
+		checkPRsMenuItem(),
 	)
 
-	m := newMenu("Main", []string{"Task", "Info"}, []menuItem{
-		{
+	prerelease :=
+		newMenu("Pre Release",
+			codeFreezeMenuItem())
+
+	m := newMenu("Main",
+		createIssueMenuItem(),
+		menuItem{
 			name:  "Prerequisites",
 			state: "",
-			act: func(mi menuItem) (menuItem, tea.Cmd) {
-				return mi, push(prereq)
-			},
-		}, {
+			act:   subMenu(prereq)},
+		menuItem{
 			name: "Pre Release",
-			act:  nil,
-		}, {
+			act:  subMenu(prerelease)},
+		menuItem{
 			name: "Release",
 			act:  nil,
 		},
-	})
+	)
 
-	if _, err := tea.NewProgram(model{active: m}).Run(); err != nil {
+	if _, err := tea.NewProgram(ui{active: m}).Run(); err != nil {
 		fmt.Println("Error running program:", err)
 		os.Exit(1)
 	}
 }
 
-func createIssue(item menuItem) (menuItem, tea.Cmd) {
-	prs := prerequisite.CheckPRs(state.MajorRelease)
-	var cmd tea.Cmd
-	if len(prs) == 0 {
-		item.state = "[x]"
-	} else {
-		cmd = push(&closePRs{
-			prs: prs,
-		})
-	}
-	return item, cmd
+func subMenu(sub menu) func(menuItem) (menuItem, tea.Cmd) {
+	return func(mi menuItem) (menuItem, tea.Cmd) { return mi, push(sub) }
 }
