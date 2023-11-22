@@ -58,6 +58,13 @@ func Pull(remote, branch string) {
 	}
 }
 
+func ResetHard(remote, branch string) {
+	out, err := exec.Command("git", "reset", "--hard", remote+"/"+branch).CombinedOutput()
+	if err != nil {
+		log.Fatalf("%s: %s", err, out)
+	}
+}
+
 func CreateBranchAndCheckout(branch, base string) error {
 	out, err := exec.Command("git", "checkout", "-b", branch, base).CombinedOutput()
 	if err != nil {

@@ -44,7 +44,8 @@ func codeFreezeUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
 
 func codeFreezeAct(mi menuItem) (menuItem, tea.Cmd) {
 	mi.state = "running..."
-	return mi, func() tea.Msg {
-		return codeFreezeUrl(pre_release.CodeFreeze())
-	}
+	pl, freeze := pre_release.CodeFreeze()
+	return mi, tea.Batch(func() tea.Msg {
+		return codeFreezeUrl(freeze())
+	}, push(newProgressDialog("Code freeze", pl)))
 }
