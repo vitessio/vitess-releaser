@@ -14,21 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package prerequisite
+package post_release
 
 import (
 	"github.com/spf13/cobra"
 )
 
-func Prerequisite() *cobra.Command {
+func PostRelease() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "prerequisite",
-		Aliases: []string{"pre"},
-		Short:   "Runs the prerequisites of a release",
+		Use:     "post_release",
+		Aliases: []string{"post"},
+		Short:   "Runs the post release steps of a release",
 	}
 
-	cmd.AddCommand(createIssue)
-	cmd.AddCommand(checkPRs)
 	cmd.AddCommand(slackAnnouncement)
 	return cmd
 }
