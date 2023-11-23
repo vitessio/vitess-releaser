@@ -54,7 +54,6 @@ func slackAnnouncementMenuItem(announcementType slackAnnouncementType) menuItem 
 }
 
 func slackAnnouncementPreRequisiteAct(mi menuItem) (menuItem, tea.Cmd) {
-	mi.state = "Creating Slack message..."
 	newRelease, _ := vitess.FindNextRelease(state.MajorRelease)
 	return mi, func() tea.Msg {
 		return slackMessage(fmt.Sprintf(preRequisiteSlackMessage, newRelease))
@@ -62,7 +61,6 @@ func slackAnnouncementPreRequisiteAct(mi menuItem) (menuItem, tea.Cmd) {
 }
 
 func slackAnnouncementPostReleaseAct(mi menuItem) (menuItem, tea.Cmd) {
-	mi.state = "Creating Slack message..."
 	newRelease, _ := vitess.FindNextRelease(state.MajorRelease)
 	return mi, func() tea.Msg {
 		return slackMessage(fmt.Sprintf(postReleaseSlackMessage, newRelease, state.VitessRepo, newRelease))
@@ -74,6 +72,8 @@ func slackAnnouncementUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
 	if !ok {
 		return mi, nil
 	}
+
+	mi.state = "Done"
 
 	return mi, push(warningDialog{
 		title:   "The following message must be posted on the #general and #releases OSS Slack channels",
