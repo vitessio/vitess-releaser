@@ -26,13 +26,18 @@ import (
 func MainScreen() {
 	prereq := newMenu(
 		"Prerequisites",
-		slackAnnouncementMenuItem(),
+		slackAnnouncementMenuItem(slackAnnouncementPreRequisite),
 		checkPRsMenuItem(),
 	)
 
 	prerelease := newMenu(
 		"Pre Release",
 		codeFreezeMenuItem(),
+	)
+
+	postRelease := newMenu(
+		"Post Release",
+		slackAnnouncementMenuItem(slackAnnouncementPostRelease),
 	)
 
 	m := newMenu("Main",
@@ -47,6 +52,10 @@ func MainScreen() {
 		menuItem{
 			name: "Release",
 			act:  nil,
+		},
+		menuItem{
+			name: "Post Release",
+			act:  subMenu(postRelease),
 		},
 	)
 

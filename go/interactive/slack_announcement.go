@@ -20,20 +20,43 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-type slackMessage string
+type (
+	slackMessage string
+	slackAnnouncementType int
+)
 
-func slackAnnouncementMenuItem() menuItem {
+const (
+	slackAnnouncementPostRelease = iota
+	slackAnnouncementPreRequisite
+)
+
+func slackAnnouncementMenuItem(announcementType slackAnnouncementType) menuItem {
+	var act func(menuItem) (menuItem, tea.Cmd)
+	switch announcementType {
+	case slackAnnouncementPostRelease:
+		act = slackAnnouncementPostReleaseAct
+	case slackAnnouncementPreRequisite:
+		act = slackAnnouncementPreRequisiteAct
+	}
+
 	return menuItem{
 		name:   "Announce the release on Slack",
-		act:    slackAnnouncementAct,
+		act:    act,
 		update: slackAnnouncementUpdate,
 	}
 }
 
-func slackAnnouncementAct(mi menuItem) (menuItem, tea.Cmd) {
+func slackAnnouncementPreRequisiteAct(mi menuItem) (menuItem, tea.Cmd) {
 	mi.state = "Creating Slack message..."
 	return mi, func() tea.Msg {
-		return slackMessage("Hello")
+		return slackMessage("Hello Pre-Req")
+	}
+}
+
+func slackAnnouncementPostReleaseAct(mi menuItem) (menuItem, tea.Cmd) {
+	mi.state = "Creating Slack message..."
+	return mi, func() tea.Msg {
+		return slackMessage("Hello Post-Release")
 	}
 }
 
