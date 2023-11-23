@@ -17,11 +17,8 @@ limitations under the License.
 package interactive
 
 import (
-	"fmt"
-
 	tea "github.com/charmbracelet/bubbletea"
-	"vitess.io/vitess-releaser/go/releaser/state"
-	"vitess.io/vitess-releaser/go/releaser/vitess"
+	"vitess.io/vitess-releaser/go/releaser/slack"
 )
 
 type (
@@ -32,9 +29,6 @@ type (
 const (
 	slackAnnouncementPostRelease = iota
 	slackAnnouncementPreRequisite
-
-	preRequisiteSlackMessage = `📣 The Vitess maintainers are planning on releasing v%s on <DATE>.`
-	postReleaseSlackMessage = `📣 We have just released v%s. Check out the release notes on https://github.com/%s/release/tag/v%s`
 )
 
 func slackAnnouncementMenuItem(announcementType slackAnnouncementType) menuItem {
@@ -54,16 +48,14 @@ func slackAnnouncementMenuItem(announcementType slackAnnouncementType) menuItem 
 }
 
 func slackAnnouncementPreRequisiteAct(mi menuItem) (menuItem, tea.Cmd) {
-	newRelease, _ := vitess.FindNextRelease(state.MajorRelease)
 	return mi, func() tea.Msg {
-		return slackMessage(fmt.Sprintf(preRequisiteSlackMessage, newRelease))
+		return slackMessage(slack.AnnouncementMessage())
 	}
 }
 
 func slackAnnouncementPostReleaseAct(mi menuItem) (menuItem, tea.Cmd) {
-	newRelease, _ := vitess.FindNextRelease(state.MajorRelease)
 	return mi, func() tea.Msg {
-		return slackMessage(fmt.Sprintf(postReleaseSlackMessage, newRelease, state.VitessRepo, newRelease))
+		return slackMessage(slack.PostReleaseMessage())
 	}
 }
 
