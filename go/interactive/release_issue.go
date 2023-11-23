@@ -21,7 +21,6 @@ import (
 
 	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/prerequisite"
-	"vitess.io/vitess-releaser/go/releaser/state"
 )
 
 func createIssueMenuItem() menuItem {
@@ -44,11 +43,11 @@ func issueInit() tea.Cmd {
 }
 
 func createIssue(mi menuItem) (menuItem, tea.Cmd) {
-	mi.state = "Creating issue...`"
-	return mi, func() tea.Msg {
-		url := prerequisite.CreateReleaseIssue(state.MajorRelease)
-		return releaseIssue(url)
-	}
+	mi.state = "Creating issue..."
+	pl, createIssueFn := prerequisite.CreateReleaseIssue()
+	return mi, tea.Batch(func() tea.Msg {
+		return releaseIssue(createIssueFn())
+	}, push(newProgressDialog("Create Release Issue", pl)))
 }
 
 func issueUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
