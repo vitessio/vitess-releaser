@@ -23,6 +23,8 @@ import (
 	"text/template"
 
 	"vitess.io/vitess-releaser/go/releaser/github"
+	"vitess.io/vitess-releaser/go/releaser/logging"
+	"vitess.io/vitess-releaser/go/releaser/state"
 	"vitess.io/vitess-releaser/go/releaser/vitess"
 )
 
@@ -56,25 +58,32 @@ const (
 `
 )
 
-func CreateReleaseIssue(majorRelease string) string {
-	vitess.CorrectCleanRepo()
-
-	newRelease, _ := vitess.FindNextRelease(majorRelease)
-
-	tmpl := template.Must(template.New("release-issue").Parse(releaseIssueTemplate))
-	b := bytes.NewBuffer(nil)
-	err := tmpl.Execute(b, nil)
-	if err != nil {
-		log.Fatal(err)
+func CreateReleaseIssue() (*logging.ProgressLogging, func() string) {
+	pl := &logging.ProgressLogging{
+		TotalSteps: 2,
 	}
 
-	newIssue := github.Issue{
-		Title:    fmt.Sprintf("Release of v%s", newRelease),
-		Body:     b.String(),
-		Labels:   []string{"Component: General", "Type: Release"},
-		Assignee: "@me",
-	}
+	return pl, func() string {
+		vitess.CorrectCleanRepo()
+		newRelease, _ := vitess.FindNextRelease(state.MajorRelease)
 
-	link := newIssue.Create()
-	return link
+		pl.NewStepf("Create Release Issue on GitHub")
+		tmpl := template.Must(template.New("release-issue").Parse(releaseIssueTemplate))
+		b := bytes.NewBuffer(nil)
+		err := tmpl.Execute(b, nil)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		newIssue := github.Issue{
+			Title:    fmt.Sprintf("Release of v%s", newRelease),
+			Body:     b.String(),
+			Labels:   []string{"Component: General", "Type: Release"},
+			Assignee: "@me",
+		}
+
+		link := newIssue.Create()
+		pl.NewStepf("Issue created: %s", link)
+		return link
+	}
 }

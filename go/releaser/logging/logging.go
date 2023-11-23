@@ -44,7 +44,8 @@ func (pl *ProgressLogging) NewStepf(msg string, args ...any) {
 	defer pl.mu.Unlock()
 
 	pl.Done++
-	pl.StepsDone = append(pl.StepsDone, fmt.Sprintf(msg, args...))
+	msgF := fmt.Sprintf(msg, args...)
+	pl.StepsDone = append(pl.StepsDone, fmt.Sprintf("%d/%d - %s", pl.Done, pl.TotalSteps, msgF))
 }
 
 func (pl *ProgressLogging) GetStepInProgress() []string {
