@@ -34,7 +34,8 @@ var codeFreeze = &cobra.Command{
 	Use:   "code-freeze",
 	Short: "Does the code-freeze of a release",
 	Run: func(cmd *cobra.Command, args []string) {
-		out := pre_release.CodeFreeze()
+		_, freeze := pre_release.CodeFreeze()
+		out := freeze()
 		fmt.Println("Please force merge the Pull Request created for code freeze:", out)
 	},
 }
