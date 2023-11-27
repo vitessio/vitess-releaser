@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package prerequisite
+package issue
 
 import (
 	"bytes"
@@ -29,13 +29,22 @@ import (
 )
 
 const (
-	releaseIssueTemplate = `This release is scheduled for: TODO: '.Date' here .
+	BackportStart = "BACKPORT_START"
+	BackportEnd = "BACKPORT_END"
+)
+
+var (
+	releaseIssueTemplate = fmt.Sprintf(`This release is scheduled for: TODO: '.Date' here .
+
+<!-- Please DO NOT modify or remove the comments in this file as they are used to auto-generate and auto-modify this issue. -->
 
 ### Prerequisites for Release
 
 - [ ] Notify the community on Slack.
 - [ ] Make sure the release notes summary is prepared and clean.
 - [ ] Make sure backport Pull Requests are merged, list below.
+<!-- %s -->
+<!-- %s -->
 
 ### Pre-Release
 
@@ -55,7 +64,7 @@ const (
 - [ ] Announce new release:
   - [ ] Slack
   - [ ] Twitter
-`
+`, BackportStart, BackportEnd)
 )
 
 func CreateReleaseIssue() (*logging.ProgressLogging, func() string) {

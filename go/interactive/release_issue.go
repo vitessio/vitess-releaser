@@ -18,9 +18,9 @@ package interactive
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	"vitess.io/vitess-releaser/go/releaser/issue"
 
 	"vitess.io/vitess-releaser/go/releaser/github"
-	"vitess.io/vitess-releaser/go/releaser/prerequisite"
 )
 
 func createIssueMenuItem() menuItem {
@@ -44,7 +44,7 @@ func issueInit() tea.Cmd {
 
 func createIssue(mi menuItem) (menuItem, tea.Cmd) {
 	mi.state = "Creating issue..."
-	pl, createIssueFn := prerequisite.CreateReleaseIssue()
+	pl, createIssueFn := issue.CreateReleaseIssue()
 	return mi, tea.Batch(func() tea.Msg {
 		return releaseIssue(createIssueFn())
 	}, push(newProgressDialog("Create Release Issue", pl)))
