@@ -25,7 +25,7 @@ type addPRsToIssue string
 
 func addPRsToIssueMenuItem() menuItem {
 	return menuItem{
-		name:   "Adding PRs to Release Issue",
+		name:   "Add pending Pull Requests to Release Issue",
 		act:    addPRsToIssueAct,
 		update: addPRsToIssueUpdate,
 	}
@@ -46,5 +46,5 @@ func addPRsToIssueAct(mi menuItem) (menuItem, tea.Cmd) {
 	pl, add := issue.AddBackportPRs()
 	return mi, tea.Batch(func() tea.Msg {
 		return addPRsToIssue(add())
-	}, push(newProgressDialog("Adding PRs to Release Issue", pl)))
+	}, push(newProgressDialog("Adding pending Pull Requests to Release Issue", pl)))
 }

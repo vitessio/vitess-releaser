@@ -103,13 +103,15 @@ func CreateReleaseIssue() (*logging.ProgressLogging, func() string) {
 
 func AddBackportPRs() (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
-		TotalSteps: 2,
+		TotalSteps: 4,
 	}
 
 	return pl, func() string {
+		pl.NewStepf("Fetch existing issue")
 		issueNb := github.GetReleaseIssueNumber()
 		body := github.GetIssueBody(issueNb)
 
+		pl.NewStepf("Parse issue's body")
 		start, end, err := getIssuePRListIndexes(body)
 		if err != nil {
 			log.Fatal(err.Error())
@@ -142,8 +144,12 @@ func AddBackportPRs() (*logging.ProgressLogging, func() string) {
 
 		body = body[:start] + "\n" + strings.Join(listURLs, "\n") + "\n" + body[end:]
 
+		pl.NewStepf("Replace issue on GitHub")
 		issue := github.Issue{Body: body, Number: issueNb}
-		return issue.UpdateBody()
+		url := issue.UpdateBody()
+
+		pl.NewStepf("Issue updated: %s", url)
+		return url
 	}
 }
 
