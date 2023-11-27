@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	gh "github.com/cli/go-gh"
@@ -32,6 +33,7 @@ type Issue struct {
 	Body     string
 	Labels   []string
 	Assignee string
+	Number   int
 }
 
 // Create will open the issue on GitHub and return the link of the newly created issue
@@ -48,6 +50,38 @@ func (i *Issue) Create() string {
 		log.Fatal(err)
 	}
 	return strings.ReplaceAll(stdOut.String(), "\n", "")
+}
+
+func (i *Issue) UpdateBody() string {
+	stdOut, _, err := gh.Exec(
+		"issue", "edit",
+		"--repo", state.VitessRepo,
+		strconv.Itoa(i.Number), "-b", i.Body,
+	)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	return strings.ReplaceAll(stdOut.String(), "\n", "")
+}
+
+func GetIssueBody(nb int) string {
+	var i Issue
+	stdOut, _, err := gh.Exec(
+		"issue", "view",
+		strconv.Itoa(nb),
+		"--repo", state.VitessRepo,
+		"--json",
+		"body",
+	)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	err = json.Unmarshal(stdOut.Bytes(), &i)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	return i.Body
 }
 
 func GetReleaseIssue() string {
@@ -75,4 +109,15 @@ func GetReleaseIssue() string {
 	}
 
 	return ""
+}
+
+func GetReleaseIssueNumber() int {
+	issueURL := GetReleaseIssue()
+	lastIdx := strings.LastIndex(issueURL, "/")
+	issueNbStr := issueURL[lastIdx+1:]
+	issueNb, err := strconv.Atoi(issueNbStr)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	return issueNb
 }

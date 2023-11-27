@@ -33,7 +33,7 @@ var checkPRs = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		majorRelease := cmd.Flags().Lookup(flags.MajorRelease).Value.String()
 
-		mustClose := prerequisite.CheckPRs(majorRelease)
+		mustClose := prerequisite.FormatPRs(prerequisite.CheckPRs(majorRelease))
 
 		if len(mustClose) == 0 {
 			return

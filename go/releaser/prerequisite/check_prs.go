@@ -33,7 +33,15 @@ type PR struct {
 	Url         string `json:"url"`
 }
 
-func CheckPRs(majorRelease string) []string {
+func FormatPRs(prs []PR) []string {
+	var prFmt []string
+	for _, pr := range prs {
+		prFmt = append(prFmt, fmt.Sprintf(" -> %s  %s", pr.Url, pr.Title))
+	}
+	return prFmt
+}
+
+func CheckPRs(majorRelease string) []PR {
 	vitess.CorrectCleanRepo()
 
 	byteRes, _, err := gh.Exec("pr", "list", "--json", "title,baseRefName,url", "--repo", state.VitessRepo)
@@ -46,12 +54,12 @@ func CheckPRs(majorRelease string) []string {
 		log.Fatalf(err.Error())
 	}
 
-	var mustClose []string
+	var mustClose []PR
 
 	branchName := fmt.Sprintf("release-%s.0", majorRelease)
 	for _, pr := range prs {
 		if pr.BaseRefName == branchName {
-			mustClose = append(mustClose, fmt.Sprintf(" -> %s  %s", pr.Url, pr.Title))
+			mustClose = append(mustClose, pr)
 		}
 	}
 	return mustClose
