@@ -17,6 +17,8 @@ limitations under the License.
 package interactive
 
 import (
+	"fmt"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/releaser/prerequisite"
 	"vitess.io/vitess-releaser/go/releaser/state"
@@ -35,7 +37,7 @@ func checkPRsMenuItem() menuItem {
 func checkPRsAct(mi menuItem) (menuItem, tea.Cmd) {
 	mi.state = "Checking pull requests..."
 	return mi, func() tea.Msg {
-		prs := prerequisite.CheckPRs(state.MajorRelease)
+		prs := prerequisite.FormatPRs(prerequisite.CheckPRs(state.MajorRelease))
 		return openPRs(prs)
 	}
 }
@@ -45,8 +47,8 @@ func checkPRsUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
 	if !ok {
 		return mi, nil
 	}
+	mi.state = fmt.Sprintf("Done, %d PRs need to be merged.", len(prs))
 	if len(prs) == 0 {
-		mi.state = "Done"
 		return mi, nil
 	}
 

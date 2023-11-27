@@ -28,6 +28,7 @@ func MainScreen() {
 		"Prerequisites",
 		slackAnnouncementMenuItem(slackAnnouncementPreRequisite),
 		checkPRsMenuItem(),
+		addPRsToIssueMenuItem(),
 	)
 
 	prerelease := newMenu(

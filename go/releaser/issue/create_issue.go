@@ -24,6 +24,7 @@ import (
 
 	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/logging"
+	"vitess.io/vitess-releaser/go/releaser/prerequisite"
 	"vitess.io/vitess-releaser/go/releaser/state"
 	"vitess.io/vitess-releaser/go/releaser/vitess"
 )
@@ -36,7 +37,8 @@ const (
 var (
 	releaseIssueTemplate = fmt.Sprintf(`This release is scheduled for: TODO: '.Date' here .
 
-<!-- Please DO NOT modify or remove the comments in this file as they are used to auto-generate and auto-modify this issue. -->
+<!-- Please DO NOT modify or remove the comments in this file. -->
+<!-- Moreover, DO NOT add text in the middle of an _START and _END comment. -->
 
 ### Prerequisites for Release
 
@@ -94,5 +96,18 @@ func CreateReleaseIssue() (*logging.ProgressLogging, func() string) {
 		link := newIssue.Create()
 		pl.NewStepf("Issue created: %s", link)
 		return link
+	}
+}
+
+func AddBackportPRs() (*logging.ProgressLogging, func() string) {
+	pl := &logging.ProgressLogging{
+		TotalSteps: 2,
+	}
+
+	return pl, func() string {
+		prs := prerequisite.CheckPRs(state.MajorRelease)
+
+		_ = prs
+		return ""
 	}
 }
