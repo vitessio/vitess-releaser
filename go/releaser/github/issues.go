@@ -55,6 +55,7 @@ func (i *Issue) Create() string {
 func (i *Issue) UpdateBody() string {
 	stdOut, _, err := gh.Exec(
 		"issue", "edit",
+		"--repo", state.VitessRepo,
 		strconv.Itoa(i.Number), "-b", i.Body,
 	)
 	if err != nil {
@@ -65,7 +66,13 @@ func (i *Issue) UpdateBody() string {
 
 func GetIssueBody(nb int) string {
 	var i Issue
-	stdOut, _, err := gh.Exec("issue", "view", strconv.Itoa(nb), "--json", "body")
+	stdOut, _, err := gh.Exec(
+		"issue", "view",
+		strconv.Itoa(nb),
+		"--repo", state.VitessRepo,
+		"--json",
+		"body",
+	)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
