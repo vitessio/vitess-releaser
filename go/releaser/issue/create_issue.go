@@ -20,6 +20,8 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"strconv"
+	"strings"
 	"text/template"
 
 	"vitess.io/vitess-releaser/go/releaser/github"
@@ -107,7 +109,9 @@ func AddBackportPRs() (*logging.ProgressLogging, func() string) {
 	return pl, func() string {
 		prs := prerequisite.CheckPRs(state.MajorRelease)
 
-		_ = prs
+		issueNb := github.GetReleaseIssueNumber()
+
+
 		return ""
 	}
 }
