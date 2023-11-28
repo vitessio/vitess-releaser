@@ -14,20 +14,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pre_release
+package prerequisite
 
 import (
-	"fmt"
+	"log"
+	"strings"
 
+	"github.com/spf13/cobra"
 	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/vitess"
+
+	"vitess.io/vitess-releaser/go/releaser/prerequisite"
 )
 
-func CheckSummary(ctx *releaser.Context) []string {
-	r, _ := vitess.FindNextRelease(ctx.MajorRelease)
-	return []string{
-		"If the release does not contain significant changes (i.e. a small patch release) then this step can be skipped",
-		fmt.Sprintf("The summary file is located in: ./changelog/%s.0/%s/summary.md.", ctx.MajorRelease, r),
-		"The summary file for a release candidate is the same as the one for the GA release.",
-	}
+var checkReleaseSummary = &cobra.Command{
+	Use:     "check-summary",
+	Run: func(cmd *cobra.Command, args []string) {
+		ctx := releaser.UnwrapCtx(cmd.Context())
+
+		out := prerequisite.CheckSummary(ctx)
+		log.Println(strings.Join(out, "\n"))
+	},
 }

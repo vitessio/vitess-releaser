@@ -21,7 +21,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/pre_release"
+	"vitess.io/vitess-releaser/go/releaser/prerequisite"
 )
 
 type checkSummary []string
@@ -50,6 +50,6 @@ func checkSummaryUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
 
 func checkSummaryAct(mi menuItem) (menuItem, tea.Cmd) {
 	return mi, func() tea.Msg {
-		return checkSummary(pre_release.CheckSummary(mi.ctx))
+		return checkSummary(prerequisite.CheckSummary(mi.ctx))
 	}
 }

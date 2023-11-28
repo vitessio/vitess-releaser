@@ -17,20 +17,17 @@ limitations under the License.
 package prerequisite
 
 import (
-	"github.com/spf13/cobra"
+	"fmt"
+
+	"vitess.io/vitess-releaser/go/releaser"
+	"vitess.io/vitess-releaser/go/releaser/vitess"
 )
 
-func Prerequisite() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "prerequisite",
-		Aliases: []string{"pre"},
-		Short:   "Runs the prerequisites of a release",
+func CheckSummary(ctx *releaser.Context) []string {
+	r, _ := vitess.FindNextRelease(ctx.MajorRelease)
+	return []string{
+		"If the release does not contain significant changes (i.e. a small patch release) then this step can be skipped",
+		fmt.Sprintf("The summary file is located in: ./changelog/%s.0/%s/summary.md.", ctx.MajorRelease, r),
+		"The summary file for a release candidate is the same as the one for the GA release.",
 	}
-
-	cmd.AddCommand(createIssue)
-	cmd.AddCommand(checkPRs)
-	cmd.AddCommand(checkReleaseSummary)
-	cmd.AddCommand(addPendingPRsToIssue)
-	cmd.AddCommand(slackAnnouncement)
-	return cmd
 }
