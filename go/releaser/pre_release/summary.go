@@ -17,14 +17,17 @@ limitations under the License.
 package pre_release
 
 import (
+	"fmt"
+
 	"vitess.io/vitess-releaser/go/releaser"
+	"vitess.io/vitess-releaser/go/releaser/vitess"
 )
 
 func CheckSummary(ctx *releaser.Context) []string {
+	r, _ := vitess.FindNextRelease(ctx.MajorRelease)
 	return []string{
 		"If the release does not contain significant changes (i.e. a small patch release) then this step can be skipped",
-		"One or more Pull Requests have to be submitted in advance to create and update the release summary.",
-		"The summary files are located in: ./changelog/*.0/*.*.*/summary.md.",
+		fmt.Sprintf("The summary file is located in: ./changelog/%s.0/%s/summary.md.", ctx.MajorRelease, r),
 		"The summary file for a release candidate is the same as the one for the GA release.",
 	}
 }
