@@ -32,8 +32,7 @@ type (
 	ui struct {
 		active tea.Model
 		stack  []tea.Model
-		width  int
-		height int
+		size   tea.WindowSizeMsg
 	}
 	_pop  struct{}
 	_push struct {
@@ -63,15 +62,13 @@ func (m ui) newActive(d tea.Model) (ui, tea.Cmd) {
 	m.active = d
 	initCmd := d.Init() // we call Init() every time a ui becomes active
 	var sizeCmd tea.Cmd
-	m.active, sizeCmd = m.active.Update(tea.WindowSizeMsg{
-		Width:  m.width,
-		Height: m.height,
-	})
+	m.active, sizeCmd = m.active.Update(m.size)
 
 	return m, tea.Batch(initCmd, sizeCmd)
 }
 
 func (m ui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	// these messages we take care of here
 	switch msg := msg.(type) {
 	case _pop:
 		if len(m.stack) == 0 {
@@ -89,11 +86,15 @@ func (m ui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "esc", "q":
 			return m, popDialog
 		}
+		newActive, cmd := m.active.Update(msg)
+		m.active = newActive
+		return m, cmd
+
 	case tea.WindowSizeMsg:
-		m.width = msg.Width
-		m.height = msg.Height
+		m.size = msg
 	}
 
+	// Other messages are passed on to all dialogs of the stack
 	var cmds []tea.Cmd
 	newStack := make([]tea.Model, len(m.stack))
 	for i, m := range m.stack {
@@ -113,11 +114,12 @@ func (m ui) View() string {
 		return m.active.View()
 	}
 	title := "Vitess Releaser"
-	if m.width == 0 {
-		m.width = 100
+	width := m.size.Width
+	if width == 0 {
+		width = 100
 	}
 	lft := bgStyle.Render(title)
-	width := m.width - len(title)
+	width -= len(title)
 	s := bgStyle.Copy().Width(width).Align(lipgloss.Right)
 	rgt := fmt.Sprintf("Repo: %s Releasing Branch: %s", state.VitessRepo, state.MajorRelease)
 	statusBar := lft + s.Render(rgt)
