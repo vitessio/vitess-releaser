@@ -31,9 +31,15 @@ import (
 )
 
 const (
+	// List of backports Pull Requests
 	backportStart   = "<!-- BACKPORT_START -->"
 	backportEnd     = "<!-- BACKPORT_END -->"
 	backPortPRsItem = "- [ ] Make sure backport Pull Requests are merged, list below."
+
+	// List of release blocker Issues
+	releaseBlockerStart      = "<!-- RELEASE_BLOCKER_START -->"
+	releaseBlockerEnd        = "<!-- RELEASE_BLOCKER_END -->"
+	releaseBlockerIssuesItem = "- [ ] Make sure release blocker Issues are closed, list below."
 )
 
 var (
@@ -46,6 +52,10 @@ var (
 
 - [ ] Notify the community on Slack.
 - [ ] Make sure the release notes summary is prepared and clean.
+%s
+%s
+%s
+
 %s
 %s
 %s
@@ -68,7 +78,8 @@ var (
 - [ ] Announce new release:
   - [ ] Slack
   - [ ] Twitter
-`, backportStart, backPortPRsItem, backportEnd)
+`, backportStart, backPortPRsItem, backportEnd,
+	releaseBlockerStart, releaseBlockerEnd, releaseBlockerIssuesItem)
 )
 
 func CreateReleaseIssue(ctx *releaser.Context) (*logging.ProgressLogging, func() string) {
