@@ -22,7 +22,7 @@ import (
 )
 
 type (
-	slackMessage string
+	slackMessage          string
 	slackAnnouncementType int
 )
 
@@ -67,7 +67,7 @@ func slackAnnouncementUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
 
 	mi.state = "Done"
 
-	return mi, push(warningDialog{
+	return mi, pushDialog(warningDialog{
 		title:   "The following message must be posted on the #general and #releases OSS Slack channels",
 		message: []string{string(slackMsg)},
 	})

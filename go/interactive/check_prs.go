@@ -52,7 +52,7 @@ func checkPRsUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
 		return mi, nil
 	}
 
-	return mi, push(warningDialog{
+	return mi, pushDialog(warningDialog{
 		title:   "These PRs still need to be closed before we can continue",
 		message: prs,
 	})

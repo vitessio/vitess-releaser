@@ -46,5 +46,5 @@ func addPRsToIssueAct(mi menuItem) (menuItem, tea.Cmd) {
 	pl, add := issue.AddBackportPRs()
 	return mi, tea.Batch(func() tea.Msg {
 		return addPRsToIssue(add())
-	}, push(newProgressDialog("Adding pending Pull Requests to Release Issue", pl)))
+	}, pushDialog(newProgressDialog("Adding pending Pull Requests to Release Issue", pl)))
 }
