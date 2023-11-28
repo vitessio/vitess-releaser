@@ -22,8 +22,7 @@ import (
 	"log"
 
 	gh "github.com/cli/go-gh/v2"
-
-	"vitess.io/vitess-releaser/go/releaser/state"
+	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/vitess"
 )
 
@@ -41,10 +40,10 @@ func FormatPRs(prs []PR) []string {
 	return prFmt
 }
 
-func CheckPRs(majorRelease string) []PR {
-	vitess.CorrectCleanRepo()
+func CheckPRs(ctx *releaser.Context) []PR {
+	vitess.CorrectCleanRepo(ctx.VitessRepo)
 
-	byteRes, _, err := gh.Exec("pr", "list", "--json", "title,baseRefName,url", "--repo", state.VitessRepo)
+	byteRes, _, err := gh.Exec("pr", "list", "--json", "title,baseRefName,url", "--repo", ctx.VitessRepo)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -56,7 +55,7 @@ func CheckPRs(majorRelease string) []PR {
 
 	var mustClose []PR
 
-	branchName := fmt.Sprintf("release-%s.0", majorRelease)
+	branchName := fmt.Sprintf("release-%s.0", ctx.MajorRelease)
 	for _, pr := range prs {
 		if pr.BaseRefName == branchName {
 			mustClose = append(mustClose, pr)

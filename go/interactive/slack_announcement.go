@@ -18,6 +18,7 @@ package interactive
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/slack"
 )
 
@@ -31,7 +32,7 @@ const (
 	slackAnnouncementPreRequisite
 )
 
-func slackAnnouncementMenuItem(announcementType slackAnnouncementType) menuItem {
+func slackAnnouncementMenuItem(ctx *releaser.Context, announcementType slackAnnouncementType) menuItem {
 	var act func(menuItem) (menuItem, tea.Cmd)
 	switch announcementType {
 	case slackAnnouncementPostRelease:
@@ -41,6 +42,7 @@ func slackAnnouncementMenuItem(announcementType slackAnnouncementType) menuItem 
 	}
 
 	return menuItem{
+		ctx:    ctx,
 		name:   "Announce the release on Slack",
 		act:    act,
 		update: slackAnnouncementUpdate,
@@ -49,13 +51,13 @@ func slackAnnouncementMenuItem(announcementType slackAnnouncementType) menuItem 
 
 func slackAnnouncementPreRequisiteAct(mi menuItem) (menuItem, tea.Cmd) {
 	return mi, func() tea.Msg {
-		return slackMessage(slack.AnnouncementMessage())
+		return slackMessage(slack.AnnouncementMessage(mi.ctx))
 	}
 }
 
 func slackAnnouncementPostReleaseAct(mi menuItem) (menuItem, tea.Cmd) {
 	return mi, func() tea.Msg {
-		return slackMessage(slack.PostReleaseMessage())
+		return slackMessage(slack.PostReleaseMessage(mi.ctx))
 	}
 }
 

@@ -18,13 +18,15 @@ package interactive
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/issue"
 )
 
 type addPRsToIssue string
 
-func addPRsToIssueMenuItem() menuItem {
+func addPRsToIssueMenuItem(ctx *releaser.Context) menuItem {
 	return menuItem{
+		ctx:    ctx,
 		name:   "Add pending Pull Requests to Release Issue",
 		act:    addPRsToIssueAct,
 		update: addPRsToIssueUpdate,
@@ -43,7 +45,7 @@ func addPRsToIssueUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
 
 func addPRsToIssueAct(mi menuItem) (menuItem, tea.Cmd) {
 	mi.state = "running..."
-	pl, add := issue.AddBackportPRs()
+	pl, add := issue.AddBackportPRs(mi.ctx)
 	return mi, tea.Batch(func() tea.Msg {
 		return addPRsToIssue(add())
 	}, pushDialog(newProgressDialog("Adding pending Pull Requests to Release Issue", pl)))

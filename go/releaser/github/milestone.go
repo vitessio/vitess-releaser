@@ -23,18 +23,17 @@ import (
 	"strings"
 
 	"github.com/cli/go-gh"
-	"vitess.io/vitess-releaser/go/releaser/state"
 )
 
 type Milestone struct {
 	URL string `json:"url"`
 }
 
-func GetMilestonesByName(name string) []Milestone {
+func GetMilestonesByName(repo, name string) []Milestone {
 	stdOut, _, err := gh.Exec(
 		"milestone", "list",
 		"--query", name,
-		"--repo", state.VitessRepo,
+		"--repo", repo,
 		"--json", "url",
 		"--state", "all",
 	)
@@ -51,16 +50,16 @@ func GetMilestonesByName(name string) []Milestone {
 	return ms
 }
 
-func CreateNewMilestone(name string) string {
+func CreateNewMilestone(repo, name string) string {
 	stdOut, _, err := gh.Exec(
 		"milestone", "create",
-		"--repo", state.VitessRepo,
+		"--repo", repo,
 		"--title", name,
 	)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 	out := strings.ReplaceAll(stdOut.String(), "\n", "")
-	idx := strings.LastIndex(out, fmt.Sprintf("https://github.com/%s/milestone/", state.VitessRepo))
+	idx := strings.LastIndex(out, fmt.Sprintf("https://github.com/%s/milestone/", repo))
 	return out[idx:]
 }

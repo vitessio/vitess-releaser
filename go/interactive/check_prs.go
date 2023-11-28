@@ -20,14 +20,15 @@ import (
 	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/prerequisite"
-	"vitess.io/vitess-releaser/go/releaser/state"
 )
 
 type openPRs []string
 
-func checkPRsMenuItem() menuItem {
+func checkPRsMenuItem(ctx *releaser.Context) menuItem {
 	return menuItem{
+		ctx:    ctx,
 		name:   "Ensure all Pull Requests have been merged",
 		act:    checkPRsAct,
 		update: checkPRsUpdate,
@@ -37,7 +38,7 @@ func checkPRsMenuItem() menuItem {
 func checkPRsAct(mi menuItem) (menuItem, tea.Cmd) {
 	mi.state = "Checking pull requests..."
 	return mi, func() tea.Msg {
-		prs := prerequisite.FormatPRs(prerequisite.CheckPRs(state.MajorRelease))
+		prs := prerequisite.FormatPRs(prerequisite.CheckPRs(mi.ctx))
 		return openPRs(prs)
 	}
 }

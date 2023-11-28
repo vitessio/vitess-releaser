@@ -21,14 +21,13 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"vitess.io/vitess-releaser/go/cmd/post_release"
-
 	"vitess.io/vitess-releaser/go/cmd/flags"
 	"vitess.io/vitess-releaser/go/cmd/interactive"
+	"vitess.io/vitess-releaser/go/cmd/post_release"
 	"vitess.io/vitess-releaser/go/cmd/pre_release"
 	"vitess.io/vitess-releaser/go/cmd/prerequisite"
+	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/github"
-	"vitess.io/vitess-releaser/go/releaser/state"
 )
 
 var (
@@ -62,14 +61,16 @@ func Execute() {
 		panic(err)
 	}
 
-	if live {
-		state.VitessRepo = "vitessio/vitess"
-	} else {
-		state.VitessRepo = github.CurrentUser() + "/vitess"
-	}
-	state.MajorRelease = releaseVersion
+	var ctx releaser.Context
 
-	if err := rootCmd.Execute(); err != nil {
+	if live {
+		ctx.VitessRepo = "vitessio/vitess"
+	} else {
+		ctx.VitessRepo = github.CurrentUser() + "/vitess"
+	}
+	ctx.MajorRelease = releaseVersion
+
+	if err := rootCmd.ExecuteContext(&ctx); err != nil {
 		fmt.Fprintf(os.Stderr, "Whoops. There was an error while executing your CLI '%s'", err)
 		os.Exit(1)
 	}

@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"vitess.io/vitess-releaser/go/releaser"
 
 	"vitess.io/vitess-releaser/go/releaser/pre_release"
 )
@@ -34,7 +35,8 @@ var codeFreeze = &cobra.Command{
 	Use:   "code-freeze",
 	Short: "Does the code-freeze of a release",
 	Run: func(cmd *cobra.Command, args []string) {
-		_, freeze := pre_release.CodeFreeze()
+		ctx := releaser.UnwrapCtx(cmd.Context())
+		_, freeze := pre_release.CodeFreeze(ctx)
 		out := freeze()
 		fmt.Println("Please force merge the Pull Request created for code freeze:", out)
 	},

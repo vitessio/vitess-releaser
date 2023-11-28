@@ -22,8 +22,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"vitess.io/vitess-releaser/go/releaser"
 
-	"vitess.io/vitess-releaser/go/cmd/flags"
 	"vitess.io/vitess-releaser/go/releaser/prerequisite"
 )
 
@@ -31,9 +31,9 @@ var checkPRs = &cobra.Command{
 	Use:     "check-prs",
 	Aliases: []string{"pr"},
 	Run: func(cmd *cobra.Command, args []string) {
-		majorRelease := cmd.Flags().Lookup(flags.MajorRelease).Value.String()
+		ctx := releaser.UnwrapCtx(cmd.Context())
 
-		mustClose := prerequisite.FormatPRs(prerequisite.CheckPRs(majorRelease))
+		mustClose := prerequisite.FormatPRs(prerequisite.CheckPRs(ctx))
 
 		if len(mustClose) == 0 {
 			return

@@ -18,12 +18,14 @@ package interactive
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	"vitess.io/vitess-releaser/go/releaser"
 
 	"vitess.io/vitess-releaser/go/releaser/pre_release"
 )
 
-func codeFreezeMenuItem() menuItem {
+func codeFreezeMenuItem(ctx *releaser.Context) menuItem {
 	return menuItem{
+		ctx:    ctx,
 		name:   "Code freeze",
 		act:    codeFreezeAct,
 		init:   nil,
@@ -44,7 +46,7 @@ func codeFreezeUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
 
 func codeFreezeAct(mi menuItem) (menuItem, tea.Cmd) {
 	mi.state = "running..."
-	pl, freeze := pre_release.CodeFreeze()
+	pl, freeze := pre_release.CodeFreeze(mi.ctx)
 	return mi, tea.Batch(func() tea.Msg {
 		return codeFreezeUrl(freeze())
 	}, pushDialog(newProgressDialog("Code freeze", pl)))

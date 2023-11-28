@@ -20,6 +20,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	tbl "github.com/charmbracelet/lipgloss/table"
+	"vitess.io/vitess-releaser/go/releaser"
 )
 
 type (
@@ -31,10 +32,11 @@ type (
 		width   int
 	}
 	menuItem struct {
+		ctx    *releaser.Context
 		name   string
 		state  string
 		act    func(menuItem) (menuItem, tea.Cmd)
-		init   func() tea.Cmd
+		init   func(ctx *releaser.Context) tea.Cmd
 		update func(menuItem, tea.Msg) (menuItem, tea.Cmd)
 	}
 )
@@ -80,7 +82,7 @@ func (m menu) Init() tea.Cmd {
 	var cmds []tea.Cmd
 	for idx, mi := range m.items {
 		if mi.init != nil {
-			cmds = append(cmds, mi.init())
+			cmds = append(cmds, mi.init(mi.ctx))
 			m.items[idx].init = nil
 		}
 	}

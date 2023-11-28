@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/pre_release"
 )
 
@@ -27,7 +28,8 @@ var createMilestone = &cobra.Command{
 	Use:   "create-milestone",
 	Short: "Create the next milestone for the future release.",
 	Run: func(cmd *cobra.Command, args []string) {
-		_, newMilestone := pre_release.NewMilestone()
+		ctx := releaser.UnwrapCtx(cmd.Context())
+		_, newMilestone := pre_release.NewMilestone(ctx)
 		out := newMilestone()
 		fmt.Println("New milestone created or found on GitHub:", out)
 	},

@@ -21,29 +21,30 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"vitess.io/vitess-releaser/go/releaser"
 )
 
-func MainScreen() {
+func MainScreen(ctx *releaser.Context) {
 	prereq := newMenu(
 		"Prerequisites",
-		slackAnnouncementMenuItem(slackAnnouncementPreRequisite),
-		checkPRsMenuItem(),
-		addPRsToIssueMenuItem(),
+		slackAnnouncementMenuItem(ctx, slackAnnouncementPreRequisite),
+		checkPRsMenuItem(ctx),
+		addPRsToIssueMenuItem(ctx),
 	)
 
 	prerelease := newMenu(
 		"Pre Release",
-		codeFreezeMenuItem(),
-		createMilestoneMenuItem(),
+		codeFreezeMenuItem(ctx),
+		createMilestoneMenuItem(ctx),
 	)
 
 	postRelease := newMenu(
 		"Post Release",
-		slackAnnouncementMenuItem(slackAnnouncementPostRelease),
+		slackAnnouncementMenuItem(ctx, slackAnnouncementPostRelease),
 	)
 
 	m := newMenu("Main",
-		createIssueMenuItem(),
+		createIssueMenuItem(ctx),
 		menuItem{
 			name:  "Prerequisites",
 			state: "",
@@ -61,7 +62,7 @@ func MainScreen() {
 		},
 	)
 
-	if _, err := tea.NewProgram(ui{active: m}).Run(); err != nil {
+	if _, err := tea.NewProgram(ui{ctx: ctx, active: m}).Run(); err != nil {
 		fmt.Println("Error running program:", err)
 		os.Exit(1)
 	}

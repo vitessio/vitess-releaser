@@ -27,5 +27,6 @@ func PreRelease() *cobra.Command {
 	}
 
 	cmd.AddCommand(codeFreeze)
+	cmd.AddCommand(createMilestone)
 	return cmd
 }

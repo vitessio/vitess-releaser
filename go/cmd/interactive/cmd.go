@@ -18,6 +18,7 @@ package interactive
 
 import (
 	"github.com/spf13/cobra"
+	"vitess.io/vitess-releaser/go/releaser"
 
 	"vitess.io/vitess-releaser/go/interactive"
 	"vitess.io/vitess-releaser/go/releaser/vitess"
@@ -29,8 +30,9 @@ func Command() *cobra.Command {
 		Aliases: []string{"i"},
 		Short:   "Runs the releaser in interactive mode",
 		Run: func(cmd *cobra.Command, args []string) {
-			vitess.CorrectCleanRepo()
-			interactive.MainScreen()
+			ctx := releaser.UnwrapCtx(cmd.Context())
+			vitess.CorrectCleanRepo(ctx.VitessRepo)
+			interactive.MainScreen(ctx)
 		},
 	}
 }
