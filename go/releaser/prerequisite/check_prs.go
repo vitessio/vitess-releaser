@@ -20,22 +20,28 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 
 	gh "github.com/cli/go-gh/v2"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/vitess"
 )
 
+type label struct {
+	Name string `json:"name"`
+}
+
 type PR struct {
-	BaseRefName string `json:"baseRefName"`
-	Title       string `json:"title"`
-	Url         string `json:"url"`
+	BaseRefName string   `json:"baseRefName"`
+	Title       string   `json:"title"`
+	URL         string   `json:"url"`
+	Labels      []label `json:"labels"`
 }
 
 func FormatPRs(prs []PR) []string {
 	var prFmt []string
 	for _, pr := range prs {
-		prFmt = append(prFmt, fmt.Sprintf(" -> %s  %s", pr.Url, pr.Title))
+		prFmt = append(prFmt, fmt.Sprintf(" -> %s  %s", pr.URL, pr.Title))
 	}
 	return prFmt
 }
@@ -43,7 +49,7 @@ func FormatPRs(prs []PR) []string {
 func CheckPRs(ctx *releaser.Context) []PR {
 	vitess.CorrectCleanRepo(ctx.VitessRepo)
 
-	byteRes, _, err := gh.Exec("pr", "list", "--json", "title,baseRefName,url", "--repo", ctx.VitessRepo)
+	byteRes, _, err := gh.Exec("pr", "list", "--json", "title,baseRefName,url,labels", "--repo", ctx.VitessRepo)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -59,6 +65,11 @@ func CheckPRs(ctx *releaser.Context) []PR {
 	for _, pr := range prs {
 		if pr.BaseRefName == branchName {
 			mustClose = append(mustClose, pr)
+		}
+		for _, l := range pr.Labels {
+			if strings.HasPrefix(l.Name, "Backport to: ") && strings.Contains(l.Name, branchName) {
+				mustClose = append(mustClose, pr)
+			}
 		}
 	}
 	return mustClose
