@@ -123,12 +123,12 @@ func AddBackportPRs(ctx *releaser.Context) (*logging.ProgressLogging, func() str
 	outer:
 		for _, pr := range prsChecked {
 			for _, prissue := range prsInIssue {
-				if prissue.url == pr.Url {
+				if prissue.url == pr.URL {
 					continue outer
 				}
 			}
 			prsInIssue = append(prsInIssue, pullRequestItem{
-				url: pr.Url,
+				url: pr.URL,
 			})
 		}
 
