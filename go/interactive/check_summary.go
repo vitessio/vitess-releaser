@@ -17,8 +17,6 @@ limitations under the License.
 package interactive
 
 import (
-	"fmt"
-
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/prerequisite"
@@ -40,7 +38,9 @@ func checkSummaryUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
 	if !ok {
 		return mi, nil
 	}
-	mi.state = fmt.Sprintf("Done.")
+
+	// TODO: i think the goal here is to mark this as done only when the action is marked as done in the release issue
+	// mi.state = fmt.Sprintf("Done.")
 
 	return mi, pushDialog(infoDialog{
 		title:   "Check release note summary",
