@@ -54,3 +54,10 @@ func (pl *ProgressLogging) GetStepInProgress() []string {
 
 	return slices.Clone(pl.StepsDone)
 }
+
+func (pl *ProgressLogging) SetTotalStep(v int) {
+	pl.mu.Lock()
+	defer pl.mu.Unlock()
+
+	pl.TotalSteps = v
+}
