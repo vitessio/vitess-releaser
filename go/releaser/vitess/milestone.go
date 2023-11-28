@@ -22,12 +22,12 @@ import (
 	"strconv"
 	"strings"
 
-	"vitess.io/vitess-releaser/go/releaser/state"
+	"vitess.io/vitess-releaser/go/releaser"
 )
 
-func FindVersionAfterNextRelease() string {
-	CorrectCleanRepo()
-	nextRelease, _ := FindNextRelease(state.MajorRelease)
+func FindVersionAfterNextRelease(ctx *releaser.Context) string {
+	CorrectCleanRepo(ctx.VitessRepo)
+	nextRelease, _ := FindNextRelease(ctx.MajorRelease)
 
 	if strings.Contains(nextRelease, "rc") {
 		panic("RC releases not supported for now")

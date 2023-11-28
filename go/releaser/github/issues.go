@@ -24,8 +24,7 @@ import (
 	"strings"
 
 	gh "github.com/cli/go-gh"
-
-	"vitess.io/vitess-releaser/go/releaser/state"
+	"vitess.io/vitess-releaser/go/releaser"
 )
 
 type Issue struct {
@@ -37,10 +36,10 @@ type Issue struct {
 }
 
 // Create will open the issue on GitHub and return the link of the newly created issue
-func (i *Issue) Create() string {
+func (i *Issue) Create(repo string) string {
 	stdOut, _, err := gh.Exec(
 		"issue", "create",
-		"--repo", state.VitessRepo,
+		"--repo", repo,
 		"--title", i.Title,
 		"--body", i.Body,
 		"--label", strings.Join(i.Labels, ","),
@@ -52,10 +51,10 @@ func (i *Issue) Create() string {
 	return strings.ReplaceAll(stdOut.String(), "\n", "")
 }
 
-func (i *Issue) UpdateBody() string {
+func (i *Issue) UpdateBody(repo string) string {
 	stdOut, _, err := gh.Exec(
 		"issue", "edit",
-		"--repo", state.VitessRepo,
+		"--repo", repo,
 		strconv.Itoa(i.Number), "-b", i.Body,
 	)
 	if err != nil {
@@ -64,12 +63,12 @@ func (i *Issue) UpdateBody() string {
 	return strings.ReplaceAll(stdOut.String(), "\n", "")
 }
 
-func GetIssueBody(nb int) string {
+func GetIssueBody(repo string, nb int) string {
 	var i Issue
 	stdOut, _, err := gh.Exec(
 		"issue", "view",
 		strconv.Itoa(nb),
-		"--repo", state.VitessRepo,
+		"--repo", repo,
 		"--json",
 		"body",
 	)
@@ -84,12 +83,12 @@ func GetIssueBody(nb int) string {
 	return i.Body
 }
 
-func GetReleaseIssue() string {
+func GetReleaseIssue(ctx *releaser.Context) string {
 	res, _, err := gh.Exec(
 		"issue", "list",
 		"-l", "Type: Release",
 		"--json", "title,url",
-		"--repo", state.VitessRepo,
+		"--repo", ctx.VitessRepo,
 	)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -103,7 +102,7 @@ func GetReleaseIssue() string {
 
 	for _, issue := range issues {
 		title := issue["title"]
-		if strings.HasPrefix(title, fmt.Sprintf("Release of v%s", state.MajorRelease)) {
+		if strings.HasPrefix(title, fmt.Sprintf("Release of v%s", ctx.MajorRelease)) {
 			return issue["url"]
 		}
 	}
@@ -111,8 +110,8 @@ func GetReleaseIssue() string {
 	return ""
 }
 
-func GetReleaseIssueNumber() int {
-	issueURL := GetReleaseIssue()
+func GetReleaseIssueNumber(ctx *releaser.Context) int {
+	issueURL := GetReleaseIssue(ctx)
 	lastIdx := strings.LastIndex(issueURL, "/")
 	issueNbStr := issueURL[lastIdx+1:]
 	issueNb, err := strconv.Atoi(issueNbStr)

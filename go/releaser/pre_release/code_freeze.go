@@ -22,10 +22,10 @@ import (
 	"log"
 	"os/exec"
 
+	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/git"
 	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/logging"
-	"vitess.io/vitess-releaser/go/releaser/state"
 	"vitess.io/vitess-releaser/go/releaser/vitess"
 )
 
@@ -41,17 +41,17 @@ const (
 // CodeFreeze will freeze the branch of the next release we want to release.
 // The function returns the URL of the code freeze Pull Request, this Pull
 // Request must be forced-merged by a Vitess maintainer, this step cannot be automated.
-func CodeFreeze() (*logging.ProgressLogging, func() string) {
+func CodeFreeze(ctx *releaser.Context) (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
 		TotalSteps: 6,
 	}
 
 	return pl, func() string {
-		vitess.CorrectCleanRepo()
-		nextRelease, branchName := vitess.FindNextRelease(state.MajorRelease)
+		vitess.CorrectCleanRepo(ctx.VitessRepo)
+		nextRelease, branchName := vitess.FindNextRelease(ctx.MajorRelease)
 
 		pl.NewStepf("Fetch from git remote")
-		remote := git.FindRemoteName(state.VitessRepo)
+		remote := git.FindRemoteName(ctx.VitessRepo)
 		git.ResetHard(remote, branchName)
 
 		pl.NewStepf("Create new branch based on %s/%s", remote, branchName)
@@ -72,7 +72,7 @@ func CodeFreeze() (*logging.ProgressLogging, func() string) {
 			Base:   branchName,
 			Labels: []string{"Component: General", "Type: Release"},
 		}
-		url := pr.Create()
+		url := pr.Create(ctx.VitessRepo)
 		pl.NewStepf("PR created %s", url)
 		return url
 	}

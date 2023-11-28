@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/slack"
 )
 
@@ -27,7 +28,8 @@ var slackAnnouncement = &cobra.Command{
 	Use:   "slack",
 	Short: "Prompts the Slack announcement for the prerequisite step",
 	Run: func(cmd *cobra.Command, args []string) {
-		msg := slack.AnnouncementMessage()
+		ctx := releaser.UnwrapCtx(cmd.Context())
+		msg := slack.AnnouncementMessage(ctx)
 		fmt.Print("Please post this message in the #general and #releases channels:\n\n")
 		fmt.Println("\t"+msg)
 	},

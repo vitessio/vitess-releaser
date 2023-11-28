@@ -21,8 +21,6 @@ import (
 	"strings"
 
 	gh "github.com/cli/go-gh"
-
-	"vitess.io/vitess-releaser/go/releaser/state"
 )
 
 type PR struct {
@@ -33,10 +31,10 @@ type PR struct {
 	Labels []string
 }
 
-func (p *PR) Create() string {
+func (p *PR) Create(repo string) string {
 	stdOut, _, err := gh.Exec(
 		"pr", "create",
-		"--repo", state.VitessRepo,
+		"--repo", repo,
 		"--title", p.Title,
 		"--body", p.Body,
 		"--label", strings.Join(p.Labels, ","),

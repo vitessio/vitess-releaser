@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/issue"
 )
 
@@ -27,7 +28,8 @@ var addPendingPRsToIssue = &cobra.Command{
 	Use:   "add-pending-prs",
 	Short: "Add all pending Pull Requests to the Release Issue",
 	Run: func(cmd *cobra.Command, args []string) {
-		_, add := issue.AddBackportPRs()
+		ctx := releaser.UnwrapCtx(cmd.Context())
+		_, add := issue.AddBackportPRs(ctx)
 		link := add()
 		fmt.Println("Done, link to the existing GitHub Issue: ", link)
 	},

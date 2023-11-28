@@ -23,10 +23,10 @@ import (
 	"strings"
 	"text/template"
 
+	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/logging"
 	"vitess.io/vitess-releaser/go/releaser/prerequisite"
-	"vitess.io/vitess-releaser/go/releaser/state"
 	"vitess.io/vitess-releaser/go/releaser/vitess"
 )
 
@@ -71,14 +71,14 @@ var (
 `, backportStart, backPortPRsItem, backportEnd)
 )
 
-func CreateReleaseIssue() (*logging.ProgressLogging, func() string) {
+func CreateReleaseIssue(ctx *releaser.Context) (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
 		TotalSteps: 2,
 	}
 
 	return pl, func() string {
-		vitess.CorrectCleanRepo()
-		newRelease, _ := vitess.FindNextRelease(state.MajorRelease)
+		vitess.CorrectCleanRepo(ctx.VitessRepo)
+		newRelease, _ := vitess.FindNextRelease(ctx.MajorRelease)
 
 		pl.NewStepf("Create Release Issue on GitHub")
 		tmpl := template.Must(template.New("release-issue").Parse(releaseIssueTemplate))
@@ -95,21 +95,21 @@ func CreateReleaseIssue() (*logging.ProgressLogging, func() string) {
 			Assignee: "@me",
 		}
 
-		link := newIssue.Create()
+		link := newIssue.Create(ctx.VitessRepo)
 		pl.NewStepf("Issue created: %s", link)
 		return link
 	}
 }
 
-func AddBackportPRs() (*logging.ProgressLogging, func() string) {
+func AddBackportPRs(ctx *releaser.Context) (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
 		TotalSteps: 4,
 	}
 
 	return pl, func() string {
 		pl.NewStepf("Fetch existing issue")
-		issueNb := github.GetReleaseIssueNumber()
-		body := github.GetIssueBody(issueNb)
+		issueNb := github.GetReleaseIssueNumber(ctx)
+		body := github.GetIssueBody(ctx.VitessRepo, issueNb)
 
 		pl.NewStepf("Parse issue's body")
 		start, end, err := getIssuePRListIndexes(body)
@@ -117,8 +117,8 @@ func AddBackportPRs() (*logging.ProgressLogging, func() string) {
 			log.Fatal(err.Error())
 		}
 		textPullRequest := body[start:end]
-		prsInIssue := parseIssueBodyGetPRsList(textPullRequest)
-		prsChecked := prerequisite.CheckPRs(state.MajorRelease)
+		prsInIssue := parseIssueBodyGetPRsList(ctx.VitessRepo, textPullRequest)
+		prsChecked := prerequisite.CheckPRs(ctx)
 
 	outer:
 		for _, pr := range prsChecked {
@@ -146,7 +146,7 @@ func AddBackportPRs() (*logging.ProgressLogging, func() string) {
 
 		pl.NewStepf("Replace issue on GitHub")
 		issue := github.Issue{Body: body, Number: issueNb}
-		url := issue.UpdateBody()
+		url := issue.UpdateBody(ctx.VitessRepo)
 
 		pl.NewStepf("Issue updated: %s", url)
 		return url
@@ -176,7 +176,7 @@ func getIssuePRListIndexes(body string) (start, end int, err error) {
 	return
 }
 
-func parseIssueBodyGetPRsList(body string) []pullRequestItem {
+func parseIssueBodyGetPRsList(repo, body string) []pullRequestItem {
 	lines := strings.Split(body, "\n")
 
 	var prs []pullRequestItem
@@ -204,7 +204,7 @@ func parseIssueBodyGetPRsList(body string) []pullRequestItem {
 		// some people can manually add a reference to a Pull Request using an # (GitHub reference).
 		// Thus, we need to support both approaches.
 		if strings.HasPrefix(line, "#") {
-			newItem.url = fmt.Sprintf("https://github.com/%s/pull/%s", state.VitessRepo, line[1:])
+			newItem.url = fmt.Sprintf("https://github.com/%s/pull/%s", repo, line[1:])
 		} else if strings.HasPrefix(line, "https://") {
 			newItem.url = line
 		}

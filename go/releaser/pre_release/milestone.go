@@ -19,22 +19,23 @@ package pre_release
 import (
 	"fmt"
 
+	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/logging"
 	"vitess.io/vitess-releaser/go/releaser/vitess"
 )
 
-func NewMilestone() (*logging.ProgressLogging, func() string) {
+func NewMilestone(ctx *releaser.Context) (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
 		TotalSteps: 3,
 	}
 
 	return pl, func() string {
 		pl.NewStepf("Finding the next Milestone")
-		nextNextRelease := vitess.FindVersionAfterNextRelease()
+		nextNextRelease := vitess.FindVersionAfterNextRelease(ctx)
 		newMilestone := fmt.Sprintf("v%s", nextNextRelease)
 
-		ms := github.GetMilestonesByName(newMilestone)
+		ms := github.GetMilestonesByName(ctx.VitessRepo, newMilestone)
 		if len(ms) > 0 {
 			pl.SetTotalStep(2)
 			pl.NewStepf("Found an existing Milestone: %s", ms[0].URL)
@@ -42,7 +43,7 @@ func NewMilestone() (*logging.ProgressLogging, func() string) {
 		}
 
 		pl.NewStepf("Creating Milestone %s on GitHub", newMilestone)
-		link := github.CreateNewMilestone(newMilestone)
+		link := github.CreateNewMilestone(ctx.VitessRepo, newMilestone)
 
 		pl.NewStepf("New Milestone %s created: %s", newMilestone, link)
 		return link

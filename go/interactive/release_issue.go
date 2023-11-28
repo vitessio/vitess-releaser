@@ -18,13 +18,15 @@ package interactive
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/issue"
 
 	"vitess.io/vitess-releaser/go/releaser/github"
 )
 
-func createIssueMenuItem() menuItem {
+func createIssueMenuItem(ctx *releaser.Context) menuItem {
 	return menuItem{
+		ctx:    ctx,
 		name:   "Create Release Issue",
 		state:  "Loading...",
 		act:    createIssue,
@@ -35,16 +37,16 @@ func createIssueMenuItem() menuItem {
 
 type releaseIssue string
 
-func issueInit() tea.Cmd {
+func issueInit(ctx *releaser.Context) tea.Cmd {
 	return func() tea.Msg {
-		url := github.GetReleaseIssue()
+		url := github.GetReleaseIssue(ctx)
 		return releaseIssue(url)
 	}
 }
 
 func createIssue(mi menuItem) (menuItem, tea.Cmd) {
 	mi.state = "Creating issue..."
-	pl, createIssueFn := issue.CreateReleaseIssue()
+	pl, createIssueFn := issue.CreateReleaseIssue(mi.ctx)
 	issueCreator := func() tea.Msg { return releaseIssue(createIssueFn()) }
 	return mi, tea.Batch(
 		issueCreator,
