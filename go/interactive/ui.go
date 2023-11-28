@@ -41,9 +41,9 @@ type (
 	}
 )
 
-var pop tea.Cmd = func() tea.Msg { return _pop{} }
+var popDialog tea.Cmd = func() tea.Msg { return _pop{} }
 
-func push(m tea.Model) tea.Cmd {
+func pushDialog(m tea.Model) tea.Cmd {
 	return func() tea.Msg {
 		return _push{m: m}
 	}
@@ -89,9 +89,17 @@ func (m ui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.height = msg.Height
 	}
 
+	var cmds []tea.Cmd
+	newStack := make([]tea.Model, len(m.stack))
+	for i, m := range m.stack {
+		var cmd tea.Cmd
+		newStack[i], cmd = m.Update(msg)
+		cmds = append(cmds, cmd)
+	}
 	newActive, cmd := m.active.Update(msg)
+	cmds = append(cmds, cmd)
 	m.active = newActive
-	return m, cmd
+	return m, tea.Batch(cmds...)
 }
 
 func (m ui) View() string {

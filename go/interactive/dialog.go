@@ -46,7 +46,7 @@ func (c warningDialog) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return c, nil
 
 	case tea.KeyMsg:
-		return c, pop
+		return c, popDialog
 	}
 
 	return c, nil
@@ -112,7 +112,7 @@ func (c progressDialog) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if c.pl.GetDone() != c.pl.GetTotal() {
 			return c, nil
 		}
-		return c, pop
+		return c, popDialog
 
 	// FrameMsg is sent when the progress bar wants to animate itself
 	case progress.FrameMsg:

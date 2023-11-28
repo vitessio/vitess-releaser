@@ -68,5 +68,5 @@ func MainScreen() {
 }
 
 func subMenu(sub menu) func(menuItem) (menuItem, tea.Cmd) {
-	return func(mi menuItem) (menuItem, tea.Cmd) { return mi, push(sub) }
+	return func(mi menuItem) (menuItem, tea.Cmd) { return mi, pushDialog(sub) }
 }

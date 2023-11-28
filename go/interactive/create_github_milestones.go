@@ -46,5 +46,5 @@ func createMilestoneAct(mi menuItem) (menuItem, tea.Cmd) {
 	pl, create := pre_release.NewMilestone()
 	return mi, tea.Batch(func() tea.Msg {
 		return createMilestone(create())
-	}, push(newProgressDialog("Creating new GitHub Milestone", pl)))
+	}, pushDialog(newProgressDialog("Creating new GitHub Milestone", pl)))
 }
