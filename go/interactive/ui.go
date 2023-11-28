@@ -83,8 +83,8 @@ func (m ui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.newActive(msg.m)
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "esc", "q":
-			return m, popDialog
+		case "ctrl+c":
+			return m, tea.Quit
 		}
 		newActive, cmd := m.active.Update(msg)
 		m.active = newActive
