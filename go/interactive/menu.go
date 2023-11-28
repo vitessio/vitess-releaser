@@ -96,8 +96,6 @@ func (m menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "esc", "q":
 			return m, popDialog
-		case "ctrl+c":
-			return m, tea.Quit
 		case "up":
 			m.idx = (m.idx - 1 + size) % size
 		case "down":

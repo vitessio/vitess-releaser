@@ -84,6 +84,11 @@ func (m ui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case _push:
 		m.stack = append(m.stack, m.active)
 		return m.newActive(msg.m)
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "esc", "q":
+			return m, popDialog
+		}
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
