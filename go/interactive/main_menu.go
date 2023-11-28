@@ -34,6 +34,7 @@ func MainScreen() {
 	prerelease := newMenu(
 		"Pre Release",
 		codeFreezeMenuItem(),
+		createMilestoneMenuItem(),
 	)
 
 	postRelease := newMenu(
