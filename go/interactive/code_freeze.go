@@ -23,8 +23,8 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/pre_release"
 )
 
-func codeFreezeMenuItem(ctx *releaser.Context) menuItem {
-	return menuItem{
+func codeFreezeMenuItem(ctx *releaser.Context) *menuItem {
+	return &menuItem{
 		ctx:    ctx,
 		name:   "Code freeze",
 		act:    codeFreezeAct,
@@ -35,7 +35,7 @@ func codeFreezeMenuItem(ctx *releaser.Context) menuItem {
 
 type codeFreezeUrl string
 
-func codeFreezeUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
+func codeFreezeUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 	url, ok := msg.(codeFreezeUrl)
 	if !ok {
 		return mi, nil
@@ -44,7 +44,7 @@ func codeFreezeUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
 	return mi, nil
 }
 
-func codeFreezeAct(mi menuItem) (menuItem, tea.Cmd) {
+func codeFreezeAct(mi *menuItem) (*menuItem, tea.Cmd) {
 	mi.state = "running..."
 	pl, freeze := pre_release.CodeFreeze(mi.ctx)
 	return mi, tea.Batch(func() tea.Msg {

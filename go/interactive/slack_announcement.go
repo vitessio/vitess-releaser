@@ -32,8 +32,8 @@ const (
 	slackAnnouncementPreRequisite
 )
 
-func slackAnnouncementMenuItem(ctx *releaser.Context, announcementType slackAnnouncementType) menuItem {
-	var act func(menuItem) (menuItem, tea.Cmd)
+func slackAnnouncementMenuItem(ctx *releaser.Context, announcementType slackAnnouncementType) *menuItem {
+	var act func(*menuItem) (*menuItem, tea.Cmd)
 	switch announcementType {
 	case slackAnnouncementPostRelease:
 		act = slackAnnouncementPostReleaseAct
@@ -41,7 +41,7 @@ func slackAnnouncementMenuItem(ctx *releaser.Context, announcementType slackAnno
 		act = slackAnnouncementPreRequisiteAct
 	}
 
-	return menuItem{
+	return &menuItem{
 		ctx:    ctx,
 		name:   "Announce the release on Slack",
 		act:    act,
@@ -49,19 +49,19 @@ func slackAnnouncementMenuItem(ctx *releaser.Context, announcementType slackAnno
 	}
 }
 
-func slackAnnouncementPreRequisiteAct(mi menuItem) (menuItem, tea.Cmd) {
+func slackAnnouncementPreRequisiteAct(mi *menuItem) (*menuItem, tea.Cmd) {
 	return mi, func() tea.Msg {
 		return slackMessage(slack.AnnouncementMessage(mi.ctx))
 	}
 }
 
-func slackAnnouncementPostReleaseAct(mi menuItem) (menuItem, tea.Cmd) {
+func slackAnnouncementPostReleaseAct(mi *menuItem) (*menuItem, tea.Cmd) {
 	return mi, func() tea.Msg {
 		return slackMessage(slack.PostReleaseMessage(mi.ctx))
 	}
 }
 
-func slackAnnouncementUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
+func slackAnnouncementUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 	slackMsg, ok := msg.(slackMessage)
 	if !ok {
 		return mi, nil

@@ -25,7 +25,7 @@ import (
 
 type (
 	menu struct {
-		items   []menuItem
+		items   []*menuItem
 		title   string
 		idx     int
 		columns []string
@@ -35,23 +35,23 @@ type (
 		ctx    *releaser.Context
 		name   string
 		state  string
-		act    func(menuItem) (menuItem, tea.Cmd)
+		act    func(*menuItem) (*menuItem, tea.Cmd)
 		init   func(ctx *releaser.Context) tea.Cmd
-		update func(menuItem, tea.Msg) (menuItem, tea.Cmd)
+		update func(*menuItem, tea.Msg) (*menuItem, tea.Cmd)
 	}
 )
 
 var columns = []string{"Task", "Info"}
 
-func newMenu(title string, items ...menuItem) menu {
-	return menu{
+func newMenu(title string, items ...*menuItem) *menu {
+	return &menu{
 		columns: columns,
 		title:   title,
 		items:   items,
 	}
 }
 
-func (m menu) At(row, cell int) string {
+func (m *menu) At(row, cell int) string {
 	item := m.items[row]
 	if cell == 1 {
 		return item.state
@@ -70,15 +70,15 @@ func (m menu) At(row, cell int) string {
 	return prefix + item.name
 }
 
-func (m menu) Rows() int {
+func (m *menu) Rows() int {
 	return len(m.items)
 }
 
-func (m menu) Columns() int {
+func (m *menu) Columns() int {
 	return 2
 }
 
-func (m menu) Init() tea.Cmd {
+func (m *menu) Init() tea.Cmd {
 	var cmds []tea.Cmd
 	for idx, mi := range m.items {
 		if mi.init != nil {
@@ -89,7 +89,7 @@ func (m menu) Init() tea.Cmd {
 	return tea.Batch(cmds...)
 }
 
-func (m menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	size := len(m.items)
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
@@ -128,7 +128,7 @@ func (m menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m menu) View() string {
+func (m *menu) View() string {
 	list := tbl.
 		New().
 		Width(m.width).

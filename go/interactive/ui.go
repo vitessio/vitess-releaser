@@ -109,7 +109,7 @@ func (m ui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m ui) View() string {
-	_, isMenu := m.active.(menu)
+	_, isMenu := m.active.(*menu)
 	if !isMenu {
 		return m.active.View()
 	}

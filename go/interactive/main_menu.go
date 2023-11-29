@@ -48,18 +48,18 @@ func MainScreen(ctx *releaser.Context) {
 
 	m := newMenu("Main",
 		createIssueMenuItem(ctx),
-		menuItem{
+		&menuItem{
 			name:  "Prerequisites",
 			state: "",
 			act:   subMenu(prereq)},
-		menuItem{
+		&menuItem{
 			name: "Pre Release",
 			act:  subMenu(prerelease)},
-		menuItem{
+		&menuItem{
 			name: "Release",
 			act:  nil,
 		},
-		menuItem{
+		&menuItem{
 			name: "Post Release",
 			act:  subMenu(postRelease),
 		},
@@ -71,6 +71,6 @@ func MainScreen(ctx *releaser.Context) {
 	}
 }
 
-func subMenu(sub menu) func(menuItem) (menuItem, tea.Cmd) {
-	return func(mi menuItem) (menuItem, tea.Cmd) { return mi, pushDialog(sub) }
+func subMenu(sub *menu) func(*menuItem) (*menuItem, tea.Cmd) {
+	return func(mi *menuItem) (*menuItem, tea.Cmd) { return mi, pushDialog(sub) }
 }

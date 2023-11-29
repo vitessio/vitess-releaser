@@ -26,8 +26,8 @@ import (
 
 type openPRs []string
 
-func checkPRsMenuItem(ctx *releaser.Context) menuItem {
-	return menuItem{
+func checkPRsMenuItem(ctx *releaser.Context) *menuItem {
+	return &menuItem{
 		ctx:    ctx,
 		name:   "Backport Pull Requests: Check",
 		act:    checkPRsAct,
@@ -35,7 +35,7 @@ func checkPRsMenuItem(ctx *releaser.Context) menuItem {
 	}
 }
 
-func checkPRsAct(mi menuItem) (menuItem, tea.Cmd) {
+func checkPRsAct(mi *menuItem) (*menuItem, tea.Cmd) {
 	mi.state = "Checking pull requests..."
 	return mi, func() tea.Msg {
 		prs := prerequisite.FormatPRs(prerequisite.CheckPRs(mi.ctx))
@@ -43,7 +43,7 @@ func checkPRsAct(mi menuItem) (menuItem, tea.Cmd) {
 	}
 }
 
-func checkPRsUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
+func checkPRsUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 	prs, ok := msg.(openPRs)
 	if !ok {
 		return mi, nil

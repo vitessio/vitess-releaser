@@ -24,8 +24,8 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/github"
 )
 
-func createIssueMenuItem(ctx *releaser.Context) menuItem {
-	return menuItem{
+func createIssueMenuItem(ctx *releaser.Context) *menuItem {
+	return &menuItem{
 		ctx:    ctx,
 		name:   "Create Release Issue",
 		state:  "Loading...",
@@ -44,7 +44,7 @@ func issueInit(ctx *releaser.Context) tea.Cmd {
 	}
 }
 
-func createIssue(mi menuItem) (menuItem, tea.Cmd) {
+func createIssue(mi *menuItem) (*menuItem, tea.Cmd) {
 	mi.state = "Creating issue..."
 	pl, createIssueFn := issue.CreateReleaseIssue(mi.ctx)
 	issueCreator := func() tea.Msg { return releaseIssue(createIssueFn()) }
@@ -54,7 +54,7 @@ func createIssue(mi menuItem) (menuItem, tea.Cmd) {
 	)
 }
 
-func issueUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
+func issueUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 	url, ok := msg.(releaseIssue)
 	if !ok {
 		return mi, nil
@@ -67,7 +67,7 @@ func issueUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
 	return mi, nil
 }
 
-func gotIssueURL(item menuItem, url string) menuItem {
+func gotIssueURL(item *menuItem, url string) *menuItem {
 	item.name = "Release Issue"
 	item.state = url
 	item.act = nil // We don't want to accidentally create a second one

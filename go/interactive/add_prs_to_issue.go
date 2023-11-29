@@ -24,8 +24,8 @@ import (
 
 type addPRsToIssue string
 
-func addPRsToIssueMenuItem(ctx *releaser.Context) menuItem {
-	return menuItem{
+func addPRsToIssueMenuItem(ctx *releaser.Context) *menuItem {
+	return &menuItem{
 		ctx:    ctx,
 		name:   "Backport Pull Requests: Add to Release Issue",
 		act:    addPRsToIssueAct,
@@ -33,7 +33,7 @@ func addPRsToIssueMenuItem(ctx *releaser.Context) menuItem {
 	}
 }
 
-func addPRsToIssueUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
+func addPRsToIssueUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 	releaseIssueLink, ok := msg.(addPRsToIssue)
 	if !ok {
 		return mi, nil
@@ -43,7 +43,7 @@ func addPRsToIssueUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
 	return mi, nil
 }
 
-func addPRsToIssueAct(mi menuItem) (menuItem, tea.Cmd) {
+func addPRsToIssueAct(mi *menuItem) (*menuItem, tea.Cmd) {
 	mi.state = "running..."
 	pl, add := issue.AddBackportPRs(mi.ctx)
 	return mi, tea.Batch(func() tea.Msg {

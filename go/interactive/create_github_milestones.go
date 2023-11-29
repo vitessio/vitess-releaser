@@ -24,8 +24,8 @@ import (
 
 type createMilestone string
 
-func createMilestoneMenuItem(ctx *releaser.Context) menuItem {
-	return menuItem{
+func createMilestoneMenuItem(ctx *releaser.Context) *menuItem {
+	return &menuItem{
 		ctx:    ctx,
 		name:   "Create a new GitHub Milestone",
 		act:    createMilestoneAct,
@@ -33,7 +33,7 @@ func createMilestoneMenuItem(ctx *releaser.Context) menuItem {
 	}
 }
 
-func createMilestoneUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
+func createMilestoneUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 	milestoneLink, ok := msg.(createMilestone)
 	if !ok {
 		return mi, nil
@@ -43,7 +43,7 @@ func createMilestoneUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
 	return mi, nil
 }
 
-func createMilestoneAct(mi menuItem) (menuItem, tea.Cmd) {
+func createMilestoneAct(mi *menuItem) (*menuItem, tea.Cmd) {
 	mi.state = "running..."
 	pl, create := pre_release.NewMilestone(mi.ctx)
 	return mi, tea.Batch(func() tea.Msg {

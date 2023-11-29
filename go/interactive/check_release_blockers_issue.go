@@ -26,8 +26,8 @@ import (
 
 type releaseBlockerIssues []string
 
-func releaseBlockerIssuesMenuItem(ctx *releaser.Context) menuItem {
-	return menuItem{
+func releaseBlockerIssuesMenuItem(ctx *releaser.Context) *menuItem {
+	return &menuItem{
 		ctx:    ctx,
 		name:   "Release Blocker Issues: Check",
 		act:    releaseBlockerIssuesAct,
@@ -35,7 +35,7 @@ func releaseBlockerIssuesMenuItem(ctx *releaser.Context) menuItem {
 	}
 }
 
-func releaseBlockerIssuesAct(mi menuItem) (menuItem, tea.Cmd) {
+func releaseBlockerIssuesAct(mi *menuItem) (*menuItem, tea.Cmd) {
 	mi.state = "Checking Issues..."
 	return mi, func() tea.Msg {
 		issues := prerequisite.FormatIssues(prerequisite.CheckReleaseBlockerIssues(mi.ctx))
@@ -43,7 +43,7 @@ func releaseBlockerIssuesAct(mi menuItem) (menuItem, tea.Cmd) {
 	}
 }
 
-func releaseBlockerIssuesUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
+func releaseBlockerIssuesUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 	is, ok := msg.(releaseBlockerIssues)
 	if !ok {
 		return mi, nil

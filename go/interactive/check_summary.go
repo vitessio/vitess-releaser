@@ -24,8 +24,8 @@ import (
 
 type checkSummary []string
 
-func checkSummaryMenuItem(ctx *releaser.Context) menuItem {
-	return menuItem{
+func checkSummaryMenuItem(ctx *releaser.Context) *menuItem {
+	return &menuItem{
 		ctx:    ctx,
 		name:   "Check release note summary",
 		act:    checkSummaryAct,
@@ -33,7 +33,7 @@ func checkSummaryMenuItem(ctx *releaser.Context) menuItem {
 	}
 }
 
-func checkSummaryUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
+func checkSummaryUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 	l, ok := msg.(checkSummary)
 	if !ok {
 		return mi, nil
@@ -48,7 +48,7 @@ func checkSummaryUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
 	})
 }
 
-func checkSummaryAct(mi menuItem) (menuItem, tea.Cmd) {
+func checkSummaryAct(mi *menuItem) (*menuItem, tea.Cmd) {
 	return mi, func() tea.Msg {
 		return checkSummary(prerequisite.CheckSummary(mi.ctx))
 	}
