@@ -19,6 +19,7 @@ package interactive
 import (
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/releaser"
+	"vitess.io/vitess-releaser/go/releaser/issue"
 )
 
 type addReleaseBlockerIssues string
@@ -44,8 +45,8 @@ func addReleaseBlockerIssuesUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd)
 
 func addReleaseBlockerIssuesAct(mi menuItem) (menuItem, tea.Cmd) {
 	mi.state = "running..."
-	// pl, add := issue.AddBackportPRs(mi.ctx)
+	pl, add := issue.AddReleaseBlockerIssues(mi.ctx)
 	return mi, tea.Batch(func() tea.Msg {
-		return addReleaseBlockerIssues("")
-	}, pushDialog(newProgressDialog("Adding pending Pull Requests to Release Issue", nil)))
+		return addReleaseBlockerIssues(add())
+	}, pushDialog(newProgressDialog("Adding opened Release Blocker Issues to Release Issue", pl)))
 }
