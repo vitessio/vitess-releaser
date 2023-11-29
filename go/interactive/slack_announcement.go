@@ -18,6 +18,7 @@ package interactive
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/slack"
 )
@@ -41,11 +42,14 @@ func slackAnnouncementMenuItem(ctx *releaser.Context, announcementType slackAnno
 		act = slackAnnouncementPreRequisiteAct
 	}
 
+	// TODO: find out the initial status of this task by reading the GitHub Issue
+
 	return &menuItem{
 		ctx:    ctx,
 		name:   "Announce the release on Slack",
 		act:    act,
 		update: slackAnnouncementUpdate,
+		state:  state.ToDo,
 	}
 }
 
@@ -67,10 +71,9 @@ func slackAnnouncementUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 		return mi, nil
 	}
 
-	mi.state = "Done"
-
-	return mi, pushDialog(warningDialog{
+	return mi, pushDialog(doneDialog{
 		title:   "The following message must be posted on the #general and #releases OSS Slack channels",
 		message: []string{string(slackMsg)},
+		status:  &mi.state,
 	})
 }
