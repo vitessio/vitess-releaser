@@ -18,6 +18,7 @@ package interactive
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/issue"
 
@@ -28,7 +29,7 @@ func createIssueMenuItem(ctx *releaser.Context) *menuItem {
 	return &menuItem{
 		ctx:    ctx,
 		name:   "Create Release Issue",
-		info:   "Loading...",
+		status: state.ToDo,
 		act:    createIssue,
 		init:   issueInit,
 		update: issueUpdate,
@@ -45,7 +46,6 @@ func issueInit(ctx *releaser.Context) tea.Cmd {
 }
 
 func createIssue(mi *menuItem) (*menuItem, tea.Cmd) {
-	mi.info = "Creating issue..."
 	pl, createIssueFn := issue.CreateReleaseIssue(mi.ctx)
 	issueCreator := func() tea.Msg { return releaseIssue(createIssueFn()) }
 	return mi, tea.Batch(
@@ -62,14 +62,13 @@ func issueUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 	if len(url) != 0 {
 		return gotIssueURL(mi, string(url)), nil
 	}
-
-	mi.info = "TODO"
 	return mi, nil
 }
 
 func gotIssueURL(item *menuItem, url string) *menuItem {
 	item.name = "Release Issue"
 	item.info = url
+	item.status = state.Done
 	item.act = nil // We don't want to accidentally create a second one
 	return item
 }
