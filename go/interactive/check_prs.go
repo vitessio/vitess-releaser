@@ -29,7 +29,7 @@ type openPRs []string
 func checkPRsMenuItem(ctx *releaser.Context) menuItem {
 	return menuItem{
 		ctx:    ctx,
-		name:   "Ensure all Pull Requests have been merged",
+		name:   "Backport Pull Requests: Check",
 		act:    checkPRsAct,
 		update: checkPRsUpdate,
 	}

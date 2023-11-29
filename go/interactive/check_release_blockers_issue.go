@@ -29,7 +29,7 @@ type releaseBlockerIssues []string
 func releaseBlockerIssuesMenuItem(ctx *releaser.Context) menuItem {
 	return menuItem{
 		ctx:    ctx,
-		name:   "Ensure all release blocker Issues are closed",
+		name:   "Release Blocker Issues: Check",
 		act:    releaseBlockerIssuesAct,
 		update: releaseBlockerIssuesUpdate,
 	}

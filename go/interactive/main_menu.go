@@ -29,8 +29,9 @@ func MainScreen(ctx *releaser.Context) {
 		"Prerequisites",
 		slackAnnouncementMenuItem(ctx, slackAnnouncementPreRequisite),
 		checkPRsMenuItem(ctx),
-		releaseBlockerIssuesMenuItem(ctx),
 		addPRsToIssueMenuItem(ctx),
+		releaseBlockerIssuesMenuItem(ctx),
+		addReleaseBlockerIssuesMenuItem(ctx),
 		checkSummaryMenuItem(ctx),
 	)
 
