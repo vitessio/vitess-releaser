@@ -21,6 +21,7 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser"
 )
 
@@ -49,17 +50,25 @@ func MainScreen(ctx *releaser.Context) {
 	m := newMenu("Main",
 		createIssueMenuItem(ctx),
 		&menuItem{
+			status: state.ToDo,
+			subItems: prereq.items,
 			name: "Prerequisites",
 			info: "",
 			act:  subMenu(prereq)},
 		&menuItem{
+			status: state.ToDo,
+			subItems: prerelease.items,
 			name: "Pre Release",
 			act:  subMenu(prerelease)},
 		&menuItem{
+			status: state.ToDo,
+			subItems: nil,
 			name: "Release",
 			act:  nil,
 		},
 		&menuItem{
+			status: state.ToDo,
+			subItems: postRelease.items,
 			name: "Post Release",
 			act:  subMenu(postRelease),
 		},

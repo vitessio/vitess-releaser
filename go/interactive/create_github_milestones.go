@@ -18,6 +18,7 @@ package interactive
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/pre_release"
 )
@@ -30,6 +31,7 @@ func createMilestoneMenuItem(ctx *releaser.Context) *menuItem {
 		name:   "Create a new GitHub Milestone",
 		act:    createMilestoneAct,
 		update: createMilestoneUpdate,
+		status: state.ToDo,
 	}
 }
 
@@ -40,6 +42,7 @@ func createMilestoneUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 	}
 
 	mi.info = string(milestoneLink)
+	mi.status = state.Done
 	return mi, nil
 }
 
