@@ -40,12 +40,12 @@ func codeFreezeUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 	if !ok {
 		return mi, nil
 	}
-	mi.state = string(url)
+	mi.info = string(url)
 	return mi, nil
 }
 
 func codeFreezeAct(mi *menuItem) (*menuItem, tea.Cmd) {
-	mi.state = "running..."
+	mi.info = "running..."
 	pl, freeze := pre_release.CodeFreeze(mi.ctx)
 	return mi, tea.Batch(func() tea.Msg {
 		return codeFreezeUrl(freeze())

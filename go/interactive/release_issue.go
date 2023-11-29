@@ -28,7 +28,7 @@ func createIssueMenuItem(ctx *releaser.Context) *menuItem {
 	return &menuItem{
 		ctx:    ctx,
 		name:   "Create Release Issue",
-		state:  "Loading...",
+		info:   "Loading...",
 		act:    createIssue,
 		init:   issueInit,
 		update: issueUpdate,
@@ -45,7 +45,7 @@ func issueInit(ctx *releaser.Context) tea.Cmd {
 }
 
 func createIssue(mi *menuItem) (*menuItem, tea.Cmd) {
-	mi.state = "Creating issue..."
+	mi.info = "Creating issue..."
 	pl, createIssueFn := issue.CreateReleaseIssue(mi.ctx)
 	issueCreator := func() tea.Msg { return releaseIssue(createIssueFn()) }
 	return mi, tea.Batch(
@@ -63,13 +63,13 @@ func issueUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 		return gotIssueURL(mi, string(url)), nil
 	}
 
-	mi.state = "TODO"
+	mi.info = "TODO"
 	return mi, nil
 }
 
 func gotIssueURL(item *menuItem, url string) *menuItem {
 	item.name = "Release Issue"
-	item.state = url
+	item.info = url
 	item.act = nil // We don't want to accidentally create a second one
 	return item
 }

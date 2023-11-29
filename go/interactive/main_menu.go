@@ -49,9 +49,9 @@ func MainScreen(ctx *releaser.Context) {
 	m := newMenu("Main",
 		createIssueMenuItem(ctx),
 		&menuItem{
-			name:  "Prerequisites",
-			state: "",
-			act:   subMenu(prereq)},
+			name: "Prerequisites",
+			info: "",
+			act:  subMenu(prereq)},
 		&menuItem{
 			name: "Pre Release",
 			act:  subMenu(prerelease)},

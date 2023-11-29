@@ -49,7 +49,7 @@ func slackAnnouncementMenuItem(ctx *releaser.Context, announcementType slackAnno
 		name:   "Announce the release on Slack",
 		act:    act,
 		update: slackAnnouncementUpdate,
-		state:  state.ToDo,
+		status:   state.ToDo,
 	}
 }
 
@@ -74,6 +74,6 @@ func slackAnnouncementUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 	return mi, pushDialog(doneDialog{
 		title:   "The following message must be posted on the #general and #releases OSS Slack channels",
 		message: []string{string(slackMsg)},
-		status:  &mi.state,
+		status:  &mi.status,
 	})
 }

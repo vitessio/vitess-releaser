@@ -34,14 +34,15 @@ type (
 	menuItem struct {
 		ctx    *releaser.Context
 		name   string
-		state  string
+		status string
+		info   string
 		act    func(*menuItem) (*menuItem, tea.Cmd)
 		init   func(ctx *releaser.Context) tea.Cmd
 		update func(*menuItem, tea.Msg) (*menuItem, tea.Cmd)
 	}
 )
 
-var columns = []string{"Task", "Info"}
+var columns = []string{"Task", "Status", "Info"}
 
 func newMenu(title string, items ...*menuItem) *menu {
 	return &menu{
@@ -54,8 +55,13 @@ func newMenu(title string, items ...*menuItem) *menu {
 func (m *menu) At(row, cell int) string {
 	item := m.items[row]
 	if cell == 1 {
-		return item.state
+		return item.status
 	}
+	if cell == 2 {
+		return item.info
+	}
+
+
 
 	var prefix string
 	switch {
@@ -75,7 +81,7 @@ func (m *menu) Rows() int {
 }
 
 func (m *menu) Columns() int {
-	return 2
+	return 3
 }
 
 func (m *menu) Init() tea.Cmd {

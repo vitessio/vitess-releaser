@@ -36,7 +36,7 @@ func releaseBlockerIssuesMenuItem(ctx *releaser.Context) *menuItem {
 }
 
 func releaseBlockerIssuesAct(mi *menuItem) (*menuItem, tea.Cmd) {
-	mi.state = "Checking Issues..."
+	mi.info = "Checking Issues..."
 	return mi, func() tea.Msg {
 		issues := prerequisite.FormatIssues(prerequisite.CheckReleaseBlockerIssues(mi.ctx))
 		return releaseBlockerIssues(issues)
@@ -48,7 +48,7 @@ func releaseBlockerIssuesUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) 
 	if !ok {
 		return mi, nil
 	}
-	mi.state = fmt.Sprintf("Done, %d Issues need to be closed.", len(is))
+	mi.info = fmt.Sprintf("Done, %d Issues need to be closed.", len(is))
 	if len(is) == 0 {
 		return mi, nil
 	}

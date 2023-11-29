@@ -40,7 +40,7 @@ func checkSummaryUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 	}
 
 	// TODO: i think the goal here is to mark this as done only when the action is marked as done in the release issue
-	// mi.state = fmt.Sprintf("Done.")
+	// mi.info = fmt.Sprintf("Done.")
 
 	return mi, pushDialog(infoDialog{
 		title:   "Check release note summary",

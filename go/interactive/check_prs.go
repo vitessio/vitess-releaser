@@ -36,7 +36,7 @@ func checkPRsMenuItem(ctx *releaser.Context) *menuItem {
 }
 
 func checkPRsAct(mi *menuItem) (*menuItem, tea.Cmd) {
-	mi.state = "Checking pull requests..."
+	mi.info = "Checking pull requests..."
 	return mi, func() tea.Msg {
 		prs := prerequisite.FormatPRs(prerequisite.CheckPRs(mi.ctx))
 		return openPRs(prs)
@@ -48,7 +48,7 @@ func checkPRsUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 	if !ok {
 		return mi, nil
 	}
-	mi.state = fmt.Sprintf("Done, %d PRs need to be merged.", len(prs))
+	mi.info = fmt.Sprintf("Done, %d PRs need to be merged.", len(prs))
 	if len(prs) == 0 {
 		return mi, nil
 	}

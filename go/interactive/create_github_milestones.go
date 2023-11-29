@@ -39,12 +39,12 @@ func createMilestoneUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 		return mi, nil
 	}
 
-	mi.state = string(milestoneLink)
+	mi.info = string(milestoneLink)
 	return mi, nil
 }
 
 func createMilestoneAct(mi *menuItem) (*menuItem, tea.Cmd) {
-	mi.state = "running..."
+	mi.info = "running..."
 	pl, create := pre_release.NewMilestone(mi.ctx)
 	return mi, tea.Batch(func() tea.Msg {
 		return createMilestone(create())

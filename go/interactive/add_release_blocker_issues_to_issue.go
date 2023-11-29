@@ -39,12 +39,12 @@ func addReleaseBlockerIssuesUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cm
 		return mi, nil
 	}
 
-	mi.state = string(releaseIssueLink)
+	mi.info = string(releaseIssueLink)
 	return mi, nil
 }
 
 func addReleaseBlockerIssuesAct(mi *menuItem) (*menuItem, tea.Cmd) {
-	mi.state = "running..."
+	mi.info = "running..."
 	pl, add := issue.AddReleaseBlockerIssues(mi.ctx)
 	return mi, tea.Batch(func() tea.Msg {
 		return addReleaseBlockerIssues(add())
