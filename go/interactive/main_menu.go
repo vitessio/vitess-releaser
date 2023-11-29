@@ -30,6 +30,8 @@ func MainScreen(ctx *releaser.Context) {
 		slackAnnouncementMenuItem(ctx, slackAnnouncementPreRequisite),
 		checkPRsMenuItem(ctx),
 		addPRsToIssueMenuItem(ctx),
+		releaseBlockerIssuesMenuItem(ctx),
+		addReleaseBlockerIssuesMenuItem(ctx),
 		checkSummaryMenuItem(ctx),
 	)
 

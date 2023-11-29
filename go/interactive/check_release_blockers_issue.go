@@ -24,37 +24,37 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/prerequisite"
 )
 
-type openPRs []string
+type releaseBlockerIssues []string
 
-func checkPRsMenuItem(ctx *releaser.Context) menuItem {
+func releaseBlockerIssuesMenuItem(ctx *releaser.Context) menuItem {
 	return menuItem{
 		ctx:    ctx,
-		name:   "Backport Pull Requests: Check",
-		act:    checkPRsAct,
-		update: checkPRsUpdate,
+		name:   "Release Blocker Issues: Check",
+		act:    releaseBlockerIssuesAct,
+		update: releaseBlockerIssuesUpdate,
 	}
 }
 
-func checkPRsAct(mi menuItem) (menuItem, tea.Cmd) {
-	mi.state = "Checking pull requests..."
+func releaseBlockerIssuesAct(mi menuItem) (menuItem, tea.Cmd) {
+	mi.state = "Checking Issues..."
 	return mi, func() tea.Msg {
-		prs := prerequisite.FormatPRs(prerequisite.CheckPRs(mi.ctx))
-		return openPRs(prs)
+		issues := prerequisite.FormatIssues(prerequisite.CheckReleaseBlockerIssues(mi.ctx))
+		return releaseBlockerIssues(issues)
 	}
 }
 
-func checkPRsUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
-	prs, ok := msg.(openPRs)
+func releaseBlockerIssuesUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
+	is, ok := msg.(releaseBlockerIssues)
 	if !ok {
 		return mi, nil
 	}
-	mi.state = fmt.Sprintf("Done, %d PRs need to be merged.", len(prs))
-	if len(prs) == 0 {
+	mi.state = fmt.Sprintf("Done, %d Issues need to be closed.", len(is))
+	if len(is) == 0 {
 		return mi, nil
 	}
 
 	return mi, pushDialog(warningDialog{
-		title:   "These PRs still need to be closed before we can continue",
-		message: prs,
+		title:   "These Issues still need to be closed before we can continue",
+		message: is,
 	})
 }

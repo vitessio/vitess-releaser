@@ -22,19 +22,19 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/issue"
 )
 
-type addPRsToIssue string
+type addReleaseBlockerIssues string
 
-func addPRsToIssueMenuItem(ctx *releaser.Context) menuItem {
+func addReleaseBlockerIssuesMenuItem(ctx *releaser.Context) menuItem {
 	return menuItem{
 		ctx:    ctx,
-		name:   "Backport Pull Requests: Add to Release Issue",
-		act:    addPRsToIssueAct,
-		update: addPRsToIssueUpdate,
+		name:   "Release Blocker Issues: Add to Release Issue",
+		act:    addReleaseBlockerIssuesAct,
+		update: addReleaseBlockerIssuesUpdate,
 	}
 }
 
-func addPRsToIssueUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
-	releaseIssueLink, ok := msg.(addPRsToIssue)
+func addReleaseBlockerIssuesUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
+	releaseIssueLink, ok := msg.(addReleaseBlockerIssues)
 	if !ok {
 		return mi, nil
 	}
@@ -43,10 +43,10 @@ func addPRsToIssueUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
 	return mi, nil
 }
 
-func addPRsToIssueAct(mi menuItem) (menuItem, tea.Cmd) {
+func addReleaseBlockerIssuesAct(mi menuItem) (menuItem, tea.Cmd) {
 	mi.state = "running..."
-	pl, add := issue.AddBackportPRs(mi.ctx)
+	pl, add := issue.AddReleaseBlockerIssues(mi.ctx)
 	return mi, tea.Batch(func() tea.Msg {
-		return addPRsToIssue(add())
-	}, pushDialog(newProgressDialog("Adding pending Pull Requests to Release Issue", pl)))
+		return addReleaseBlockerIssues(add())
+	}, pushDialog(newProgressDialog("Adding opened Release Blocker Issues to Release Issue", pl)))
 }
