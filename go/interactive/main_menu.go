@@ -53,7 +53,6 @@ func MainScreen(ctx *releaser.Context) {
 			status: state.ToDo,
 			subItems: prereq.items,
 			name: "Prerequisites",
-			info: "",
 			act:  subMenu(prereq)},
 		&menuItem{
 			status: state.ToDo,
