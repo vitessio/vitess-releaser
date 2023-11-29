@@ -20,18 +20,14 @@ import (
 	"fmt"
 
 	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/vitess"
 )
 
 func CheckSummary(ctx *releaser.Context) []string {
 	r, _ := vitess.FindNextRelease(ctx.MajorRelease)
-	issueLink := fmt.Sprintf("https://github.com/%s/issue/%d", ctx.VitessRepo, github.GetReleaseIssueNumber(ctx))
 	return []string{
 		"If the release does not contain significant changes (i.e. a small patch release) then this step can be skipped",
 		fmt.Sprintf("The summary file is located in: ./changelog/%s.0/%s/summary.md.", ctx.MajorRelease, r),
 		"The summary file for a release candidate is the same as the one for the GA release.",
-		"",
-		fmt.Sprintf("Once the release notes are looking good please check the corresponding item on the release issue: %s.", issueLink),
 	}
 }
