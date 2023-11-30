@@ -36,7 +36,10 @@ func CheckAndAddPRsIssues(ctx *releaser.Context) (*logging.ProgressLogging, func
 		pl.NewStepf("Check and add Release Blocker Issues")
 		nbIssues, _ := issue.AddReleaseBlockerIssues(ctx)
 
-		msg := fmt.Sprintf("Found %d PRs and %d issues, %s up-to-date", nbPRs, nbIssues, url)
+		msg := fmt.Sprintf("Up to date, see: %s", url)
+		if nbPRs > 0 || nbIssues > 0 {
+			msg = fmt.Sprintf("Found %d PRs and %d issues, see: %s", nbPRs, nbIssues, url)
+		}
 		pl.NewStepf(msg)
 		return msg
 	}

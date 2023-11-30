@@ -17,7 +17,10 @@ limitations under the License.
 package interactive
 
 import (
+	"strings"
+
 	tea "github.com/charmbracelet/bubbletea"
+	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/prerequisite"
 )
@@ -30,16 +33,23 @@ func checkAndAddMenuItem(ctx *releaser.Context) *menuItem {
 		name:   "Check and add pending PRs and release blocker Issues to Release Issue",
 		act:    checkAndAddAct,
 		update: checkAndAddUpdate,
+		status: state.ToDo, // TODO: read the initial state from the Release Issue on GitHub
 	}
 }
 
 func checkAndAddUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
-	releaseIssueLink, ok := msg.(checkAndAdd)
+	out, ok := msg.(checkAndAdd)
 	if !ok {
 		return mi, nil
 	}
 
-	mi.info = string(releaseIssueLink)
+	outStr := string(out)
+	mi.info = outStr
+	if strings.Contains(outStr, "Found") {
+		mi.status = state.ToDo
+	} else {
+		mi.status = state.Done
+	}
 	return mi, nil
 }
 
