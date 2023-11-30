@@ -17,6 +17,8 @@ limitations under the License.
 package interactive
 
 import (
+	"fmt"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	tbl "github.com/charmbracelet/lipgloss/table"
@@ -60,19 +62,18 @@ func newMenu(title string, items ...*menuItem) *menu {
 func (m *menu) At(row, cell int) string {
 	item := m.items[row]
 	if cell == 1 {
-		// let's check if we have sub items, if any is marked as 'To Do' the whole
-		// current item will also be marked as 'To Do'
-		for _, subItem := range item.subItems {
-			if subItem.status != state.Done {
-				item.status = state.ToDo
-				return item.status
-			}
-		}
-		// If there are sub items, and they are all done, let's mark this item as
-		// done and return its status
 		if len(item.subItems) > 0 {
-			item.status = state.Done
-			return item.status
+			done := 0
+			for _, subItem := range item.subItems {
+				if subItem.status == state.Done {
+					done++
+				}
+			}
+			nb := len(item.subItems)
+			if done == nb {
+				item.status = state.Done
+			}
+			return fmt.Sprintf("%s %d/%d", item.status, done, nb)
 		}
 
 		// if there are no sub items, let's just return the current status
