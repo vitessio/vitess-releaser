@@ -23,6 +23,7 @@ import (
 	"strings"
 	"text/template"
 
+	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/logging"
@@ -157,31 +158,43 @@ func CreateReleaseIssue(ctx *releaser.Context) (*logging.ProgressLogging, func()
 	}
 }
 
-func InverseStepStatus(ctx *releaser.Context, step string) string {
+func InverseStepStatus(ctx *releaser.Context, step string) (*logging.ProgressLogging, func()) {
 	binding, ok := stepBindings[step]
 	if !ok {
 		log.Fatalf("unknown step: %s", step)
 	}
 
-	issueNb := github.GetReleaseIssueNumber(ctx)
-	body := github.GetIssueBody(ctx.VitessRepo, issueNb)
+	pl := &logging.ProgressLogging{TotalSteps: 1 + len(binding)}
+	return pl, func() {
+		pl.NewStepf("Update status for '%s' on the Release Issue", step)
 
-	var url string
-	for _, meta := range binding {
-		start, end, err := getIssueTextBetweenTokens(meta.StartToken, meta.EndToken, body)
-		if err != nil {
-			log.Fatal(err.Error())
+		issueNb := github.GetReleaseIssueNumber(ctx)
+		body := github.GetIssueBody(ctx.VitessRepo, issueNb)
+
+		for _, meta := range binding {
+			start, end, err := getIssueTextBetweenTokens(meta.StartToken, meta.EndToken, body)
+			if err != nil {
+				log.Fatal(err.Error())
+			}
+
+			content := body[start:end]
+			prefixLen := len("- [ ] ")
+
+			var s string
+
+			if strings.HasPrefix(content, "- [x]") {
+				content = "- [ ] " + content[prefixLen:]
+				s = state.ToDo
+			} else if strings.HasPrefix(content, "- [ ]") {
+				content = "- [x] " + content[prefixLen:]
+				s = state.Done
+			}
+
+			updateSegmentOfIssue(ctx, body, content, start, end, issueNb)
+
+			pl.NewStepf("Item marked as '%s'", s)
 		}
-		content := body[start:end]
-		prefixLen := len("- [ ] ")
-		if strings.HasPrefix(content, "- [x]") {
-			content = "- [ ] " + content[prefixLen:]
-		} else if strings.HasPrefix(content, "- [ ]") {
-			content = "- [x] " + content[prefixLen:]
-		}
-		url = updateSegmentOfIssue(ctx, body, content, start, end, issueNb)
 	}
-	return url
 }
 
 func AddBackportPRs(ctx *releaser.Context) (int, string) {
