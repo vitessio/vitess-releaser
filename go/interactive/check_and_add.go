@@ -23,6 +23,7 @@ import (
 	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/prerequisite"
+	"vitess.io/vitess-releaser/go/releaser/steps"
 )
 
 type checkAndAdd string
@@ -30,7 +31,7 @@ type checkAndAdd string
 func checkAndAddMenuItem(ctx *releaser.Context) *menuItem {
 	return &menuItem{
 		ctx:    ctx,
-		name:   "Check and add pending PRs and release blocker Issues to Release Issue",
+		name:   steps.CheckAndAdd,
 		act:    checkAndAddAct,
 		update: checkAndAddUpdate,
 		status: state.ToDo, // TODO: read the initial state from the Release Issue on GitHub

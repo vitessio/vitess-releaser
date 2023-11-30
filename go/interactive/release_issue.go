@@ -21,6 +21,7 @@ import (
 	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/issue"
+	"vitess.io/vitess-releaser/go/releaser/steps"
 
 	"vitess.io/vitess-releaser/go/releaser/github"
 )
@@ -28,7 +29,7 @@ import (
 func createIssueMenuItem(ctx *releaser.Context) *menuItem {
 	return &menuItem{
 		ctx:    ctx,
-		name:   "Create Release Issue",
+		name:   steps.CreateReleaseIssue,
 		status: state.ToDo,
 		act:    createIssue,
 		init:   issueInit,
@@ -66,7 +67,7 @@ func issueUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 }
 
 func gotIssueURL(item *menuItem, url string) *menuItem {
-	item.name = "Release Issue"
+	item.name = steps.ReleaseIssue
 	item.info = url
 	item.status = state.Done
 	item.act = nil // We don't want to accidentally create a second one

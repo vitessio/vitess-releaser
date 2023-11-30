@@ -21,6 +21,7 @@ import (
 	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/prerequisite"
+	"vitess.io/vitess-releaser/go/releaser/steps"
 )
 
 type checkSummary []string
@@ -28,7 +29,7 @@ type checkSummary []string
 func checkSummaryMenuItem(ctx *releaser.Context) *menuItem {
 	return &menuItem{
 		ctx:    ctx,
-		name:   "Check release note summary",
+		name:   steps.CheckSummary,
 		status: state.ToDo, // TODO: read initial status from Release Issue on GitHub
 		act:    checkSummaryAct,
 		update: checkSummaryUpdate,
