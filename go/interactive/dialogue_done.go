@@ -30,6 +30,7 @@ type doneDialog struct {
 	title         string
 	message       []string
 	status        *string
+	onDone        func()
 }
 
 var _ tea.Model = doneDialog{}
@@ -63,6 +64,11 @@ func (c doneDialog) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					*(c.status) = state.Done
 				case state.Done:
 					*(c.status) = state.ToDo
+				}
+
+				// call the callback
+				if c.onDone != nil {
+					c.onDone()
 				}
 			}
 		}

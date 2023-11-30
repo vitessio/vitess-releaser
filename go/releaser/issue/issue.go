@@ -31,15 +31,27 @@ import (
 )
 
 const (
+	slackAnnouncementStart = "<!-- SLACK_START -->"
+	slackAnnouncementEnd   = "<!-- SLACK_END -->"
+	slackAnnouncementItem  = "- [ ] Notify the community on Slack."
+	slackAnnouncementFmt   = slackAnnouncementStart + "\n" + slackAnnouncementItem + "\n" + slackAnnouncementEnd
+
+	checkSummaryStart = "<!-- SUMMARY_START -->"
+	checkSummaryEnd   = "<!-- SUMMARY_START -->"
+	checkSummaryItem  = "- [ ] Make sure the release notes summary is prepared and clean."
+	checkSummaryFmt   = checkSummaryStart + "\n" + checkSummaryItem + "\n" + checkSummaryEnd
+
 	// List of backports Pull Requests
 	backportStart   = "<!-- BACKPORT_START -->"
-	backportEnd     = "<!-- BACKPORT_END -->"
-	backPortPRsItem = "- [ ] Make sure backport Pull Requests are merged, list below."
+	backportEnd  = "<!-- BACKPORT_END -->"
+	backportItem = "- Make sure backport Pull Requests are merged, list below."
+	backportFmt  = backportStart + "\n" + backportItem + "\n" + backportEnd
 
 	// List of release blocker Issues
 	releaseBlockerStart      = "<!-- RELEASE_BLOCKER_START -->"
-	releaseBlockerEnd        = "<!-- RELEASE_BLOCKER_END -->"
-	releaseBlockerIssuesItem = "- [ ] Make sure release blocker Issues are closed, list below."
+	releaseBlockerEnd  = "<!-- RELEASE_BLOCKER_END -->"
+	releaseBlockerItem = "- Make sure release blocker Issues are closed, list below."
+	releaseBlockerFmt  = releaseBlockerStart + "\n" + releaseBlockerItem + "\n" + releaseBlockerEnd
 )
 
 type StepMeta struct {
@@ -49,30 +61,42 @@ type StepMeta struct {
 }
 
 var (
-	stepBindings = map[string]StepMeta{
-		steps.SlackAnnouncement:     {},
+	stepBindings = map[string][]StepMeta{
+		steps.SlackAnnouncement: {{
+			StartToken:   slackAnnouncementStart,
+			EndToken:     slackAnnouncementEnd,
+			IssueItemStr: slackAnnouncementItem,
+		}},
+		steps.CheckAndAdd: {{
+			StartToken:   backportStart,
+			EndToken:     backportEnd,
+			IssueItemStr: backportItem,
+		}, {
+			StartToken:   releaseBlockerStart,
+			EndToken:     releaseBlockerEnd,
+			IssueItemStr: releaseBlockerItem,
+		}},
+		steps.CheckSummary:    {{
+			StartToken:   checkSummaryStart,
+			EndToken:     checkSummaryEnd,
+			IssueItemStr: checkSummaryItem,
+		}},
+		steps.CodeFreeze:      {},
+		steps.CreateMilestone: {},
 		steps.SlackAnnouncementPost: {},
-		steps.CheckAndAdd:           {},
-		steps.CheckSummary:          {},
-		steps.CodeFreeze:            {},
-		steps.CreateMilestone:       {},
 	}
 )
 
 var (
-	releaseIssueTemplate = fmt.Sprintf(`This release is scheduled for: TODO: '.Date' here .
+	releaseIssueTemplate = fmt.Sprintf(
+		`This release is scheduled for: TODO: '.Date' here .
 
 <!-- Please DO NOT modify or remove the comments in this file. -->
 <!-- Moreover, DO NOT add text in the middle of an _START and _END comment. -->
 
 ### Prerequisites for Release
 
-- [ ] Notify the community on Slack.
-- [ ] Make sure the release notes summary is prepared and clean.
 %s
-%s
-%s
-
 %s
 %s
 %s
@@ -95,8 +119,12 @@ var (
 - [ ] Announce new release:
   - [ ] Slack
   - [ ] Twitter
-`, backportStart, backPortPRsItem, backportEnd,
-		releaseBlockerStart, releaseBlockerEnd, releaseBlockerIssuesItem)
+`,
+		slackAnnouncementFmt,
+		checkSummaryFmt,
+		backportFmt,
+		releaseBlockerFmt,
+	)
 )
 
 func CreateReleaseIssue(ctx *releaser.Context) (*logging.ProgressLogging, func() string) {
@@ -129,6 +157,33 @@ func CreateReleaseIssue(ctx *releaser.Context) (*logging.ProgressLogging, func()
 	}
 }
 
+func InverseStepStatus(ctx *releaser.Context, step string) string {
+	binding, ok := stepBindings[step]
+	if !ok {
+		log.Fatalf("unknown step: %s", step)
+	}
+
+	issueNb := github.GetReleaseIssueNumber(ctx)
+	body := github.GetIssueBody(ctx.VitessRepo, issueNb)
+
+	var url string
+	for _, meta := range binding {
+		start, end, err := getIssueTextBetweenTokens(meta.StartToken, meta.EndToken, body)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		content := body[start:end]
+		prefixLen := len("- [ ] ")
+		if strings.HasPrefix(content, "- [x]") {
+			content = "- [ ] " + content[prefixLen:]
+		} else if strings.HasPrefix(content, "- [ ]") {
+			content = "- [x] " + content[prefixLen:]
+		}
+		url = updateSegmentOfIssue(ctx, body, content, start, end, issueNb)
+	}
+	return url
+}
+
 func AddBackportPRs(ctx *releaser.Context) (int, string) {
 	issueNb := github.GetReleaseIssueNumber(ctx)
 	body := github.GetIssueBody(ctx.VitessRepo, issueNb)
@@ -159,7 +214,7 @@ outer:
 	}
 
 	listURLs := make([]string, 0, len(prsInIssue)+1)
-	listURLs = append(listURLs, backPortPRsItem)
+	listURLs = append(listURLs, backportItem)
 	prNotDoneCount := 0
 	for _, item := range prsInIssue {
 		done := "x"
@@ -202,7 +257,7 @@ outer:
 	}
 
 	listURLs := make([]string, 0, len(issuesInIssue)+1)
-	listURLs = append(listURLs, releaseBlockerIssuesItem)
+	listURLs = append(listURLs, releaseBlockerItem)
 	issueNotDone := 0
 	for _, item := range issuesInIssue {
 		done := "x"

@@ -20,6 +20,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser"
+	"vitess.io/vitess-releaser/go/releaser/issue"
 	"vitess.io/vitess-releaser/go/releaser/slack"
 	"vitess.io/vitess-releaser/go/releaser/steps"
 )
@@ -79,5 +80,8 @@ func slackAnnouncementUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 		title:   "The following message must be posted on the #general and #releases OSS Slack channels",
 		message: []string{string(slackMsg)},
 		status:  &mi.status,
+		onDone: func() {
+			issue.InverseStepStatus(mi.ctx, mi.name)
+		},
 	})
 }
