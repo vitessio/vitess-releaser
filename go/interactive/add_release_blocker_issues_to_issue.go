@@ -24,8 +24,8 @@ import (
 
 type addReleaseBlockerIssues string
 
-func addReleaseBlockerIssuesMenuItem(ctx *releaser.Context) menuItem {
-	return menuItem{
+func addReleaseBlockerIssuesMenuItem(ctx *releaser.Context) *menuItem {
+	return &menuItem{
 		ctx:    ctx,
 		name:   "Release Blocker Issues: Add to Release Issue",
 		act:    addReleaseBlockerIssuesAct,
@@ -33,18 +33,18 @@ func addReleaseBlockerIssuesMenuItem(ctx *releaser.Context) menuItem {
 	}
 }
 
-func addReleaseBlockerIssuesUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
+func addReleaseBlockerIssuesUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 	releaseIssueLink, ok := msg.(addReleaseBlockerIssues)
 	if !ok {
 		return mi, nil
 	}
 
-	mi.state = string(releaseIssueLink)
+	mi.info = string(releaseIssueLink)
 	return mi, nil
 }
 
-func addReleaseBlockerIssuesAct(mi menuItem) (menuItem, tea.Cmd) {
-	mi.state = "running..."
+func addReleaseBlockerIssuesAct(mi *menuItem) (*menuItem, tea.Cmd) {
+	mi.info = "running..."
 	pl, add := issue.AddReleaseBlockerIssues(mi.ctx)
 	return mi, tea.Batch(func() tea.Msg {
 		return addReleaseBlockerIssues(add())

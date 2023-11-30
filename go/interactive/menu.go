@@ -20,41 +20,66 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	tbl "github.com/charmbracelet/lipgloss/table"
+	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser"
 )
 
 type (
 	menu struct {
-		items   []menuItem
+		items   []*menuItem
 		title   string
 		idx     int
 		columns []string
 		width   int
 	}
+
 	menuItem struct {
-		ctx    *releaser.Context
-		name   string
-		state  string
-		act    func(menuItem) (menuItem, tea.Cmd)
-		init   func(ctx *releaser.Context) tea.Cmd
-		update func(menuItem, tea.Msg) (menuItem, tea.Cmd)
+		ctx      *releaser.Context
+		name     string
+		status   string
+		info     string
+		act      func(*menuItem) (*menuItem, tea.Cmd)
+		init     func(ctx *releaser.Context) tea.Cmd
+		update   func(*menuItem, tea.Msg) (*menuItem, tea.Cmd)
+
+		// subItems is a slice of *menuItem referring to the menuItem embedded by this item
+		subItems []*menuItem
 	}
 )
 
-var columns = []string{"Task", "Info"}
+var columns = []string{"Task", "Status", "Info"}
 
-func newMenu(title string, items ...menuItem) menu {
-	return menu{
+func newMenu(title string, items ...*menuItem) *menu {
+	return &menu{
 		columns: columns,
 		title:   title,
 		items:   items,
 	}
 }
 
-func (m menu) At(row, cell int) string {
+func (m *menu) At(row, cell int) string {
 	item := m.items[row]
 	if cell == 1 {
-		return item.state
+		// let's check if we have sub items, if any is marked as 'To Do' the whole
+		// current item will also be marked as 'To Do'
+		for _, subItem := range item.subItems {
+			if subItem.status != state.Done {
+				item.status = state.ToDo
+				return item.status
+			}
+		}
+		// If there are sub items, and they are all done, let's mark this item as
+		// done and return its status
+		if len(item.subItems) > 0 {
+			item.status = state.Done
+			return item.status
+		}
+
+		// if there are no sub items, let's just return the current status
+		return item.status
+	}
+	if cell == 2 {
+		return item.info
 	}
 
 	var prefix string
@@ -70,15 +95,15 @@ func (m menu) At(row, cell int) string {
 	return prefix + item.name
 }
 
-func (m menu) Rows() int {
+func (m *menu) Rows() int {
 	return len(m.items)
 }
 
-func (m menu) Columns() int {
-	return 2
+func (m *menu) Columns() int {
+	return 3
 }
 
-func (m menu) Init() tea.Cmd {
+func (m *menu) Init() tea.Cmd {
 	var cmds []tea.Cmd
 	for idx, mi := range m.items {
 		if mi.init != nil {
@@ -89,7 +114,7 @@ func (m menu) Init() tea.Cmd {
 	return tea.Batch(cmds...)
 }
 
-func (m menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	size := len(m.items)
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
@@ -128,7 +153,7 @@ func (m menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m menu) View() string {
+func (m *menu) View() string {
 	list := tbl.
 		New().
 		Width(m.width).

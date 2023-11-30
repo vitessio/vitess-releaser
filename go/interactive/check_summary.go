@@ -18,37 +18,37 @@ package interactive
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/prerequisite"
 )
 
 type checkSummary []string
 
-func checkSummaryMenuItem(ctx *releaser.Context) menuItem {
-	return menuItem{
+func checkSummaryMenuItem(ctx *releaser.Context) *menuItem {
+	return &menuItem{
 		ctx:    ctx,
 		name:   "Check release note summary",
+		status: state.ToDo, // TODO: read initial status from Release Issue on GitHub
 		act:    checkSummaryAct,
 		update: checkSummaryUpdate,
 	}
 }
 
-func checkSummaryUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
+func checkSummaryUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 	l, ok := msg.(checkSummary)
 	if !ok {
 		return mi, nil
 	}
 
-	// TODO: i think the goal here is to mark this as done only when the action is marked as done in the release issue
-	// mi.state = fmt.Sprintf("Done.")
-
-	return mi, pushDialog(infoDialog{
+	return mi, pushDialog(doneDialog{
 		title:   "Check release note summary",
 		message: l,
+		status:  &mi.status,
 	})
 }
 
-func checkSummaryAct(mi menuItem) (menuItem, tea.Cmd) {
+func checkSummaryAct(mi *menuItem) (*menuItem, tea.Cmd) {
 	return mi, func() tea.Msg {
 		return checkSummary(prerequisite.CheckSummary(mi.ctx))
 	}

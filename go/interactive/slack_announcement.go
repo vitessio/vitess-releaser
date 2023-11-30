@@ -18,6 +18,7 @@ package interactive
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/slack"
 )
@@ -32,8 +33,8 @@ const (
 	slackAnnouncementPreRequisite
 )
 
-func slackAnnouncementMenuItem(ctx *releaser.Context, announcementType slackAnnouncementType) menuItem {
-	var act func(menuItem) (menuItem, tea.Cmd)
+func slackAnnouncementMenuItem(ctx *releaser.Context, announcementType slackAnnouncementType) *menuItem {
+	var act func(*menuItem) (*menuItem, tea.Cmd)
 	switch announcementType {
 	case slackAnnouncementPostRelease:
 		act = slackAnnouncementPostReleaseAct
@@ -41,36 +42,38 @@ func slackAnnouncementMenuItem(ctx *releaser.Context, announcementType slackAnno
 		act = slackAnnouncementPreRequisiteAct
 	}
 
-	return menuItem{
+	// TODO: find out the initial status of this task by reading the GitHub Issue
+
+	return &menuItem{
 		ctx:    ctx,
 		name:   "Announce the release on Slack",
 		act:    act,
 		update: slackAnnouncementUpdate,
+		status:   state.ToDo,
 	}
 }
 
-func slackAnnouncementPreRequisiteAct(mi menuItem) (menuItem, tea.Cmd) {
+func slackAnnouncementPreRequisiteAct(mi *menuItem) (*menuItem, tea.Cmd) {
 	return mi, func() tea.Msg {
 		return slackMessage(slack.AnnouncementMessage(mi.ctx))
 	}
 }
 
-func slackAnnouncementPostReleaseAct(mi menuItem) (menuItem, tea.Cmd) {
+func slackAnnouncementPostReleaseAct(mi *menuItem) (*menuItem, tea.Cmd) {
 	return mi, func() tea.Msg {
 		return slackMessage(slack.PostReleaseMessage(mi.ctx))
 	}
 }
 
-func slackAnnouncementUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
+func slackAnnouncementUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 	slackMsg, ok := msg.(slackMessage)
 	if !ok {
 		return mi, nil
 	}
 
-	mi.state = "Done"
-
-	return mi, pushDialog(warningDialog{
+	return mi, pushDialog(doneDialog{
 		title:   "The following message must be posted on the #general and #releases OSS Slack channels",
 		message: []string{string(slackMsg)},
+		status:  &mi.status,
 	})
 }

@@ -18,34 +18,37 @@ package interactive
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser"
 
 	"vitess.io/vitess-releaser/go/releaser/pre_release"
 )
 
-func codeFreezeMenuItem(ctx *releaser.Context) menuItem {
-	return menuItem{
+func codeFreezeMenuItem(ctx *releaser.Context) *menuItem {
+	return &menuItem{
 		ctx:    ctx,
 		name:   "Code freeze",
 		act:    codeFreezeAct,
 		init:   nil,
 		update: codeFreezeUpdate,
+		status: state.ToDo, // TODO: read the initial state from the Release Issue on GitHub
 	}
 }
 
 type codeFreezeUrl string
 
-func codeFreezeUpdate(mi menuItem, msg tea.Msg) (menuItem, tea.Cmd) {
+func codeFreezeUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 	url, ok := msg.(codeFreezeUrl)
 	if !ok {
 		return mi, nil
 	}
-	mi.state = string(url)
+	mi.info = string(url)
+	mi.status = state.Done
 	return mi, nil
 }
 
-func codeFreezeAct(mi menuItem) (menuItem, tea.Cmd) {
-	mi.state = "running..."
+func codeFreezeAct(mi *menuItem) (*menuItem, tea.Cmd) {
+	mi.info = "running..."
 	pl, freeze := pre_release.CodeFreeze(mi.ctx)
 	return mi, tea.Batch(func() tea.Msg {
 		return codeFreezeUrl(freeze())

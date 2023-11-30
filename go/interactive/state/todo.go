@@ -14,20 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package prerequisite
+package state
 
-import (
-	"fmt"
-
-	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/vitess"
+const (
+	ToDo = "To do"
+	Done = "Done"
 )
-
-func CheckSummary(ctx *releaser.Context) []string {
-	r, _ := vitess.FindNextRelease(ctx.MajorRelease)
-	return []string{
-		"If the release does not contain significant changes (i.e. a small patch release) then this step can be skipped",
-		fmt.Sprintf("The summary file is located in: ./changelog/%s.0/%s/summary.md.", ctx.MajorRelease, r),
-		"The summary file for a release candidate is the same as the one for the GA release.",
-	}
-}
