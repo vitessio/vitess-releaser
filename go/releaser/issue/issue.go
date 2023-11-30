@@ -26,6 +26,7 @@ import (
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/logging"
+	"vitess.io/vitess-releaser/go/releaser/steps"
 	"vitess.io/vitess-releaser/go/releaser/vitess"
 )
 
@@ -39,6 +40,23 @@ const (
 	releaseBlockerStart      = "<!-- RELEASE_BLOCKER_START -->"
 	releaseBlockerEnd        = "<!-- RELEASE_BLOCKER_END -->"
 	releaseBlockerIssuesItem = "- [ ] Make sure release blocker Issues are closed, list below."
+)
+
+type StepMeta struct {
+	StartToken   string
+	EndToken     string
+	IssueItemStr string
+}
+
+var (
+	stepBindings = map[string]StepMeta{
+		steps.SlackAnnouncement:     {},
+		steps.SlackAnnouncementPost: {},
+		steps.CheckAndAdd:           {},
+		steps.CheckSummary:          {},
+		steps.CodeFreeze:            {},
+		steps.CreateMilestone:       {},
+	}
 )
 
 var (
@@ -136,7 +154,7 @@ outer:
 			}
 		}
 		prsInIssue = append(prsInIssue, prsIssuesListItem{
-			nb:  nb,
+			nb: nb,
 		})
 	}
 
@@ -152,11 +170,60 @@ outer:
 		listURLs = append(listURLs, fmt.Sprintf("  - [%s] #%s", done, item.nb))
 	}
 
-	body = body[:start] + "\n" + strings.Join(listURLs, "\n") + "\n" + body[end:]
+	newList := fmt.Sprintf("\n%s\n", strings.Join(listURLs, "\n"))
+	url := updateSegmentOfIssue(ctx, body, newList, start, end, issueNb)
+	return prNotDoneCount, url
+}
+
+func AddReleaseBlockerIssues(ctx *releaser.Context) (int, string) {
+	issueNb := github.GetReleaseIssueNumber(ctx)
+	body := github.GetIssueBody(ctx.VitessRepo, issueNb)
+
+	start, end, err := getIssueTextBetweenTokens(releaseBlockerStart, releaseBlockerEnd, body)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	textPullRequest := body[start:end]
+
+	issuesInIssue := parseMarkdownCheckboxListWithIssuePRsLinks(ctx.VitessRepo, textPullRequest)
+	issuesChecked := github.CheckReleaseBlockerIssues(ctx)
+
+outer:
+	for _, issueChecked := range issuesChecked {
+		nb := issueChecked.URL[strings.LastIndex(issueChecked.URL, "/")+1:]
+		for _, i := range issuesInIssue {
+			if i.nb == nb {
+				continue outer
+			}
+		}
+		issuesInIssue = append(issuesInIssue, prsIssuesListItem{
+			nb: nb,
+		})
+	}
+
+	listURLs := make([]string, 0, len(issuesInIssue)+1)
+	listURLs = append(listURLs, releaseBlockerIssuesItem)
+	issueNotDone := 0
+	for _, item := range issuesInIssue {
+		done := "x"
+		if !item.done {
+			done = " "
+			issueNotDone++
+		}
+		listURLs = append(listURLs, fmt.Sprintf("  - [%s] #%s", done, item.nb))
+	}
+
+	newList := fmt.Sprintf("\n%s\n", strings.Join(listURLs, "\n"))
+	url := updateSegmentOfIssue(ctx, body, newList, start, end, issueNb)
+	return issueNotDone, url
+}
+
+func updateSegmentOfIssue(ctx *releaser.Context, body, replaceBy string, startIdx, endIdx, issueNb int) string {
+	body = body[:startIdx] + replaceBy + body[endIdx:]
 
 	issue := github.Issue{Body: body, Number: issueNb}
 	url := issue.UpdateBody(ctx.VitessRepo)
-	return prNotDoneCount, url
+	return url
 }
 
 func getIssueTextBetweenTokens(tokenStart, tokenEnd, body string) (start, end int, err error) {
@@ -219,49 +286,4 @@ func parseMarkdownCheckboxListWithIssuePRsLinks(repo, body string) []prsIssuesLi
 		lis = append(lis, newItem)
 	}
 	return lis
-}
-
-func AddReleaseBlockerIssues(ctx *releaser.Context) (int, string) {
-	issueNb := github.GetReleaseIssueNumber(ctx)
-	body := github.GetIssueBody(ctx.VitessRepo, issueNb)
-
-	start, end, err := getIssueTextBetweenTokens(releaseBlockerStart, releaseBlockerEnd, body)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	textPullRequest := body[start:end]
-
-	issuesInIssue := parseMarkdownCheckboxListWithIssuePRsLinks(ctx.VitessRepo, textPullRequest)
-	issuesChecked := github.CheckReleaseBlockerIssues(ctx)
-
-outer:
-	for _, issueChecked := range issuesChecked {
-		nb := issueChecked.URL[strings.LastIndex(issueChecked.URL, "/")+1:]
-		for _, i := range issuesInIssue {
-			if i.nb == nb {
-				continue outer
-			}
-		}
-		issuesInIssue = append(issuesInIssue, prsIssuesListItem{
-			nb:  nb,
-		})
-	}
-
-	listURLs := make([]string, 0, len(issuesInIssue)+1)
-	listURLs = append(listURLs, releaseBlockerIssuesItem)
-	issueNotDone := 0
-	for _, item := range issuesInIssue {
-		done := "x"
-		if !item.done {
-			done = " "
-			issueNotDone++
-		}
-		listURLs = append(listURLs, fmt.Sprintf("  - [%s] #%s", done, item.nb))
-	}
-
-	body = body[:start] + "\n" + strings.Join(listURLs, "\n") + "\n" + body[end:]
-
-	issue := github.Issue{Body: body, Number: issueNb}
-	url := issue.UpdateBody(ctx.VitessRepo)
-	return issueNotDone, url
 }
