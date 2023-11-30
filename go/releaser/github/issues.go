@@ -25,24 +25,30 @@ import (
 
 	gh "github.com/cli/go-gh"
 	"vitess.io/vitess-releaser/go/releaser"
+	"vitess.io/vitess-releaser/go/releaser/vitess"
 )
 
 type Issue struct {
-	Title    string
-	Body     string
-	Labels   []string
-	Assignee string
-	Number   int
+	Title    string  `json:"title"`
+	Body     string  `json:"body"`
+	URL      string  `json:"url"`
+	Labels   []Label `json:"labels"`
+	Assignee string  `json:"assignee"`
+	Number   int     `json:"number"`
 }
 
 // Create will open the issue on GitHub and return the link of the newly created issue
 func (i *Issue) Create(repo string) string {
+	var labels []string
+	for _, label := range i.Labels {
+		labels = append(labels, label.Name)
+	}
 	stdOut, _, err := gh.Exec(
 		"issue", "create",
 		"--repo", repo,
 		"--title", i.Title,
 		"--body", i.Body,
-		"--label", strings.Join(i.Labels, ","),
+		"--label", strings.Join(labels, ","),
 		"--assignee", i.Assignee,
 	)
 	if err != nil {
@@ -119,4 +125,38 @@ func GetReleaseIssueNumber(ctx *releaser.Context) int {
 		log.Fatal(err.Error())
 	}
 	return issueNb
+}
+
+func FormatIssues(issues []Issue) []string {
+	var prFmt []string
+	for _, issue := range issues {
+		prFmt = append(prFmt, fmt.Sprintf(" -> %s  %s", issue.URL, issue.Title))
+	}
+	return prFmt
+}
+
+func CheckReleaseBlockerIssues(ctx *releaser.Context) []Issue {
+	vitess.CorrectCleanRepo(ctx.VitessRepo)
+
+	byteRes, _, err := gh.Exec("issue", "list", "--json", "title,url,labels", "--repo", ctx.VitessRepo)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	var issues []Issue
+	err = json.Unmarshal(byteRes.Bytes(), &issues)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+
+	var mustClose []Issue
+
+	branchName := fmt.Sprintf("release-%s.0", ctx.MajorRelease)
+	for _, i := range issues {
+		for _, l := range i.Labels {
+			if strings.HasPrefix(l.Name, "Release Blocker: ") && strings.Contains(l.Name, branchName) {
+				mustClose = append(mustClose, i)
+			}
+		}
+	}
+	return mustClose
 }

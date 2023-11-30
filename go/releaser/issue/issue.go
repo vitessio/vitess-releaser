@@ -26,7 +26,6 @@ import (
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/logging"
-	"vitess.io/vitess-releaser/go/releaser/prerequisite"
 	"vitess.io/vitess-releaser/go/releaser/vitess"
 )
 
@@ -102,7 +101,7 @@ func CreateReleaseIssue(ctx *releaser.Context) (*logging.ProgressLogging, func()
 		newIssue := github.Issue{
 			Title:    fmt.Sprintf("Release of v%s", newRelease),
 			Body:     b.String(),
-			Labels:   []string{"Component: General", "Type: Release"},
+			Labels:   []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}},
 			Assignee: "@me",
 		}
 
@@ -112,61 +111,52 @@ func CreateReleaseIssue(ctx *releaser.Context) (*logging.ProgressLogging, func()
 	}
 }
 
-func AddBackportPRs(ctx *releaser.Context) (*logging.ProgressLogging, func() string) {
-	pl := &logging.ProgressLogging{
-		TotalSteps: 4,
+func AddBackportPRs(ctx *releaser.Context) (int, string) {
+	issueNb := github.GetReleaseIssueNumber(ctx)
+	body := github.GetIssueBody(ctx.VitessRepo, issueNb)
+
+	// we must figure out what is the index of the BACKPORT_START comment
+	// in our issue's body, and what is the index of the BACKPORT_END comment too.
+	// once we have those, we will be able to get the list of Pull Requests in text,
+	// which will then need to be parsed.
+	start, end, err := getIssueTextBetweenTokens(backportStart, backportEnd, body)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	textPullRequest := body[start:end]
+	prsInIssue := parseMarkdownCheckboxListWithIssuePRsLinks(ctx.VitessRepo, textPullRequest)
+	prsChecked := github.CheckBackportToPRs(ctx)
+
+outer:
+	for _, pr := range prsChecked {
+		nb := pr.URL[strings.LastIndex(pr.URL, "/")+1:]
+		for _, pri := range prsInIssue {
+			if pri.nb == nb {
+				continue outer
+			}
+		}
+		prsInIssue = append(prsInIssue, prsIssuesListItem{
+			nb:  nb,
+		})
 	}
 
-	return pl, func() string {
-		pl.NewStepf("Fetch existing issue")
-		issueNb := github.GetReleaseIssueNumber(ctx)
-		body := github.GetIssueBody(ctx.VitessRepo, issueNb)
-
-		// we must figure out what is the index of the BACKPORT_START comment
-		// in our issue's body, and what is the index of the BACKPORT_END comment too.
-		// once we have those, we will be able to get the list of Pull Requests in text,
-		// which will then need to be parsed.
-		pl.NewStepf("Parse issue's body")
-		start, end, err := getIssueTextBetweenTokens(backportStart, backportEnd, body)
-		if err != nil {
-			log.Fatal(err.Error())
+	listURLs := make([]string, 0, len(prsInIssue)+1)
+	listURLs = append(listURLs, backPortPRsItem)
+	prNotDoneCount := 0
+	for _, item := range prsInIssue {
+		done := "x"
+		if !item.done {
+			done = " "
+			prNotDoneCount++
 		}
-		textPullRequest := body[start:end]
-		prsInIssue := parseMarkdownCheckboxListWithIssuePRsLinks(ctx.VitessRepo, textPullRequest)
-		prsChecked := prerequisite.CheckPRs(ctx)
-
-	outer:
-		for _, pr := range prsChecked {
-			nb := pr.URL[strings.LastIndex(pr.URL, "/")+1:]
-			for _, pri := range prsInIssue {
-				if pri.nb == nb {
-					continue outer
-				}
-			}
-			prsInIssue = append(prsInIssue, prsIssuesListItem{
-				nb:  nb,
-			})
-		}
-
-		listURLs := make([]string, 0, len(prsInIssue)+1)
-		listURLs = append(listURLs, backPortPRsItem)
-		for _, item := range prsInIssue {
-			done := " "
-			if item.done {
-				done = "x"
-			}
-			listURLs = append(listURLs, fmt.Sprintf("  - [%s] #%s", done, item.nb))
-		}
-
-		body = body[:start] + "\n" + strings.Join(listURLs, "\n") + "\n" + body[end:]
-
-		pl.NewStepf("Replace issue on GitHub")
-		issue := github.Issue{Body: body, Number: issueNb}
-		url := issue.UpdateBody(ctx.VitessRepo)
-
-		pl.NewStepf("Issue updated: %s", url)
-		return url
+		listURLs = append(listURLs, fmt.Sprintf("  - [%s] #%s", done, item.nb))
 	}
+
+	body = body[:start] + "\n" + strings.Join(listURLs, "\n") + "\n" + body[end:]
+
+	issue := github.Issue{Body: body, Number: issueNb}
+	url := issue.UpdateBody(ctx.VitessRepo)
+	return prNotDoneCount, url
 }
 
 func getIssueTextBetweenTokens(tokenStart, tokenEnd, body string) (start, end int, err error) {
@@ -231,56 +221,47 @@ func parseMarkdownCheckboxListWithIssuePRsLinks(repo, body string) []prsIssuesLi
 	return lis
 }
 
-func AddReleaseBlockerIssues(ctx *releaser.Context) (*logging.ProgressLogging, func() string) {
-	pl := &logging.ProgressLogging{
-		TotalSteps: 4,
+func AddReleaseBlockerIssues(ctx *releaser.Context) (int, string) {
+	issueNb := github.GetReleaseIssueNumber(ctx)
+	body := github.GetIssueBody(ctx.VitessRepo, issueNb)
+
+	start, end, err := getIssueTextBetweenTokens(releaseBlockerStart, releaseBlockerEnd, body)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	textPullRequest := body[start:end]
+
+	issuesInIssue := parseMarkdownCheckboxListWithIssuePRsLinks(ctx.VitessRepo, textPullRequest)
+	issuesChecked := github.CheckReleaseBlockerIssues(ctx)
+
+outer:
+	for _, issueChecked := range issuesChecked {
+		nb := issueChecked.URL[strings.LastIndex(issueChecked.URL, "/")+1:]
+		for _, i := range issuesInIssue {
+			if i.nb == nb {
+				continue outer
+			}
+		}
+		issuesInIssue = append(issuesInIssue, prsIssuesListItem{
+			nb:  nb,
+		})
 	}
 
-	return pl, func() string {
-		pl.NewStepf("Fetch existing issue")
-		issueNb := github.GetReleaseIssueNumber(ctx)
-		body := github.GetIssueBody(ctx.VitessRepo, issueNb)
-
-		pl.NewStepf("Parse issue's body")
-		start, end, err := getIssueTextBetweenTokens(releaseBlockerStart, releaseBlockerEnd, body)
-		if err != nil {
-			log.Fatal(err.Error())
+	listURLs := make([]string, 0, len(issuesInIssue)+1)
+	listURLs = append(listURLs, releaseBlockerIssuesItem)
+	issueNotDone := 0
+	for _, item := range issuesInIssue {
+		done := "x"
+		if !item.done {
+			done = " "
+			issueNotDone++
 		}
-		textPullRequest := body[start:end]
-
-		issuesInIssue := parseMarkdownCheckboxListWithIssuePRsLinks(ctx.VitessRepo, textPullRequest)
-		issuesChecked := prerequisite.CheckReleaseBlockerIssues(ctx)
-
-	outer:
-		for _, issueChecked := range issuesChecked {
-			nb := issueChecked.URL[strings.LastIndex(issueChecked.URL, "/")+1:]
-			for _, i := range issuesInIssue {
-				if i.nb == nb {
-					continue outer
-				}
-			}
-			issuesInIssue = append(issuesInIssue, prsIssuesListItem{
-				nb:  nb,
-			})
-		}
-
-		listURLs := make([]string, 0, len(issuesInIssue)+1)
-		listURLs = append(listURLs, releaseBlockerIssuesItem)
-		for _, item := range issuesInIssue {
-			done := " "
-			if item.done {
-				done = "x"
-			}
-			listURLs = append(listURLs, fmt.Sprintf("  - [%s] #%s", done, item.nb))
-		}
-
-		body = body[:start] + "\n" + strings.Join(listURLs, "\n") + "\n" + body[end:]
-
-		pl.NewStepf("Replace issue on GitHub")
-		issue := github.Issue{Body: body, Number: issueNb}
-		url := issue.UpdateBody(ctx.VitessRepo)
-
-		pl.NewStepf("Issue updated: %s", url)
-		return url
+		listURLs = append(listURLs, fmt.Sprintf("  - [%s] #%s", done, item.nb))
 	}
+
+	body = body[:start] + "\n" + strings.Join(listURLs, "\n") + "\n" + body[end:]
+
+	issue := github.Issue{Body: body, Number: issueNb}
+	url := issue.UpdateBody(ctx.VitessRepo)
+	return issueNotDone, url
 }

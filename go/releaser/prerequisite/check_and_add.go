@@ -18,26 +18,26 @@ package prerequisite
 
 import (
 	"fmt"
-	"log"
-	"strings"
 
-	"github.com/spf13/cobra"
 	"vitess.io/vitess-releaser/go/releaser"
-
-	"vitess.io/vitess-releaser/go/releaser/prerequisite"
+	"vitess.io/vitess-releaser/go/releaser/issue"
+	"vitess.io/vitess-releaser/go/releaser/logging"
 )
 
-var checkPRs = &cobra.Command{
-	Use:     "check-prs",
-	Aliases: []string{"pr"},
-	Run: func(cmd *cobra.Command, args []string) {
-		ctx := releaser.UnwrapCtx(cmd.Context())
+func CheckAndAddPRsIssues(ctx *releaser.Context) (*logging.ProgressLogging, func() string) {
+	pl := &logging.ProgressLogging{
+		TotalSteps: 3,
+	}
 
-		mustClose := prerequisite.FormatPRs(prerequisite.CheckPRs(ctx))
+	return pl, func() string {
+		pl.NewStepf("Check and add Pull Requests")
+		nbPRs, url := issue.AddBackportPRs(ctx)
 
-		if len(mustClose) == 0 {
-			return
-		}
-		log.Fatalf(fmt.Sprintf("Still open PRs against the release branch:\n%s", strings.Join(mustClose, "\n")))
-	},
+		pl.NewStepf("Check and add Release Blocker Issues")
+		nbIssues, _ := issue.AddReleaseBlockerIssues(ctx)
+
+		msg := fmt.Sprintf("Found %d PRs and %d issues, %s up-to-date", nbPRs, nbIssues, url)
+		pl.NewStepf(msg)
+		return msg
+	}
 }

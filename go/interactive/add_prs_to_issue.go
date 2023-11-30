@@ -19,22 +19,22 @@ package interactive
 import (
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/issue"
+	"vitess.io/vitess-releaser/go/releaser/prerequisite"
 )
 
-type addPRsToIssue string
+type checkAndAdd string
 
-func addPRsToIssueMenuItem(ctx *releaser.Context) *menuItem {
+func checkAndAddMenuItem(ctx *releaser.Context) *menuItem {
 	return &menuItem{
 		ctx:    ctx,
-		name:   "Backport Pull Requests: Add to Release Issue",
-		act:    addPRsToIssueAct,
-		update: addPRsToIssueUpdate,
+		name:   "Check and add pending PRs and release blocker Issues to Release Issue",
+		act:    checkAndAddAct,
+		update: checkAndAddUpdate,
 	}
 }
 
-func addPRsToIssueUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
-	releaseIssueLink, ok := msg.(addPRsToIssue)
+func checkAndAddUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
+	releaseIssueLink, ok := msg.(checkAndAdd)
 	if !ok {
 		return mi, nil
 	}
@@ -43,10 +43,10 @@ func addPRsToIssueUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 	return mi, nil
 }
 
-func addPRsToIssueAct(mi *menuItem) (*menuItem, tea.Cmd) {
+func checkAndAddAct(mi *menuItem) (*menuItem, tea.Cmd) {
 	mi.info = "running..."
-	pl, add := issue.AddBackportPRs(mi.ctx)
+	pl, add := prerequisite.CheckAndAddPRsIssues(mi.ctx)
 	return mi, tea.Batch(func() tea.Msg {
-		return addPRsToIssue(add())
-	}, pushDialog(newProgressDialog("Adding pending Pull Requests to Release Issue", pl)))
+		return checkAndAdd(add())
+	}, pushDialog(newProgressDialog("Check and add pending PRs and release blocker Issues to Release Issue", pl)))
 }

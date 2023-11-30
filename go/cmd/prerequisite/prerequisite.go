@@ -28,10 +28,6 @@ func Prerequisite() *cobra.Command {
 	}
 
 	cmd.AddCommand(createIssue)
-	cmd.AddCommand(checkPRs)
-	cmd.AddCommand(checkReleaseSummary)
-	cmd.AddCommand(addPendingPRsToIssue)
-	cmd.AddCommand(addReleaseBlockerIssuesToIssue)
 	cmd.AddCommand(slackAnnouncement)
 	return cmd
 }
