@@ -29,10 +29,7 @@ func MainScreen(ctx *releaser.Context) {
 	prereq := newMenu(
 		"Prerequisites",
 		slackAnnouncementMenuItem(ctx, slackAnnouncementPreRequisite),
-		checkPRsMenuItem(ctx),
-		addPRsToIssueMenuItem(ctx),
-		releaseBlockerIssuesMenuItem(ctx),
-		addReleaseBlockerIssuesMenuItem(ctx),
+		checkAndAddMenuItem(ctx),
 		checkSummaryMenuItem(ctx),
 	)
 

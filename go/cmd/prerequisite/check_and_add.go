@@ -18,26 +18,19 @@ package prerequisite
 
 import (
 	"fmt"
-	"log"
-	"strings"
 
 	"github.com/spf13/cobra"
 	"vitess.io/vitess-releaser/go/releaser"
-
 	"vitess.io/vitess-releaser/go/releaser/prerequisite"
 )
 
-var checkPRs = &cobra.Command{
-	Use:     "check-prs",
-	Aliases: []string{"pr"},
+var checkAndAdd = &cobra.Command{
+	Use:   "check-and-add",
+	Short: "Checks and adds pending Pull Request and Release Blocker Issues to the release Issue",
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := releaser.UnwrapCtx(cmd.Context())
-
-		mustClose := prerequisite.FormatPRs(prerequisite.CheckPRs(ctx))
-
-		if len(mustClose) == 0 {
-			return
-		}
-		log.Fatalf(fmt.Sprintf("Still open PRs against the release branch:\n%s", strings.Join(mustClose, "\n")))
+		_, check := prerequisite.CheckAndAddPRsIssues(ctx)
+		msg := check()
+		fmt.Println(msg)
 	},
 }

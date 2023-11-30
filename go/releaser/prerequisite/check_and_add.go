@@ -19,18 +19,28 @@ package prerequisite
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/issue"
+	"vitess.io/vitess-releaser/go/releaser/logging"
 )
 
-var addPendingPRsToIssue = &cobra.Command{
-	Use:   "add-pending-prs",
-	Short: "Add all pending Pull Requests to the Release Issue",
-	Run: func(cmd *cobra.Command, args []string) {
-		ctx := releaser.UnwrapCtx(cmd.Context())
-		_, add := issue.AddBackportPRs(ctx)
-		link := add()
-		fmt.Println("Done, link to the existing GitHub Issue: ", link)
-	},
+func CheckAndAddPRsIssues(ctx *releaser.Context) (*logging.ProgressLogging, func() string) {
+	pl := &logging.ProgressLogging{
+		TotalSteps: 3,
+	}
+
+	return pl, func() string {
+		pl.NewStepf("Check and add Pull Requests")
+		nbPRs, url := issue.AddBackportPRs(ctx)
+
+		pl.NewStepf("Check and add Release Blocker Issues")
+		nbIssues, _ := issue.AddReleaseBlockerIssues(ctx)
+
+		msg := fmt.Sprintf("Up to date, see: %s", url)
+		if nbPRs > 0 || nbIssues > 0 {
+			msg = fmt.Sprintf("Found %d PRs and %d issues, see: %s", nbPRs, nbIssues, url)
+		}
+		pl.NewStepf(msg)
+		return msg
+	}
 }

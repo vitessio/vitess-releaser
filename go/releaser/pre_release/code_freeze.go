@@ -70,7 +70,7 @@ func CodeFreeze(ctx *releaser.Context) (*logging.ProgressLogging, func() string)
 			Body:   fmt.Sprintf("This Pull Request freezes the branch `%s` for `v%s`", branchName, nextRelease),
 			Branch: newBranchName,
 			Base:   branchName,
-			Labels: []string{"Component: General", "Type: Release"},
+			Labels: []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}},
 		}
 		url := pr.Create(ctx.VitessRepo)
 		pl.NewStepf("PR created %s", url)
