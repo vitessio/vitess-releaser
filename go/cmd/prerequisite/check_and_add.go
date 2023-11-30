@@ -17,18 +17,20 @@ limitations under the License.
 package prerequisite
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
+	"vitess.io/vitess-releaser/go/releaser"
+	"vitess.io/vitess-releaser/go/releaser/prerequisite"
 )
 
-func Prerequisite() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "prerequisite",
-		Aliases: []string{"pre"},
-		Short:   "Runs the prerequisites of a release",
-	}
-
-	cmd.AddCommand(createIssue)
-	cmd.AddCommand(checkAndAdd)
-	cmd.AddCommand(slackAnnouncement)
-	return cmd
+var checkAndAdd = &cobra.Command{
+	Use:   "check-and-add",
+	Short: "Checks and adds pending Pull Request and Release Blocker Issues to the release Issue",
+	Run: func(cmd *cobra.Command, args []string) {
+		ctx := releaser.UnwrapCtx(cmd.Context())
+		_, check := prerequisite.CheckAndAddPRsIssues(ctx)
+		msg := check()
+		fmt.Println(msg)
+	},
 }
