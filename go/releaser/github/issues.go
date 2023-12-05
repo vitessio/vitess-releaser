@@ -24,8 +24,7 @@ import (
 	"strings"
 
 	gh "github.com/cli/go-gh"
-	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/vitess"
+	"vitess.io/vitess-releaser/go/releaser/git"
 )
 
 type Issue struct {
@@ -135,10 +134,10 @@ func FormatIssues(issues []Issue) []string {
 	return prFmt
 }
 
-func CheckReleaseBlockerIssues(ctx *releaser.Context) []Issue {
-	vitess.CorrectCleanRepo(ctx.VitessRepo)
+func CheckReleaseBlockerIssues(repo, majorRelease string) []Issue {
+	git.CorrectCleanRepo(repo)
 
-	byteRes, _, err := gh.Exec("issue", "list", "--json", "title,url,labels", "--repo", ctx.VitessRepo)
+	byteRes, _, err := gh.Exec("issue", "list", "--json", "title,url,labels", "--repo", repo)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -150,7 +149,7 @@ func CheckReleaseBlockerIssues(ctx *releaser.Context) []Issue {
 
 	var mustClose []Issue
 
-	branchName := fmt.Sprintf("release-%s.0", ctx.MajorRelease)
+	branchName := fmt.Sprintf("release-%s.0", majorRelease)
 	for _, i := range issues {
 		for _, l := range i.Labels {
 			if strings.HasPrefix(l.Name, "Release Blocker: ") && strings.Contains(l.Name, branchName) {

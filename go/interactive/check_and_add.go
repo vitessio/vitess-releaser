@@ -34,7 +34,7 @@ func checkAndAddMenuItem(ctx *releaser.Context) *menuItem {
 		name:   steps.CheckAndAdd,
 		act:    checkAndAddAct,
 		update: checkAndAddUpdate,
-		isDone: state.ToDo, // TODO: read the initial state from the Release Issue on GitHub
+		isDone: ctx.Issue.CheckBackports.Done() && ctx.Issue.ReleaseBlocker.Done(),
 	}
 }
 

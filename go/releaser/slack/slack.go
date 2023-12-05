@@ -20,20 +20,19 @@ import (
 	"fmt"
 
 	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/vitess"
 )
 
 const (
 	preRequisiteSlackMessage = `📣 The Vitess maintainers are planning on releasing v%s on <DATE>.`
-	postReleaseSlackMessage = `📣 We have just released v%s. Check out the release notes on https://github.com/%s/release/tag/v%s`
+	postReleaseSlackMessage  = `📣 We have just released v%s. Check out the release notes on https://github.com/%s/release/tag/v%s`
 )
 
 func AnnouncementMessage(ctx *releaser.Context) string {
-	newRelease, _ := vitess.FindNextRelease(ctx.MajorRelease)
+	newRelease, _ := releaser.FindNextRelease(ctx.MajorRelease)
 	return fmt.Sprintf(preRequisiteSlackMessage, newRelease)
 }
 
 func PostReleaseMessage(ctx *releaser.Context) string {
-	newRelease, _ := vitess.FindNextRelease(ctx.MajorRelease)
+	newRelease, _ := releaser.FindNextRelease(ctx.MajorRelease)
 	return fmt.Sprintf(postReleaseSlackMessage, newRelease, ctx.VitessRepo, newRelease)
 }

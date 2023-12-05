@@ -18,7 +18,6 @@ package interactive
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
-	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/prerequisite"
 	"vitess.io/vitess-releaser/go/releaser/steps"
@@ -30,7 +29,7 @@ func checkSummaryMenuItem(ctx *releaser.Context) *menuItem {
 	return &menuItem{
 		ctx:    ctx,
 		name:   steps.CheckSummary,
-		isDone: state.ToDo, // TODO: read initial status from Release Issue on GitHub
+		isDone: ctx.Issue.CheckSummary,
 		act:    checkSummaryAct,
 		update: checkSummaryUpdate,
 	}

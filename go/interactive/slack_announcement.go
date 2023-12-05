@@ -18,7 +18,6 @@ package interactive
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
-	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/logging"
 	"vitess.io/vitess-releaser/go/releaser/slack"
@@ -38,13 +37,16 @@ const (
 func slackAnnouncementMenuItem(ctx *releaser.Context, announcementType slackAnnouncementType) *menuItem {
 	var name string
 	var act func(*menuItem) (*menuItem, tea.Cmd)
+	var isDone bool
 	switch announcementType {
 	case slackAnnouncementPreRequisite:
 		act = slackAnnouncementPreRequisiteAct
 		name = steps.SlackAnnouncement
+		isDone = ctx.Issue.SlackPreRequisite
 	case slackAnnouncementPostRelease:
 		act = slackAnnouncementPostReleaseAct
 		name = steps.SlackAnnouncementPost
+		isDone = ctx.Issue.SlackPostRelease
 	}
 
 	return &menuItem{
@@ -52,7 +54,7 @@ func slackAnnouncementMenuItem(ctx *releaser.Context, announcementType slackAnno
 		name:   name,
 		act:    act,
 		update: slackAnnouncementUpdate,
-		isDone: state.ToDo,
+		isDone: isDone,
 	}
 }
 

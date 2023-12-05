@@ -14,18 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package vitess
+package releaser
 
 import (
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
-
-	"vitess.io/vitess-releaser/go/releaser"
 )
 
-func FindVersionAfterNextRelease(ctx *releaser.Context) string {
+func FindVersionAfterNextRelease(ctx *Context) string {
 	CorrectCleanRepo(ctx.VitessRepo)
 	nextRelease, _ := FindNextRelease(ctx.MajorRelease)
 

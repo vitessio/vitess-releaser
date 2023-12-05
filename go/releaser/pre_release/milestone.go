@@ -22,7 +22,6 @@ import (
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/logging"
-	"vitess.io/vitess-releaser/go/releaser/vitess"
 )
 
 func NewMilestone(ctx *releaser.Context) (*logging.ProgressLogging, func() string) {
@@ -32,7 +31,7 @@ func NewMilestone(ctx *releaser.Context) (*logging.ProgressLogging, func() strin
 
 	return pl, func() string {
 		pl.NewStepf("Finding the next Milestone")
-		nextNextRelease := vitess.FindVersionAfterNextRelease(ctx)
+		nextNextRelease := releaser.FindVersionAfterNextRelease(ctx)
 		newMilestone := fmt.Sprintf("v%s", nextNextRelease)
 
 		ms := github.GetMilestonesByName(ctx.VitessRepo, newMilestone)

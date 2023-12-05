@@ -26,7 +26,6 @@ import (
 	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/logging"
-	"vitess.io/vitess-releaser/go/releaser/vitess"
 )
 
 const (
@@ -89,7 +88,7 @@ func (pi parentItem) Done() bool {
 	return true
 }
 
-func LoadIssue(ctx *Context) {
+func (ctx *Context) LoadIssue() {
 	body := github.GetIssueBody(ctx.VitessRepo, ctx.IssueNbGH)
 
 	lines := strings.Split(body, "\n")
@@ -143,8 +142,8 @@ func CreateReleaseIssue(ctx *Context) (*logging.ProgressLogging, func() string) 
 	}
 
 	return pl, func() string {
-		vitess.CorrectCleanRepo(ctx.VitessRepo)
-		newRelease, _ := vitess.FindNextRelease(ctx.MajorRelease)
+		CorrectCleanRepo(ctx.VitessRepo)
+		newRelease, _ := FindNextRelease(ctx.MajorRelease)
 
 		var err error
 		var i Issue

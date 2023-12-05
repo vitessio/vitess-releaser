@@ -35,22 +35,22 @@ type Context struct {
 	Issue        Issue
 }
 
-func (c Context) Deadline() (deadline time.Time, ok bool) {
+func (ctx *Context) Deadline() (deadline time.Time, ok bool) {
 	// TODO implement me
 	panic("implement me")
 }
 
-func (c Context) Done() <-chan struct{} {
+func (ctx *Context) Done() <-chan struct{} {
 	// TODO implement me
 	panic("implement me")
 }
 
-func (c Context) Err() error {
+func (ctx *Context) Err() error {
 	// TODO implement me
 	panic("implement me")
 }
 
-func (c Context) Value(key any) any {
+func (ctx *Context) Value(key any) any {
 	// TODO implement me
 	panic("implement me")
 }
