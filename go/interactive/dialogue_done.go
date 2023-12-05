@@ -23,6 +23,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
 	"vitess.io/vitess-releaser/go/interactive/state"
+	"vitess.io/vitess-releaser/go/releaser/logging"
 )
 
 type doneDialog struct {
@@ -30,6 +31,7 @@ type doneDialog struct {
 	title         string
 	message       []string
 	status        *string
+	onDoneAsync   func() (*logging.ProgressLogging, func())
 }
 
 var _ tea.Model = doneDialog{}
@@ -63,6 +65,15 @@ func (c doneDialog) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					*(c.status) = state.Done
 				case state.Done:
 					*(c.status) = state.ToDo
+				}
+
+				// call the callback
+				if c.onDoneAsync != nil {
+					pl, fn := c.onDoneAsync()
+					return c, tea.Batch(func() tea.Msg {
+						fn()
+						return ""
+					}, pushDialog(newProgressDialog("Loading ...", pl)))
 				}
 			}
 		}

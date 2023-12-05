@@ -20,6 +20,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser"
+	"vitess.io/vitess-releaser/go/releaser/steps"
 
 	"vitess.io/vitess-releaser/go/releaser/pre_release"
 )
@@ -27,7 +28,7 @@ import (
 func codeFreezeMenuItem(ctx *releaser.Context) *menuItem {
 	return &menuItem{
 		ctx:    ctx,
-		name:   "Code freeze",
+		name:   steps.CodeFreeze,
 		act:    codeFreezeAct,
 		init:   nil,
 		update: codeFreezeUpdate,

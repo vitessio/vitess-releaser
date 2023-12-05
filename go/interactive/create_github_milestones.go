@@ -21,6 +21,7 @@ import (
 	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/pre_release"
+	"vitess.io/vitess-releaser/go/releaser/steps"
 )
 
 type createMilestone string
@@ -28,7 +29,7 @@ type createMilestone string
 func createMilestoneMenuItem(ctx *releaser.Context) *menuItem {
 	return &menuItem{
 		ctx:    ctx,
-		name:   "Create a new GitHub Milestone",
+		name:   steps.CreateMilestone,
 		act:    createMilestoneAct,
 		update: createMilestoneUpdate,
 		status: state.ToDo,

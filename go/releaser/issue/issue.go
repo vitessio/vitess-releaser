@@ -23,38 +23,81 @@ import (
 	"strings"
 	"text/template"
 
+	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/logging"
+	"vitess.io/vitess-releaser/go/releaser/steps"
 	"vitess.io/vitess-releaser/go/releaser/vitess"
 )
 
 const (
+	slackAnnouncementStart = "<!-- SLACK_START -->"
+	slackAnnouncementEnd   = "<!-- SLACK_END -->"
+	slackAnnouncementItem  = "- [ ] Notify the community on Slack."
+	slackAnnouncementFmt   = slackAnnouncementStart + "\n" + slackAnnouncementItem + "\n" + slackAnnouncementEnd
+
+	checkSummaryStart = "<!-- SUMMARY_START -->"
+	checkSummaryEnd   = "<!-- SUMMARY_START -->"
+	checkSummaryItem  = "- [ ] Make sure the release notes summary is prepared and clean."
+	checkSummaryFmt   = checkSummaryStart + "\n" + checkSummaryItem + "\n" + checkSummaryEnd
+
 	// List of backports Pull Requests
 	backportStart   = "<!-- BACKPORT_START -->"
-	backportEnd     = "<!-- BACKPORT_END -->"
-	backPortPRsItem = "- [ ] Make sure backport Pull Requests are merged, list below."
+	backportEnd  = "<!-- BACKPORT_END -->"
+	backportItem = "- Make sure backport Pull Requests are merged, list below."
+	backportFmt  = backportStart + "\n" + backportItem + "\n" + backportEnd
 
 	// List of release blocker Issues
 	releaseBlockerStart      = "<!-- RELEASE_BLOCKER_START -->"
-	releaseBlockerEnd        = "<!-- RELEASE_BLOCKER_END -->"
-	releaseBlockerIssuesItem = "- [ ] Make sure release blocker Issues are closed, list below."
+	releaseBlockerEnd  = "<!-- RELEASE_BLOCKER_END -->"
+	releaseBlockerItem = "- Make sure release blocker Issues are closed, list below."
+	releaseBlockerFmt  = releaseBlockerStart + "\n" + releaseBlockerItem + "\n" + releaseBlockerEnd
+)
+
+type StepMeta struct {
+	StartToken   string
+	EndToken     string
+	IssueItemStr string
+}
+
+var (
+	stepBindings = map[string][]StepMeta{
+		steps.SlackAnnouncement: {{
+			StartToken:   slackAnnouncementStart,
+			EndToken:     slackAnnouncementEnd,
+			IssueItemStr: slackAnnouncementItem,
+		}},
+		steps.CheckAndAdd: {{
+			StartToken:   backportStart,
+			EndToken:     backportEnd,
+			IssueItemStr: backportItem,
+		}, {
+			StartToken:   releaseBlockerStart,
+			EndToken:     releaseBlockerEnd,
+			IssueItemStr: releaseBlockerItem,
+		}},
+		steps.CheckSummary:    {{
+			StartToken:   checkSummaryStart,
+			EndToken:     checkSummaryEnd,
+			IssueItemStr: checkSummaryItem,
+		}},
+		steps.CodeFreeze:      {},
+		steps.CreateMilestone: {},
+		steps.SlackAnnouncementPost: {},
+	}
 )
 
 var (
-	releaseIssueTemplate = fmt.Sprintf(`This release is scheduled for: TODO: '.Date' here .
+	releaseIssueTemplate = fmt.Sprintf(
+		`This release is scheduled for: TODO: '.Date' here .
 
 <!-- Please DO NOT modify or remove the comments in this file. -->
 <!-- Moreover, DO NOT add text in the middle of an _START and _END comment. -->
 
 ### Prerequisites for Release
 
-- [ ] Notify the community on Slack.
-- [ ] Make sure the release notes summary is prepared and clean.
 %s
-%s
-%s
-
 %s
 %s
 %s
@@ -77,8 +120,12 @@ var (
 - [ ] Announce new release:
   - [ ] Slack
   - [ ] Twitter
-`, backportStart, backPortPRsItem, backportEnd,
-		releaseBlockerStart, releaseBlockerEnd, releaseBlockerIssuesItem)
+`,
+		slackAnnouncementFmt,
+		checkSummaryFmt,
+		backportFmt,
+		releaseBlockerFmt,
+	)
 )
 
 func CreateReleaseIssue(ctx *releaser.Context) (*logging.ProgressLogging, func() string) {
@@ -111,6 +158,45 @@ func CreateReleaseIssue(ctx *releaser.Context) (*logging.ProgressLogging, func()
 	}
 }
 
+func InverseStepStatus(ctx *releaser.Context, step string) (*logging.ProgressLogging, func()) {
+	binding, ok := stepBindings[step]
+	if !ok {
+		log.Fatalf("unknown step: %s", step)
+	}
+
+	pl := &logging.ProgressLogging{TotalSteps: 1 + len(binding)}
+	return pl, func() {
+		pl.NewStepf("Update status for '%s' on the Release Issue", step)
+
+		issueNb := github.GetReleaseIssueNumber(ctx)
+		body := github.GetIssueBody(ctx.VitessRepo, issueNb)
+
+		for _, meta := range binding {
+			start, end, err := getIssueTextBetweenTokens(meta.StartToken, meta.EndToken, body)
+			if err != nil {
+				log.Fatal(err.Error())
+			}
+
+			content := body[start:end]
+			prefixLen := len("- [ ] ")
+
+			var s string
+
+			if strings.HasPrefix(content, "- [x]") {
+				content = "- [ ] " + content[prefixLen:]
+				s = state.ToDo
+			} else if strings.HasPrefix(content, "- [ ]") {
+				content = "- [x] " + content[prefixLen:]
+				s = state.Done
+			}
+
+			updateSegmentOfIssue(ctx, body, content, start, end, issueNb)
+
+			pl.NewStepf("Item marked as '%s'", s)
+		}
+	}
+}
+
 func AddBackportPRs(ctx *releaser.Context) (int, string) {
 	issueNb := github.GetReleaseIssueNumber(ctx)
 	body := github.GetIssueBody(ctx.VitessRepo, issueNb)
@@ -136,12 +222,12 @@ outer:
 			}
 		}
 		prsInIssue = append(prsInIssue, prsIssuesListItem{
-			nb:  nb,
+			nb: nb,
 		})
 	}
 
 	listURLs := make([]string, 0, len(prsInIssue)+1)
-	listURLs = append(listURLs, backPortPRsItem)
+	listURLs = append(listURLs, backportItem)
 	prNotDoneCount := 0
 	for _, item := range prsInIssue {
 		done := "x"
@@ -152,11 +238,60 @@ outer:
 		listURLs = append(listURLs, fmt.Sprintf("  - [%s] #%s", done, item.nb))
 	}
 
-	body = body[:start] + "\n" + strings.Join(listURLs, "\n") + "\n" + body[end:]
+	newList := fmt.Sprintf("\n%s\n", strings.Join(listURLs, "\n"))
+	url := updateSegmentOfIssue(ctx, body, newList, start, end, issueNb)
+	return prNotDoneCount, url
+}
+
+func AddReleaseBlockerIssues(ctx *releaser.Context) (int, string) {
+	issueNb := github.GetReleaseIssueNumber(ctx)
+	body := github.GetIssueBody(ctx.VitessRepo, issueNb)
+
+	start, end, err := getIssueTextBetweenTokens(releaseBlockerStart, releaseBlockerEnd, body)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	textPullRequest := body[start:end]
+
+	issuesInIssue := parseMarkdownCheckboxListWithIssuePRsLinks(ctx.VitessRepo, textPullRequest)
+	issuesChecked := github.CheckReleaseBlockerIssues(ctx)
+
+outer:
+	for _, issueChecked := range issuesChecked {
+		nb := issueChecked.URL[strings.LastIndex(issueChecked.URL, "/")+1:]
+		for _, i := range issuesInIssue {
+			if i.nb == nb {
+				continue outer
+			}
+		}
+		issuesInIssue = append(issuesInIssue, prsIssuesListItem{
+			nb: nb,
+		})
+	}
+
+	listURLs := make([]string, 0, len(issuesInIssue)+1)
+	listURLs = append(listURLs, releaseBlockerItem)
+	issueNotDone := 0
+	for _, item := range issuesInIssue {
+		done := "x"
+		if !item.done {
+			done = " "
+			issueNotDone++
+		}
+		listURLs = append(listURLs, fmt.Sprintf("  - [%s] #%s", done, item.nb))
+	}
+
+	newList := fmt.Sprintf("\n%s\n", strings.Join(listURLs, "\n"))
+	url := updateSegmentOfIssue(ctx, body, newList, start, end, issueNb)
+	return issueNotDone, url
+}
+
+func updateSegmentOfIssue(ctx *releaser.Context, body, replaceBy string, startIdx, endIdx, issueNb int) string {
+	body = body[:startIdx] + replaceBy + body[endIdx:]
 
 	issue := github.Issue{Body: body, Number: issueNb}
 	url := issue.UpdateBody(ctx.VitessRepo)
-	return prNotDoneCount, url
+	return url
 }
 
 func getIssueTextBetweenTokens(tokenStart, tokenEnd, body string) (start, end int, err error) {
@@ -219,49 +354,4 @@ func parseMarkdownCheckboxListWithIssuePRsLinks(repo, body string) []prsIssuesLi
 		lis = append(lis, newItem)
 	}
 	return lis
-}
-
-func AddReleaseBlockerIssues(ctx *releaser.Context) (int, string) {
-	issueNb := github.GetReleaseIssueNumber(ctx)
-	body := github.GetIssueBody(ctx.VitessRepo, issueNb)
-
-	start, end, err := getIssueTextBetweenTokens(releaseBlockerStart, releaseBlockerEnd, body)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	textPullRequest := body[start:end]
-
-	issuesInIssue := parseMarkdownCheckboxListWithIssuePRsLinks(ctx.VitessRepo, textPullRequest)
-	issuesChecked := github.CheckReleaseBlockerIssues(ctx)
-
-outer:
-	for _, issueChecked := range issuesChecked {
-		nb := issueChecked.URL[strings.LastIndex(issueChecked.URL, "/")+1:]
-		for _, i := range issuesInIssue {
-			if i.nb == nb {
-				continue outer
-			}
-		}
-		issuesInIssue = append(issuesInIssue, prsIssuesListItem{
-			nb:  nb,
-		})
-	}
-
-	listURLs := make([]string, 0, len(issuesInIssue)+1)
-	listURLs = append(listURLs, releaseBlockerIssuesItem)
-	issueNotDone := 0
-	for _, item := range issuesInIssue {
-		done := "x"
-		if !item.done {
-			done = " "
-			issueNotDone++
-		}
-		listURLs = append(listURLs, fmt.Sprintf("  - [%s] #%s", done, item.nb))
-	}
-
-	body = body[:start] + "\n" + strings.Join(listURLs, "\n") + "\n" + body[end:]
-
-	issue := github.Issue{Body: body, Number: issueNb}
-	url := issue.UpdateBody(ctx.VitessRepo)
-	return issueNotDone, url
 }

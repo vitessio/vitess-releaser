@@ -20,7 +20,10 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser"
+	"vitess.io/vitess-releaser/go/releaser/issue"
+	"vitess.io/vitess-releaser/go/releaser/logging"
 	"vitess.io/vitess-releaser/go/releaser/slack"
+	"vitess.io/vitess-releaser/go/releaser/steps"
 )
 
 type (
@@ -34,22 +37,25 @@ const (
 )
 
 func slackAnnouncementMenuItem(ctx *releaser.Context, announcementType slackAnnouncementType) *menuItem {
+	var name string
 	var act func(*menuItem) (*menuItem, tea.Cmd)
 	switch announcementType {
-	case slackAnnouncementPostRelease:
-		act = slackAnnouncementPostReleaseAct
 	case slackAnnouncementPreRequisite:
 		act = slackAnnouncementPreRequisiteAct
+		name = steps.SlackAnnouncement
+	case slackAnnouncementPostRelease:
+		act = slackAnnouncementPostReleaseAct
+		name = steps.SlackAnnouncementPost
 	}
 
 	// TODO: find out the initial status of this task by reading the GitHub Issue
 
 	return &menuItem{
 		ctx:    ctx,
-		name:   "Announce the release on Slack",
+		name:   name,
 		act:    act,
 		update: slackAnnouncementUpdate,
-		status:   state.ToDo,
+		status: state.ToDo,
 	}
 }
 
@@ -75,5 +81,8 @@ func slackAnnouncementUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 		title:   "The following message must be posted on the #general and #releases OSS Slack channels",
 		message: []string{string(slackMsg)},
 		status:  &mi.status,
+		onDoneAsync: func() (*logging.ProgressLogging, func()) {
+			return issue.InverseStepStatus(mi.ctx, mi.name)
+		},
 	})
 }
