@@ -27,3 +27,10 @@ func Fmt(b bool) string {
 	}
 	return "To do"
 }
+
+func FmtMd(b bool) string {
+	if b {
+		return "x"
+	}
+	return " "
+}

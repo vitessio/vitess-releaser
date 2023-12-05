@@ -20,7 +20,6 @@ import (
 	"fmt"
 
 	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/issue"
 	"vitess.io/vitess-releaser/go/releaser/logging"
 )
 
@@ -31,10 +30,10 @@ func CheckAndAddPRsIssues(ctx *releaser.Context) (*logging.ProgressLogging, func
 
 	return pl, func() string {
 		pl.NewStepf("Check and add Pull Requests")
-		nbPRs, url := issue.AddBackportPRs(ctx)
+		nbPRs, url := releaser.AddBackportPRs(ctx)
 
 		pl.NewStepf("Check and add Release Blocker Issues")
-		nbIssues, _ := issue.AddReleaseBlockerIssues(ctx)
+		nbIssues, _ := releaser.AddReleaseBlockerIssues(ctx)
 
 		msg := fmt.Sprintf("Up to date, see: %s", url)
 		if nbPRs > 0 || nbIssues > 0 {

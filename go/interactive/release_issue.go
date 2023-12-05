@@ -20,7 +20,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/issue"
 	"vitess.io/vitess-releaser/go/releaser/steps"
 
 	"vitess.io/vitess-releaser/go/releaser/github"
@@ -41,13 +40,13 @@ type releaseIssue string
 
 func issueInit(ctx *releaser.Context) tea.Cmd {
 	return func() tea.Msg {
-		url := github.GetReleaseIssue(ctx)
+		url := github.GetReleaseIssue(ctx.VitessRepo, ctx.MajorRelease)
 		return releaseIssue(url)
 	}
 }
 
 func createIssue(mi *menuItem) (*menuItem, tea.Cmd) {
-	pl, createIssueFn := issue.CreateReleaseIssue(mi.ctx)
+	pl, createIssueFn := releaser.CreateReleaseIssue(mi.ctx)
 	issueCreator := func() tea.Msg { return releaseIssue(createIssueFn()) }
 	return mi, tea.Batch(
 		issueCreator,

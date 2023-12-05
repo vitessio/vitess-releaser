@@ -20,7 +20,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/issue"
 	"vitess.io/vitess-releaser/go/releaser/logging"
 	"vitess.io/vitess-releaser/go/releaser/slack"
 	"vitess.io/vitess-releaser/go/releaser/steps"
@@ -80,7 +79,7 @@ func slackAnnouncementUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 		message: []string{string(slackMsg)},
 		isDone:  &mi.isDone,
 		onDoneAsync: func() (*logging.ProgressLogging, func()) {
-			return issue.InverseStepStatus(mi.ctx, mi.name)
+			return releaser.InverseStepStatus(mi.name)
 		},
 	})
 }

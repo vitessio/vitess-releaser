@@ -89,12 +89,12 @@ func GetIssueBody(repo string, nb int) string {
 	return i.Body
 }
 
-func GetReleaseIssue(ctx *releaser.Context) string {
+func GetReleaseIssue(repo, majorRelease string) string {
 	res, _, err := gh.Exec(
 		"issue", "list",
 		"-l", "Type: Release",
 		"--json", "title,url",
-		"--repo", ctx.VitessRepo,
+		"--repo", repo,
 	)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -108,7 +108,7 @@ func GetReleaseIssue(ctx *releaser.Context) string {
 
 	for _, issue := range issues {
 		title := issue["title"]
-		if strings.HasPrefix(title, fmt.Sprintf("Release of v%s", ctx.MajorRelease)) {
+		if strings.HasPrefix(title, fmt.Sprintf("Release of v%s", majorRelease)) {
 			return issue["url"]
 		}
 	}
@@ -116,8 +116,8 @@ func GetReleaseIssue(ctx *releaser.Context) string {
 	return ""
 }
 
-func GetReleaseIssueNumber(ctx *releaser.Context) int {
-	issueURL := GetReleaseIssue(ctx)
+func GetReleaseIssueNumber(repo, majorRelease string) int {
+	issueURL := GetReleaseIssue(repo, majorRelease)
 	lastIdx := strings.LastIndex(issueURL, "/")
 	issueNbStr := issueURL[lastIdx+1:]
 	issueNb, err := strconv.Atoi(issueNbStr)

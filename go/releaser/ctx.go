@@ -31,6 +31,8 @@ func UnwrapCtx(ctx context.Context) *Context {
 type Context struct {
 	VitessRepo   string
 	MajorRelease string
+	IssueNbGH    int
+	Issue        Issue
 }
 
 func (c Context) Deadline() (deadline time.Time, ok bool) {
@@ -52,4 +54,3 @@ func (c Context) Value(key any) any {
 	// TODO implement me
 	panic("implement me")
 }
-
