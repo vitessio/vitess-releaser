@@ -19,7 +19,6 @@ package interactive
 import (
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/logging"
 	"vitess.io/vitess-releaser/go/releaser/slack"
 	"vitess.io/vitess-releaser/go/releaser/steps"
 )
@@ -71,17 +70,20 @@ func slackAnnouncementPostReleaseAct(mi *menuItem) (*menuItem, tea.Cmd) {
 }
 
 func slackAnnouncementUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
-	slackMsg, ok := msg.(slackMessage)
-	if !ok {
-		return mi, nil
+	switch msg := msg.(type) {
+	case slackMessage:
+		return mi, pushDialog(&doneDialog2{
+			title:   "The following message must be posted on the #general and #releases OSS Slack channels",
+			message: []string{string(msg)},
+			isDone:  mi.isDone,
+		})
+	case doneDialog2DoneAct:
+		mi.isDone = !mi.isDone
+		pl, fn := releaser.InverseStepStatus(mi.name)
+		return mi, tea.Batch(func() tea.Msg {
+			fn()
+			return tea.Msg("")
+		}, pushDialog(newProgressDialog("Updating the Issue", pl)))
 	}
-
-	return mi, pushDialog(doneDialog{
-		title:   "The following message must be posted on the #general and #releases OSS Slack channels",
-		message: []string{string(slackMsg)},
-		isDone:  &mi.isDone,
-		onDoneAsync: func() (*logging.ProgressLogging, func()) {
-			return releaser.InverseStepStatus(mi.name)
-		},
-	})
+	return mi, nil
 }
