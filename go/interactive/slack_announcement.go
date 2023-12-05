@@ -72,18 +72,23 @@ func slackAnnouncementPostReleaseAct(mi *menuItem) (*menuItem, tea.Cmd) {
 func slackAnnouncementUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 	switch msg := msg.(type) {
 	case slackMessage:
-		return mi, pushDialog(&doneDialog2{
-			title:   "The following message must be posted on the #general and #releases OSS Slack channels",
-			message: []string{string(msg)},
-			isDone:  mi.isDone,
+		return mi, pushDialog(&doneDialog{
+			stepName: mi.name,
+			title:    "The following message must be posted on the #general and #releases OSS Slack channels",
+			message:  []string{string(msg)},
+			isDone:   mi.isDone,
 		})
-	case doneDialog2DoneAct:
+	case doneDialogAction:
+		if string(msg) != mi.name {
+			return mi, nil
+		}
+		if mi.name == steps.SlackAnnouncement {
+			mi.ctx.Issue.SlackPreRequisite = !mi.ctx.Issue.SlackPreRequisite
+		} else if mi.name == steps.SlackAnnouncementPost {
+			mi.ctx.Issue.SlackPostRelease = !mi.ctx.Issue.SlackPostRelease
+		}
 		mi.isDone = !mi.isDone
-		pl, fn := releaser.InverseStepStatus(mi.name)
-		return mi, tea.Batch(func() tea.Msg {
-			fn()
-			return tea.Msg("")
-		}, pushDialog(newProgressDialog("Updating the Issue", pl)))
+		// TODO: update the issue
 	}
 	return mi, nil
 }

@@ -36,16 +36,23 @@ func checkSummaryMenuItem(ctx *releaser.Context) *menuItem {
 }
 
 func checkSummaryUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
-	l, ok := msg.(checkSummary)
-	if !ok {
-		return mi, nil
+	switch msg := msg.(type) {
+	case checkSummary:
+		return mi, pushDialog(&doneDialog{
+			stepName: mi.name,
+			title:    "Check release note summary",
+			message:  msg,
+			isDone:   mi.isDone,
+		})
+	case doneDialogAction:
+		if string(msg) != mi.name {
+			return mi, nil
+		}
+		mi.ctx.Issue.CheckSummary = !mi.ctx.Issue.CheckSummary
+		mi.isDone = !mi.isDone
+		// TODO: update the issue
 	}
-
-	return mi, pushDialog(doneDialog{
-		title:   "Check release note summary",
-		message: l,
-		isDone:  &mi.isDone,
-	})
+	return mi, nil
 }
 
 func checkSummaryAct(mi *menuItem) (*menuItem, tea.Cmd) {

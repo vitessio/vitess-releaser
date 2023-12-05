@@ -23,24 +23,25 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
 	"vitess.io/vitess-releaser/go/interactive/state"
-	"vitess.io/vitess-releaser/go/releaser/logging"
 )
+
+type doneDialogAction string
 
 type doneDialog struct {
 	height, width int
 	title         string
 	message       []string
-	isDone        *bool
-	onDoneAsync   func() (*logging.ProgressLogging, func())
+	isDone        bool
+	stepName      string
 }
 
-var _ tea.Model = doneDialog{}
+var _ tea.Model = &doneDialog{}
 
-func (c doneDialog) Init() tea.Cmd {
+func (c *doneDialog) Init() tea.Cmd {
 	return nil
 }
 
-func (c doneDialog) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (c *doneDialog) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		c.height = msg.Height
@@ -54,23 +55,9 @@ func (c doneDialog) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyRunes:
 			switch string(msg.Runes) {
 			case "x":
-
-				if c.isDone == nil {
-					return c, nil
-				}
-				if *(c.isDone) {
-					*(c.isDone) = state.ToDo
-				} else {
-					*(c.isDone) = state.Done
-				}
-
-				// call the callback
-				if c.onDoneAsync != nil {
-					pl, fn := c.onDoneAsync()
-					return c, tea.Batch(func() tea.Msg {
-						fn()
-						return ""
-					}, pushDialog(newProgressDialog("Loading ...", pl)))
+				return c, func() tea.Msg {
+					c.isDone = !c.isDone
+					return doneDialogAction(c.stepName)
 				}
 			}
 		}
@@ -79,21 +66,16 @@ func (c doneDialog) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return c, nil
 }
 
-func (c doneDialog) View() string {
+func (c *doneDialog) View() string {
 	var rows [][]string
 	for _, s := range c.message {
 		rows = append(rows, []string{s})
 	}
 
-	s := false
-	if c.isDone != nil {
-		s = *(c.isDone)
-	}
-
 	lines := []string{
 		c.title,
 		"",
-		fmt.Sprintf("Task isDone is: %s", state.Fmt(s)),
+		fmt.Sprintf("Task status is: %s", state.Fmt(c.isDone)),
 	}
 	lines = append(lines, table.New().Data(table.NewStringData(rows...)).Width(c.width).Render())
 	lines = append(
