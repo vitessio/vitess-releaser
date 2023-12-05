@@ -115,15 +115,16 @@ func GetReleaseIssue(repo, majorRelease string) string {
 	return ""
 }
 
-func GetReleaseIssueNumber(repo, majorRelease string) int {
-	issueURL := GetReleaseIssue(repo, majorRelease)
-	lastIdx := strings.LastIndex(issueURL, "/")
-	issueNbStr := issueURL[lastIdx+1:]
-	issueNb, err := strconv.Atoi(issueNbStr)
+func GetReleaseIssueInfo(repo, majorRelease string) (nb int, url string) {
+	url = GetReleaseIssue(repo, majorRelease)
+	lastIdx := strings.LastIndex(url, "/")
+	issueNbStr := url[lastIdx+1:]
+	var err error
+	nb, err = strconv.Atoi(issueNbStr)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	return issueNb
+	return nb, url
 }
 
 func FormatIssues(issues []Issue) []string {

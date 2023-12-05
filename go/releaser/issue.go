@@ -44,21 +44,24 @@ const (
 	releaseBlockerItem    = "Make sure release blocker Issues are closed, list below."
 )
 
-type itemWithLink struct {
+type ItemWithLink struct {
 	Done bool
-	URL  string
+
+	// URL always uses the following format: "#111"
+	// No http links are used, only Markdown links
+	URL string
 }
 
-type parentItem struct {
-	Items []itemWithLink
+type ParentItem struct {
+	Items []ItemWithLink
 }
 
 type Issue struct {
 	SlackPreRequisite bool
 	SlackPostRelease  bool
 	CheckSummary      bool
-	CheckBackports    parentItem
-	ReleaseBlocker    parentItem
+	CheckBackports    ParentItem
+	ReleaseBlocker    ParentItem
 }
 
 const (
@@ -79,7 +82,17 @@ const (
 `
 )
 
-func (pi parentItem) Done() bool {
+func (pi ParentItem) ItemsLeft() int {
+	nb := 0
+	for _, item := range pi.Items {
+		if !item.Done {
+			nb++
+		}
+	}
+	return nb
+}
+
+func (pi ParentItem) Done() bool {
 	for _, item := range pi.Items {
 		if !item.Done {
 			return false
@@ -96,7 +109,7 @@ func (ctx *Context) LoadIssue() {
 	var newIssue Issue
 
 	s := stateReadingItem
-	for _, line := range lines {
+	for i, line := range lines {
 		switch s {
 		case stateReadingItem:
 			if strings.Contains(line, slackAnnouncementItem) {
@@ -114,41 +127,48 @@ func (ctx *Context) LoadIssue() {
 		case stateReadingBackport:
 			if !strings.HasPrefix(line, "  -") {
 				s = stateReadingItem
-				break
+				continue
 			}
 			// remove indentation from line after we have confirmed it is present
 			line = strings.TrimSpace(line)
-			newIssue.CheckBackports.Items = append(newIssue.CheckBackports.Items, itemWithLink{
+			newIssue.CheckBackports.Items = append(newIssue.CheckBackports.Items, ItemWithLink{
 				Done: strings.HasPrefix(line, markdownItemDone),
 				URL:  strings.TrimSpace(line[len(markdownItemDone):]),
 			})
+			if i+1 == len(lines) || !strings.HasPrefix(lines[i+1], "  -") {
+				s = stateReadingItem
+			}
 		case stateReadingReleaseBlockerIssue:
 			if !strings.HasPrefix(line, "  -") {
 				s = stateReadingItem
-				break
+				continue
 			}
 			// remove indentation from line after we have confirmed it is present
 			line = strings.TrimSpace(line)
-			newIssue.ReleaseBlocker.Items = append(newIssue.ReleaseBlocker.Items, itemWithLink{
+			newIssue.ReleaseBlocker.Items = append(newIssue.ReleaseBlocker.Items, ItemWithLink{
 				Done: strings.HasPrefix(line, markdownItemDone),
 				URL:  strings.TrimSpace(line[len(markdownItemDone):]),
 			})
+			if i+1 == len(lines) || !strings.HasPrefix(lines[i+1], "  -") {
+				s = stateReadingItem
+			}
 		}
 	}
 	ctx.Issue = newIssue
 }
 
-func (ctx *Context) UploadIssue() (*logging.ProgressLogging, func()) {
+func (ctx *Context) UploadIssue() (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
 		TotalSteps: 2,
 	}
 
-	return pl, func() {
+	return pl, func() string {
 		pl.NewStepf("Update Issue #%d on GitHub", ctx.IssueNbGH)
 		body := ctx.Issue.toString()
 		issue := github.Issue{Body: body, Number: ctx.IssueNbGH}
 		link := issue.UpdateBody(ctx.VitessRepo)
 		pl.NewStepf("Issue updated: %s", link)
+		return link
 	}
 }
 

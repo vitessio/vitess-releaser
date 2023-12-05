@@ -17,10 +17,7 @@ limitations under the License.
 package interactive
 
 import (
-	"strings"
-
 	tea "github.com/charmbracelet/bubbletea"
-	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/prerequisite"
 	"vitess.io/vitess-releaser/go/releaser/steps"
@@ -35,6 +32,7 @@ func checkAndAddMenuItem(ctx *releaser.Context) *menuItem {
 		act:    checkAndAddAct,
 		update: checkAndAddUpdate,
 		isDone: ctx.Issue.CheckBackports.Done() && ctx.Issue.ReleaseBlocker.Done(),
+		info:   prerequisite.GetCheckAndAddInfoMsg(ctx, ctx.IssueLink),
 	}
 }
 
@@ -46,11 +44,7 @@ func checkAndAddUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 
 	outStr := string(out)
 	mi.info = outStr
-	if strings.Contains(outStr, "Found") {
-		mi.isDone = state.ToDo
-	} else {
-		mi.isDone = state.Done
-	}
+	mi.isDone = mi.ctx.Issue.CheckBackports.Done() && mi.ctx.Issue.ReleaseBlocker.Done()
 	return mi, nil
 }
 

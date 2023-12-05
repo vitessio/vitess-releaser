@@ -32,6 +32,7 @@ type Context struct {
 	VitessRepo   string
 	MajorRelease string
 	IssueNbGH    int
+	IssueLink    string
 	Issue        Issue
 }
 

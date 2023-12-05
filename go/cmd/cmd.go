@@ -69,7 +69,7 @@ func Execute() {
 		ctx.VitessRepo = github.CurrentUser() + "/vitess"
 	}
 	ctx.MajorRelease = releaseVersion
-	ctx.IssueNbGH = github.GetReleaseIssueNumber(ctx.VitessRepo, ctx.MajorRelease)
+	ctx.IssueNbGH, ctx.IssueLink = github.GetReleaseIssueInfo(ctx.VitessRepo, ctx.MajorRelease)
 
 	if err := rootCmd.ExecuteContext(&ctx); err != nil {
 		fmt.Fprintf(os.Stderr, "Whoops. There was an error while executing your CLI '%s'", err)
