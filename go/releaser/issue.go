@@ -90,8 +90,7 @@ func (pi parentItem) Done() bool {
 }
 
 func LoadIssue(ctx *Context) {
-	issueNb := github.GetReleaseIssueNumber(ctx.VitessRepo, ctx.MajorRelease)
-	body := github.GetIssueBody(ctx.VitessRepo, issueNb)
+	body := github.GetIssueBody(ctx.VitessRepo, ctx.IssueNbGH)
 
 	lines := strings.Split(body, "\n")
 
@@ -187,15 +186,13 @@ func InverseStepStatus(step string) (*logging.ProgressLogging, func()) {
 }
 
 func AddBackportPRs(ctx *Context) (int, string) {
-	issueNb := github.GetReleaseIssueNumber(ctx.VitessRepo, ctx.MajorRelease)
-	_ = github.GetIssueBody(ctx.VitessRepo, issueNb)
+	_ = github.GetIssueBody(ctx.VitessRepo, ctx.IssueNbGH)
 
 	return 0, ""
 }
 
 func AddReleaseBlockerIssues(ctx *Context) (int, string) {
-	issueNb := github.GetReleaseIssueNumber(ctx.VitessRepo, ctx.MajorRelease)
-	_ = github.GetIssueBody(ctx.VitessRepo, issueNb)
+	_ = github.GetIssueBody(ctx.VitessRepo, ctx.IssueNbGH)
 
 	return 0, ""
 }
