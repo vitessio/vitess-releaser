@@ -30,7 +30,7 @@ func createIssueMenuItem(ctx *releaser.Context) *menuItem {
 	return &menuItem{
 		ctx:    ctx,
 		name:   steps.CreateReleaseIssue,
-		status: state.ToDo,
+		isDone: state.ToDo,
 		act:    createIssue,
 		init:   issueInit,
 		update: issueUpdate,
@@ -69,7 +69,7 @@ func issueUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 func gotIssueURL(item *menuItem, url string) *menuItem {
 	item.name = steps.ReleaseIssue
 	item.info = url
-	item.status = state.Done
+	item.isDone = state.Done
 	item.act = nil // We don't want to accidentally create a second one
 	return item
 }

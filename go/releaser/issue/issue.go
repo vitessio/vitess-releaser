@@ -32,6 +32,9 @@ import (
 )
 
 const (
+	markdownItemDone = "- [x]"
+	markdownItemToDo = "- [ ]"
+
 	slackAnnouncementStart = "<!-- SLACK_START -->"
 	slackAnnouncementEnd   = "<!-- SLACK_END -->"
 	slackAnnouncementItem  = "- [ ] Notify the community on Slack."
@@ -43,16 +46,16 @@ const (
 	checkSummaryFmt   = checkSummaryStart + "\n" + checkSummaryItem + "\n" + checkSummaryEnd
 
 	// List of backports Pull Requests
-	backportStart   = "<!-- BACKPORT_START -->"
-	backportEnd  = "<!-- BACKPORT_END -->"
-	backportItem = "- Make sure backport Pull Requests are merged, list below."
-	backportFmt  = backportStart + "\n" + backportItem + "\n" + backportEnd
+	backportStart = "<!-- BACKPORT_START -->"
+	backportEnd   = "<!-- BACKPORT_END -->"
+	backportItem  = "- Make sure backport Pull Requests are merged, list below."
+	backportFmt   = backportStart + "\n" + backportItem + "\n" + backportEnd
 
 	// List of release blocker Issues
-	releaseBlockerStart      = "<!-- RELEASE_BLOCKER_START -->"
-	releaseBlockerEnd  = "<!-- RELEASE_BLOCKER_END -->"
-	releaseBlockerItem = "- Make sure release blocker Issues are closed, list below."
-	releaseBlockerFmt  = releaseBlockerStart + "\n" + releaseBlockerItem + "\n" + releaseBlockerEnd
+	releaseBlockerStart = "<!-- RELEASE_BLOCKER_START -->"
+	releaseBlockerEnd   = "<!-- RELEASE_BLOCKER_END -->"
+	releaseBlockerItem  = "- Make sure release blocker Issues are closed, list below."
+	releaseBlockerFmt   = releaseBlockerStart + "\n" + releaseBlockerItem + "\n" + releaseBlockerEnd
 )
 
 type StepMeta struct {
@@ -77,13 +80,13 @@ var (
 			EndToken:     releaseBlockerEnd,
 			IssueItemStr: releaseBlockerItem,
 		}},
-		steps.CheckSummary:    {{
+		steps.CheckSummary: {{
 			StartToken:   checkSummaryStart,
 			EndToken:     checkSummaryEnd,
 			IssueItemStr: checkSummaryItem,
 		}},
-		steps.CodeFreeze:      {},
-		steps.CreateMilestone: {},
+		steps.CodeFreeze:            {},
+		steps.CreateMilestone:       {},
 		steps.SlackAnnouncementPost: {},
 	}
 )
@@ -158,6 +161,17 @@ func CreateReleaseIssue(ctx *releaser.Context) (*logging.ProgressLogging, func()
 	}
 }
 
+// func ReadStepStatus(ctx *releaser.Context, step string) string {
+// 	binding, ok := stepBindings[step]
+// 	if !ok {
+// 		log.Fatalf("unknown step: %s", step)
+// 	}
+//
+//
+//
+// 	return ""
+// }
+
 func InverseStepStatus(ctx *releaser.Context, step string) (*logging.ProgressLogging, func()) {
 	binding, ok := stepBindings[step]
 	if !ok {
@@ -178,23 +192,31 @@ func InverseStepStatus(ctx *releaser.Context, step string) (*logging.ProgressLog
 			}
 
 			content := body[start:end]
-			prefixLen := len("- [ ] ")
 
-			var s string
+			isDone := getStepStatus(content)
 
-			if strings.HasPrefix(content, "- [x]") {
-				content = "- [ ] " + content[prefixLen:]
-				s = state.ToDo
-			} else if strings.HasPrefix(content, "- [ ]") {
-				content = "- [x] " + content[prefixLen:]
-				s = state.Done
+			// proceed to inverse
+			if isDone {
+				content = markdownItemToDo + content[len(markdownItemDone):]
+			} else {
+				content = markdownItemDone + content[len(markdownItemToDo):]
 			}
 
 			updateSegmentOfIssue(ctx, body, content, start, end, issueNb)
 
-			pl.NewStepf("Item marked as '%s'", s)
+			pl.NewStepf("Item marked as '%s'", state.Fmt(!isDone))
 		}
 	}
+}
+
+func getStepStatus(body string) bool {
+	if strings.HasPrefix(body, markdownItemDone) {
+		return state.Done
+	} else if strings.HasPrefix(body, markdownItemToDo) {
+		return state.ToDo
+	}
+	log.Fatalf("unknown step status: %s", body)
+	return false
 }
 
 func AddBackportPRs(ctx *releaser.Context) (int, string) {

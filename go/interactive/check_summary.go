@@ -30,7 +30,7 @@ func checkSummaryMenuItem(ctx *releaser.Context) *menuItem {
 	return &menuItem{
 		ctx:    ctx,
 		name:   steps.CheckSummary,
-		status: state.ToDo, // TODO: read initial status from Release Issue on GitHub
+		isDone: state.ToDo, // TODO: read initial status from Release Issue on GitHub
 		act:    checkSummaryAct,
 		update: checkSummaryUpdate,
 	}
@@ -45,7 +45,7 @@ func checkSummaryUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 	return mi, pushDialog(doneDialog{
 		title:   "Check release note summary",
 		message: l,
-		status:  &mi.status,
+		isDone:  &mi.isDone,
 	})
 }
 

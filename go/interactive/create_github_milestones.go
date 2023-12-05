@@ -32,7 +32,7 @@ func createMilestoneMenuItem(ctx *releaser.Context) *menuItem {
 		name:   steps.CreateMilestone,
 		act:    createMilestoneAct,
 		update: createMilestoneUpdate,
-		status: state.ToDo,
+		isDone: state.ToDo,
 	}
 }
 
@@ -43,7 +43,7 @@ func createMilestoneUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 	}
 
 	mi.info = string(milestoneLink)
-	mi.status = state.Done
+	mi.isDone = state.Done
 	return mi, nil
 }
 

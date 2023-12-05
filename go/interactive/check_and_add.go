@@ -34,7 +34,7 @@ func checkAndAddMenuItem(ctx *releaser.Context) *menuItem {
 		name:   steps.CheckAndAdd,
 		act:    checkAndAddAct,
 		update: checkAndAddUpdate,
-		status: state.ToDo, // TODO: read the initial state from the Release Issue on GitHub
+		isDone: state.ToDo, // TODO: read the initial state from the Release Issue on GitHub
 	}
 }
 
@@ -47,9 +47,9 @@ func checkAndAddUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 	outStr := string(out)
 	mi.info = outStr
 	if strings.Contains(outStr, "Found") {
-		mi.status = state.ToDo
+		mi.isDone = state.ToDo
 	} else {
-		mi.status = state.Done
+		mi.isDone = state.Done
 	}
 	return mi, nil
 }

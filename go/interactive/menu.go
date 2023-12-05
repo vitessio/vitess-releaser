@@ -36,13 +36,13 @@ type (
 	}
 
 	menuItem struct {
-		ctx      *releaser.Context
-		name     string
-		status   string
-		info     string
-		act      func(*menuItem) (*menuItem, tea.Cmd)
-		init     func(ctx *releaser.Context) tea.Cmd
-		update   func(*menuItem, tea.Msg) (*menuItem, tea.Cmd)
+		ctx    *releaser.Context
+		name   string
+		isDone bool
+		info   string
+		act    func(*menuItem) (*menuItem, tea.Cmd)
+		init   func(ctx *releaser.Context) tea.Cmd
+		update func(*menuItem, tea.Msg) (*menuItem, tea.Cmd)
 
 		// subItems is a slice of *menuItem referring to the menuItem embedded by this item
 		subItems []*menuItem
@@ -65,19 +65,19 @@ func (m *menu) At(row, cell int) string {
 		if len(item.subItems) > 0 {
 			done := 0
 			for _, subItem := range item.subItems {
-				if subItem.status == state.Done {
+				if subItem.isDone {
 					done++
 				}
 			}
 			nb := len(item.subItems)
 			if done == nb {
-				item.status = state.Done
+				item.isDone = state.Done
 			}
-			return fmt.Sprintf("%s %d/%d", item.status, done, nb)
+			return fmt.Sprintf("%s %d/%d", state.Fmt(item.isDone), done, nb)
 		}
 
 		// if there are no sub items, let's just return the current status
-		return item.status
+		return state.Fmt(item.isDone)
 	}
 	if cell == 2 {
 		return item.info

@@ -48,14 +48,12 @@ func slackAnnouncementMenuItem(ctx *releaser.Context, announcementType slackAnno
 		name = steps.SlackAnnouncementPost
 	}
 
-	// TODO: find out the initial status of this task by reading the GitHub Issue
-
 	return &menuItem{
 		ctx:    ctx,
 		name:   name,
 		act:    act,
 		update: slackAnnouncementUpdate,
-		status: state.ToDo,
+		isDone: state.ToDo,
 	}
 }
 
@@ -80,7 +78,7 @@ func slackAnnouncementUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 	return mi, pushDialog(doneDialog{
 		title:   "The following message must be posted on the #general and #releases OSS Slack channels",
 		message: []string{string(slackMsg)},
-		status:  &mi.status,
+		isDone:  &mi.isDone,
 		onDoneAsync: func() (*logging.ProgressLogging, func()) {
 			return issue.InverseStepStatus(mi.ctx, mi.name)
 		},

@@ -30,7 +30,7 @@ type doneDialog struct {
 	height, width int
 	title         string
 	message       []string
-	status        *string
+	isDone        *bool
 	onDoneAsync   func() (*logging.ProgressLogging, func())
 }
 
@@ -55,16 +55,13 @@ func (c doneDialog) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch string(msg.Runes) {
 			case "x":
 
-				// TODO: update the Release Issue on GitHub
-
-				if c.status == nil {
+				if c.isDone == nil {
 					return c, nil
 				}
-				switch *(c.status) {
-				case state.ToDo:
-					*(c.status) = state.Done
-				case state.Done:
-					*(c.status) = state.ToDo
+				if *(c.isDone) {
+					*(c.isDone) = state.ToDo
+				} else {
+					*(c.isDone) = state.Done
 				}
 
 				// call the callback
@@ -88,15 +85,15 @@ func (c doneDialog) View() string {
 		rows = append(rows, []string{s})
 	}
 
-	s := "Unknown"
-	if c.status != nil {
-		s = *(c.status)
+	s := false
+	if c.isDone != nil {
+		s = *(c.isDone)
 	}
 
 	lines := []string{
 		c.title,
 		"",
-		fmt.Sprintf("Task status is: %s", s),
+		fmt.Sprintf("Task isDone is: %s", state.Fmt(s)),
 	}
 	lines = append(lines, table.New().Data(table.NewStringData(rows...)).Width(c.width).Render())
 	lines = append(
