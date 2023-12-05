@@ -50,7 +50,11 @@ func checkSummaryUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 		}
 		mi.ctx.Issue.CheckSummary = !mi.ctx.Issue.CheckSummary
 		mi.isDone = !mi.isDone
-		// TODO: update the issue
+		pl, fn := mi.ctx.UploadIssue()
+		return mi, tea.Batch(func() tea.Msg {
+			fn()
+			return tea.Msg("")
+		}, pushDialog(newProgressDialog("Updating the Release Issue", pl)))
 	}
 	return mi, nil
 }

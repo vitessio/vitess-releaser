@@ -114,6 +114,7 @@ func (ctx *Context) LoadIssue() {
 		case stateReadingBackport:
 			if !strings.HasPrefix(line, "  -") {
 				s = stateReadingItem
+				break
 			}
 			// remove indentation from line after we have confirmed it is present
 			line = strings.TrimSpace(line)
@@ -124,6 +125,7 @@ func (ctx *Context) LoadIssue() {
 		case stateReadingReleaseBlockerIssue:
 			if !strings.HasPrefix(line, "  -") {
 				s = stateReadingItem
+				break
 			}
 			// remove indentation from line after we have confirmed it is present
 			line = strings.TrimSpace(line)
@@ -136,6 +138,20 @@ func (ctx *Context) LoadIssue() {
 	ctx.Issue = newIssue
 }
 
+func (ctx *Context) UploadIssue() (*logging.ProgressLogging, func()) {
+	pl := &logging.ProgressLogging{
+		TotalSteps: 2,
+	}
+
+	return pl, func() {
+		pl.NewStepf("Update Issue #%d on GitHub", ctx.IssueNbGH)
+		body := ctx.Issue.toString()
+		issue := github.Issue{Body: body, Number: ctx.IssueNbGH}
+		link := issue.UpdateBody(ctx.VitessRepo)
+		pl.NewStepf("Issue updated: %s", link)
+	}
+}
+
 func CreateReleaseIssue(ctx *Context) (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
 		TotalSteps: 2,
@@ -145,28 +161,11 @@ func CreateReleaseIssue(ctx *Context) (*logging.ProgressLogging, func() string) 
 		CorrectCleanRepo(ctx.VitessRepo)
 		newRelease, _ := FindNextRelease(ctx.MajorRelease)
 
-		var err error
 		var i Issue
-
 		pl.NewStepf("Create Release Issue on GitHub")
-		tmpl := template.New("release-issue")
-		tmpl = tmpl.Funcs(template.FuncMap{
-			"fmtStatus": state.FmtMd,
-		})
-
-		tmpl, err = tmpl.Parse(releaseIssueTemplate)
-		if err != nil {
-			log.Fatal(err)
-		}
-		b := bytes.NewBuffer(nil)
-		err = tmpl.Execute(b, i)
-		if err != nil {
-			log.Fatal(err)
-		}
-
 		newIssue := github.Issue{
 			Title:    fmt.Sprintf("Release of v%s", newRelease),
-			Body:     b.String(),
+			Body:     i.toString(),
 			Labels:   []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}},
 			Assignee: "@me",
 		}
@@ -175,6 +174,24 @@ func CreateReleaseIssue(ctx *Context) (*logging.ProgressLogging, func() string) 
 		pl.NewStepf("Issue created: %s", link)
 		return link
 	}
+}
+
+func (i *Issue) toString() string {
+	tmpl := template.New("release-issue")
+	tmpl = tmpl.Funcs(template.FuncMap{
+		"fmtStatus": state.FmtMd,
+	})
+
+	parsed, err := tmpl.Parse(releaseIssueTemplate)
+	if err != nil {
+		log.Fatal(err)
+	}
+	b := bytes.NewBufferString("")
+	err = parsed.Execute(b, i)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return b.String()
 }
 
 func InverseStepStatus(step string) (*logging.ProgressLogging, func()) {
