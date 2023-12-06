@@ -18,6 +18,8 @@ package pre_release
 
 import (
 	"fmt"
+	"log"
+	"os/exec"
 
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/git"
@@ -53,8 +55,81 @@ func CreateReleasePR(ctx *releaser.Context) (*logging.ProgressLogging, func() st
 		}
 		git.Push(remote, newBranchName)
 
+		updateExamples(nextRelease, "")
 		// TODO: Do the version change throughout the code base
 
 		return ""
+	}
+}
+
+// if [ "$2" != "" ]; then
+//
+//	sed -i.bak -E "s/planetscale\/vitess-operator:(.*)/planetscale\/vitess-operator:v$2/g" $vtop_example_files
+//
+// fi
+// rm -f $(find -E $ROOT/examples/operator -regex ".*.(md|yaml).bak")
+// rm -f $(find -E $ROOT/examples/compose/* -regex ".*.(go|yml).bak")
+// rm -f $(find -E $ROOT/examples/compose/**/* -regex ".*.(go|yml).bak")
+func updateExamples(newVersion, vtopNewVersion string) {
+	//  compose_example_files=$(find -E $ROOT/examples/compose/* -regex ".*.(go|yml)")
+	//  compose_example_sub_files=$(find -E $ROOT/examples/compose/**/* -regex ".*.(go|yml)")
+	//  vtop_example_files=$(find -E $ROOT/examples/operator -name "*.yaml")
+
+	// sed -i.bak -E "s/vitess\/lite:(.*)/vitess\/lite:v$1/g" $compose_example_files $compose_example_sub_files $vtop_example_files
+	out, err := exec.Command(
+		"sed", "-i.bak", "-E",
+		fmt.Sprintf("s/vitess\\/lite:(.*)/vitess\\/lite:v%s/g", newVersion),
+		"$(find -E $ROOT/examples/compose/* -regex \".*.(go|yml)\")",
+		"$(find -E $ROOT/examples/compose/**/* -regex \".*.(go|yml)\")",
+		"$(find -E $ROOT/examples/operator -name \"*.yaml\")",
+	).CombinedOutput()
+	if err != nil {
+		log.Fatalf("%s: %s", err, out)
+	}
+
+	// sed -i.bak -E "s/vitess\/vtadmin:(.*)/vitess\/vtadmin:v$1/g" $compose_example_files $compose_example_sub_files $vtop_example_files
+	out, err = exec.Command(
+		"sed", "-i.bak", "-E",
+		fmt.Sprintf("\"s/vitess\\/vtadmin:(.*)/vitess\\/vtadmin:v%s/g\"", newVersion),
+		"$(find -E $ROOT/examples/compose/* -regex \".*.(go|yml)\")",
+		"$(find -E $ROOT/examples/compose/**/* -regex \".*.(go|yml)\")",
+		"$(find -E $ROOT/examples/operator -name \"*.yaml\")",
+	).CombinedOutput()
+	if err != nil {
+		log.Fatalf("%s: %s", err, out)
+	}
+
+	// sed -i.bak -E "s/vitess\/lite:\${VITESS_TAG:-latest}/vitess\/lite:v$1/g" $compose_example_sub_files $vtop_example_files
+	out, err = exec.Command(
+		"sed", "-i.bak", "-E",
+		fmt.Sprintf("s/vitess\\/lite:\\${VITESS_TAG:-latest}/vitess\\/lite:v%s/g", newVersion),
+		"$(find -E $ROOT/examples/compose/**/* -regex \".*.(go|yml)\")",
+		"$(find -E $ROOT/examples/operator -name \"*.yaml\")",
+	).CombinedOutput()
+	if err != nil {
+		log.Fatalf("%s: %s", err, out)
+	}
+
+	// sed -i.bak -E "s/vitess\/lite:(.*)-mysql80/vitess\/lite:v$1-mysql80/g" $(find -E $ROOT/examples/operator -name "*.md")
+	out, err = exec.Command(
+		"sed", "-i.bak", "-E",
+		fmt.Sprintf("s/vitess\\/lite:(.*)-mysql80/vitess\\/lite:v%s-mysql80/g", newVersion),
+		"$(find -E $ROOT/examples/operator -name \"*.md\")",
+	).CombinedOutput()
+	if err != nil {
+		log.Fatalf("%s: %s", err, out)
+	}
+
+	//  rm -f $(find -E $ROOT/examples/operator -regex ".*.(md|yaml).bak")
+	//  rm -f $(find -E $ROOT/examples/compose/* -regex ".*.(go|yml).bak")
+	//  rm -f $(find -E $ROOT/examples/compose/**/* -regex ".*.(go|yml).bak")
+	out, err = exec.Command(
+		"rm", "-f",
+		"$(find -E $ROOT/examples/operator -regex \".*.(md|yaml).bak\")",
+		"$(find -E $ROOT/examples/compose/* -regex \".*.(go|yml).bak\")",
+		"$(find -E $ROOT/examples/compose/**/* -regex \".*.(go|yml).bak\")",
+	).CombinedOutput()
+	if err != nil {
+		log.Fatalf("%s: %s", err, out)
 	}
 }
