@@ -58,9 +58,9 @@ type (
 	ItemWithLink struct {
 		Done bool
 
-		// URL always uses the following format: "#111"
-		// Expect for GH milestones, where the HTTP
-		// version is used, such as "https://github.com...."
+		// URL can use two formats:
+		// 	- GH links:		"#111"
+		//  - HTTP links:	"https://github.com...."
 		URL string
 	}
 
@@ -177,6 +177,9 @@ func (ctx *Context) LoadIssue() {
 				if isNextLineAList(lines, i) {
 					s = stateReadingNewMilestoneItem
 				}
+			}
+			if strings.Contains(line, postSlackAnnouncementItem) {
+				newIssue.SlackPostRelease = strings.HasPrefix(line, markdownItemDone)
 			}
 		case stateReadingBackport:
 			newIssue.CheckBackport.Items = append(newIssue.CheckBackport.Items, handleNewListItem(lines, i, &s))

@@ -42,7 +42,7 @@ func createMilestoneMenuItem(ctx *releaser.Context) *menuItem {
 
 func createMilestoneUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 	milestoneLink, ok := msg.(createMilestone)
-	if !ok || milestoneLink == "" {
+	if !ok || len(milestoneLink) == 0 {
 		return mi, nil
 	}
 

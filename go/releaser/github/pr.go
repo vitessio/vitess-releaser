@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	gh "github.com/cli/go-gh"
@@ -39,7 +40,7 @@ type PR struct {
 	Labels []Label `json:"labels"`
 }
 
-func (p *PR) Create(repo string) string {
+func (p *PR) Create(repo string) (nb int, url string) {
 	var labels []string
 	for _, label := range p.Labels {
 		labels = append(labels, label.Name)
@@ -56,15 +57,28 @@ func (p *PR) Create(repo string) string {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return strings.ReplaceAll(stdOut.String(), "\n", "")
+	url = strings.ReplaceAll(stdOut.String(), "\n", "")
+	nb = URLToNb(url)
+	return nb, url
 }
 
-func FormatPRs(prs []PR) []string {
-	var prFmt []string
-	for _, pr := range prs {
-		prFmt = append(prFmt, fmt.Sprintf(" -> %s  %s", pr.URL, pr.Title))
+func IsPRMerged(repo string, nb int) bool {
+	stdOut, _, err := gh.Exec(
+		"pr", "view", strconv.Itoa(nb),
+		"--repo", repo,
+		"--json", "mergedAt",
+	)
+	if err != nil {
+		log.Fatal(err)
 	}
-	return prFmt
+
+	// If the PR is not merged, the output of the gh command will be:
+	// {
+	//  "mergedAt": null
+	// }
+	//
+	// We can then grep for "null", if present, the PR has not been merged yet.
+	return !strings.Contains(stdOut.String(), "null")
 }
 
 func CheckBackportToPRs(repo, majorRelease string) []PR {
@@ -94,4 +108,27 @@ func CheckBackportToPRs(repo, majorRelease string) []PR {
 		}
 	}
 	return mustClose
+}
+
+func FindCodeFreezePR(repo, prTitle string) (nb int, url string) {
+	byteRes, _, err := gh.Exec(
+		"pr", "list",
+		"--json", "url",
+		"--repo", repo,
+		"--search", prTitle,
+		"--state", "open",
+	)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	var prs []PR
+	err = json.Unmarshal(byteRes.Bytes(), &prs)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	if len(prs) != 1 {
+		return 0, ""
+	}
+	url = prs[0].URL
+	return URLToNb(url), url
 }
