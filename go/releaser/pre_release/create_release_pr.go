@@ -47,6 +47,11 @@ func CreateReleasePR(ctx *releaser.Context) (*logging.ProgressLogging, func() st
 		git.Push(remote, newBranchName)
 
 		generateReleaseNotes(ctx, nextRelease)
+		if git.CommitAll("Addition of release notes") {
+			// TODO: handle
+			return ""
+		}
+		git.Push(remote, newBranchName)
 
 		// TODO: Do the version change throughout the code base
 
