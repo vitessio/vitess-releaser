@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -31,6 +32,10 @@ type Label struct {
 	Name string `json:"name"`
 }
 
+type Author struct {
+	Login string `json:"login"`
+}
+
 type PR struct {
 	Title  string  `json:"title"`
 	Body   string  `json:"body,omitempty"`
@@ -38,6 +43,8 @@ type PR struct {
 	Base   string  `json:"baseRefName"`
 	URL    string  `json:"url"`
 	Labels []Label `json:"labels"`
+	Author Author  `json:"author"`
+	Number int     `json:"number"`
 }
 
 func (p *PR) Create(repo string) (nb int, url string) {
@@ -131,4 +138,35 @@ func FindCodeFreezePR(repo, prTitle string) (nb int, url string) {
 	}
 	url = prs[0].URL
 	return URLToNb(url), url
+}
+
+func GetMergedPRsAndAuthorsByMilestone(repo, milestone string) (prs []PR, authors []string) {
+	byteRes, _, err := gh.Exec(
+		"pr", "list",
+		"-s", "merged",
+		"-S", fmt.Sprintf("milestone:%s", milestone),
+		"--json", "number,title,labels,author",
+		"--limit", "5000",
+		"--repo", repo,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = json.Unmarshal(byteRes.Bytes(), &prs)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Get the full list of distinct PRs authors and sort them
+	authorMap := map[string]bool{}
+	for _, pr := range prs {
+		login := pr.Author.Login
+		if ok := authorMap[login]; !ok {
+			authors = append(authors, login)
+			authorMap[login] = true
+		}
+	}
+	sort.Strings(authors)
+	return prs, authors
 }

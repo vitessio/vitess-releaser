@@ -46,7 +46,7 @@ func CreateReleasePR(ctx *releaser.Context) (*logging.ProgressLogging, func() st
 		}
 		git.Push(remote, newBranchName)
 
-		// TODO: Generate the release notes
+		generateReleaseNotes(ctx, nextRelease)
 
 		// TODO: Do the version change throughout the code base
 

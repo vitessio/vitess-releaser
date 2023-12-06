@@ -168,3 +168,24 @@ func CheckReleaseBlockerIssues(repo, majorRelease string) []Issue {
 	}
 	return mustClose
 }
+
+func LoadKnownIssues(repo, majorRelease string) []Issue {
+	label := fmt.Sprintf("Known issue: %s", majorRelease)
+
+	byteRes, _, err := gh.Exec(
+		"issue", "list",
+		"--repo", repo,
+		"--label", label,
+		"--json", "title,number",
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var knownIssues []Issue
+	err = json.Unmarshal(byteRes.Bytes(), &knownIssues)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return knownIssues
+}
