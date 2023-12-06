@@ -280,22 +280,3 @@ func (i *Issue) toString() string {
 	}
 	return b.String()
 }
-
-func InverseStepStatus(step string) (*logging.ProgressLogging, func()) {
-	pl := &logging.ProgressLogging{TotalSteps: 1}
-	return pl, func() {
-		pl.NewStepf("Update status for '%s' on the Release Issue", step)
-	}
-}
-
-func AddBackportPRs(ctx *Context) (int, string) {
-	_ = github.GetIssueBody(ctx.VitessRepo, ctx.IssueNbGH)
-
-	return 0, ""
-}
-
-func AddReleaseBlockerIssues(ctx *Context) (int, string) {
-	_ = github.GetIssueBody(ctx.VitessRepo, ctx.IssueNbGH)
-
-	return 0, ""
-}
