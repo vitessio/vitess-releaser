@@ -30,7 +30,6 @@ func codeFreezeMenuItem(ctx *releaser.Context) *menuItem {
 		ctx:    ctx,
 		name:   steps.CodeFreeze,
 		act:    codeFreezeAct,
-		init:   nil,
 		update: codeFreezeUpdate,
 		isDone: state.ToDo, // TODO: read the initial state from the Release Issue on GitHub
 	}

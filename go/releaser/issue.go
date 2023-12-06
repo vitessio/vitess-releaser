@@ -38,31 +38,48 @@ const (
 	markdownItemDone = "- [x]"
 	markdownItemToDo = "- [ ]"
 
-	slackAnnouncementItem = "Notify the community on Slack."
-	checkSummaryItem      = "Make sure the release notes summary is prepared and clean."
-	backportItem          = "Make sure backport Pull Requests are merged, list below."
-	releaseBlockerItem    = "Make sure release blocker Issues are closed, list below."
+	// Prerequisites
+	preSlackAnnouncementItem = "Notify the community on Slack."
+	checkSummaryItem         = "Make sure the release notes summary is prepared and clean."
+	backportItem             = "Make sure backport Pull Requests are merged, list below."
+	releaseBlockerItem       = "Make sure release blocker Issues are closed, list below."
+
+	// Pre-Release
+	codeFreezeItem   = "Code Freeze."
+	newMilestoneItem = "Create new GitHub Milestone."
+
+	// Post-Release
+	postSlackAnnouncementItem = "Notify the community on Slack for the new release."
 )
 
-type ItemWithLink struct {
-	Done bool
+type (
+	ItemWithLink struct {
+		Done bool
 
-	// URL always uses the following format: "#111"
-	// No http links are used, only Markdown links
-	URL string
-}
+		// URL always uses the following format: "#111"
+		// No http links are used, only Markdown links
+		URL string
+	}
 
-type ParentItem struct {
-	Items []ItemWithLink
-}
+	ParentOfItems struct {
+		Items []ItemWithLink
+	}
 
-type Issue struct {
-	SlackPreRequisite bool
-	SlackPostRelease  bool
-	CheckSummary      bool
-	CheckBackports    ParentItem
-	ReleaseBlocker    ParentItem
-}
+	Issue struct {
+		// Prerequisites
+		SlackPreRequisite bool
+		CheckSummary      bool
+		CheckBackports    ParentOfItems
+		ReleaseBlocker    ParentOfItems
+
+		// Pre-Release
+		CodeFreeze         ItemWithLink
+		NewGitHubMilestone ItemWithLink
+
+		// Post-Release
+		SlackPostRelease bool
+	}
+)
 
 const (
 	releaseIssueTemplate = `This release is scheduled for ...
@@ -79,10 +96,25 @@ const (
 {{- range $item := .ReleaseBlocker.Items }}
   - [{{fmtStatus $item.Done}}] {{$item.URL}}
 {{- end }}
+
+
+### Pre-Release
+
+- [{{fmtStatus .CodeFreeze.Done}}] Code Freeze.
+{{- if .CodeFreeze.URL }}
+  - {{ .CodeFreeze.URL }}
+{{- end }}
+- [{{fmtStatus .NewGitHubMilestone.Done}}] Create new GitHub Milestone.
+{{- if .NewGitHubMilestone.URL }}
+  - {{ .NewGitHubMilestone.URL }}
+{{- end }}
+
+### Post-Release
+- [{{fmtStatus .SlackPostRelease}}] Notify the community on Slack for the new release.
 `
 )
 
-func (pi ParentItem) ItemsLeft() int {
+func (pi ParentOfItems) ItemsLeft() int {
 	nb := 0
 	for _, item := range pi.Items {
 		if !item.Done {
@@ -92,7 +124,7 @@ func (pi ParentItem) ItemsLeft() int {
 	return nb
 }
 
-func (pi ParentItem) Done() bool {
+func (pi ParentOfItems) Done() bool {
 	for _, item := range pi.Items {
 		if !item.Done {
 			return false
@@ -102,6 +134,13 @@ func (pi ParentItem) Done() bool {
 }
 
 func (ctx *Context) LoadIssue() {
+	if ctx.IssueNbGH == 0 {
+		// we are in the case where we start vitess-releaser
+		// and the Release Issue hasn't been created yet.
+		// We simply quit, the issue is left empty, nothing to load.
+		return
+	}
+
 	body := github.GetIssueBody(ctx.VitessRepo, ctx.IssueNbGH)
 
 	lines := strings.Split(body, "\n")
@@ -112,7 +151,7 @@ func (ctx *Context) LoadIssue() {
 	for i, line := range lines {
 		switch s {
 		case stateReadingItem:
-			if strings.Contains(line, slackAnnouncementItem) {
+			if strings.Contains(line, preSlackAnnouncementItem) {
 				newIssue.SlackPreRequisite = strings.HasPrefix(line, markdownItemDone)
 			}
 			if strings.Contains(line, checkSummaryItem) {
@@ -172,12 +211,12 @@ func (ctx *Context) UploadIssue() (*logging.ProgressLogging, func() string) {
 	}
 }
 
-func CreateReleaseIssue(ctx *Context) (*logging.ProgressLogging, func() string) {
+func CreateReleaseIssue(ctx *Context) (*logging.ProgressLogging, func() (int, string)) {
 	pl := &logging.ProgressLogging{
 		TotalSteps: 2,
 	}
 
-	return pl, func() string {
+	return pl, func() (int, string) {
 		CorrectCleanRepo(ctx.VitessRepo)
 		newRelease, _ := FindNextRelease(ctx.MajorRelease)
 
@@ -191,8 +230,9 @@ func CreateReleaseIssue(ctx *Context) (*logging.ProgressLogging, func() string) 
 		}
 
 		link := newIssue.Create(ctx.VitessRepo)
+		nb := github.URLToNb(link)
 		pl.NewStepf("Issue created: %s", link)
-		return link
+		return nb, link
 	}
 }
 

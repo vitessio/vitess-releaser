@@ -31,7 +31,7 @@ func checkAndAddMenuItem(ctx *releaser.Context) *menuItem {
 		name:   steps.CheckAndAdd,
 		act:    checkAndAddAct,
 		update: checkAndAddUpdate,
-		isDone: ctx.Issue.CheckBackports.Done() && ctx.Issue.ReleaseBlocker.Done(),
+		isDone: ctx.IssueNbGH != 0 && ctx.Issue.CheckBackports.Done() && ctx.Issue.ReleaseBlocker.Done(),
 		info:   prerequisite.GetCheckAndAddInfoMsg(ctx, ctx.IssueLink),
 	}
 }

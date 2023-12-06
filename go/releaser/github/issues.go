@@ -117,14 +117,22 @@ func GetReleaseIssue(repo, majorRelease string) string {
 
 func GetReleaseIssueInfo(repo, majorRelease string) (nb int, url string) {
 	url = GetReleaseIssue(repo, majorRelease)
+	if url == "" {
+		// no issue found
+		return 0, ""
+	}
+	nb = URLToNb(url)
+	return nb, url
+}
+
+func URLToNb(url string) int {
 	lastIdx := strings.LastIndex(url, "/")
 	issueNbStr := url[lastIdx+1:]
-	var err error
-	nb, err = strconv.Atoi(issueNbStr)
+	nb, err := strconv.Atoi(issueNbStr)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	return nb, url
+	return nb
 }
 
 func FormatIssues(issues []Issue) []string {

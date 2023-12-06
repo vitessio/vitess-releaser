@@ -41,7 +41,7 @@ type (
 		isDone bool
 		info   string
 		act    func(*menuItem) (*menuItem, tea.Cmd)
-		init   func(ctx *releaser.Context) tea.Cmd
+		init   func(*menuItem) tea.Cmd
 		update func(*menuItem, tea.Msg) (*menuItem, tea.Cmd)
 
 		// subItems is a slice of *menuItem referring to the menuItem embedded by this item
@@ -108,7 +108,7 @@ func (m *menu) Init() tea.Cmd {
 	var cmds []tea.Cmd
 	for idx, mi := range m.items {
 		if mi.init != nil {
-			cmds = append(cmds, mi.init(mi.ctx))
+			cmds = append(cmds, mi.init(mi))
 			m.items[idx].init = nil
 		}
 	}

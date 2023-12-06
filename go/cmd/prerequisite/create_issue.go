@@ -34,7 +34,7 @@ var createIssue = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := releaser.UnwrapCtx(cmd.Context())
 		_, createIssueFn := releaser.CreateReleaseIssue(ctx)
-		link := createIssueFn()
+		_, link := createIssueFn()
 		fmt.Println("Link to the new GitHub Issue: ", link)
 	},
 }
