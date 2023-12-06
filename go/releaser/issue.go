@@ -58,9 +58,9 @@ type (
 	ItemWithLink struct {
 		Done bool
 
-		// URL always uses the following format: "#111"
-		// Expect for GH milestones, where the HTTP
-		// version is used, such as "https://github.com...."
+		// URL can use two formats:
+		// 	- GH links:		"#111"
+		//  - HTTP links:	"https://github.com...."
 		URL string
 	}
 

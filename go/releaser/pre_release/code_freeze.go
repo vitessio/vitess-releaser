@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
+	"time"
 
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/git"
@@ -42,7 +43,7 @@ const (
 // Request must be forced-merged by a Vitess maintainer, this step cannot be automated.
 func CodeFreeze(ctx *releaser.Context) (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
-		TotalSteps: 6,
+		TotalSteps: 10,
 	}
 
 	return pl, func() string {
@@ -71,8 +72,27 @@ func CodeFreeze(ctx *releaser.Context) (*logging.ProgressLogging, func() string)
 			Base:   branchName,
 			Labels: []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}},
 		}
-		url := pr.Create(ctx.VitessRepo)
+		nb, url := pr.Create(ctx.VitessRepo)
 		pl.NewStepf("PR created %s", url)
+		pl.NewStepf("Waiting for the PR to be merged. You must enable bypassing the branch protection rules in: https://github.com/vitessio/vitess/settings/branches")
+	outer:
+		for {
+			select {
+			case <-time.After(5 * time.Second):
+				if github.IsPRMerged(ctx.VitessRepo, nb) {
+					break outer
+				}
+			}
+		}
+		pl.NewStepf("PR has been merged")
+
+		ctx.Issue.CodeFreeze.Done = true
+		ctx.Issue.CodeFreeze.URL = url
+		pl.NewStepf("Update Issue %s on GitHub", ctx.IssueLink)
+		_, fn := ctx.UploadIssue()
+		issueLink := fn()
+
+		pl.NewStepf("Issue updated, see: %s", issueLink)
 		return url
 	}
 }
