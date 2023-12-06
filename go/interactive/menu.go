@@ -28,6 +28,7 @@ import (
 
 type (
 	menu struct {
+		ctx     *releaser.Context
 		items   []*menuItem
 		title   string
 		idx     int
@@ -46,13 +47,16 @@ type (
 
 		// subItems is a slice of *menuItem referring to the menuItem embedded by this item
 		subItems []*menuItem
+
+		blockActIfNoReleaseIssue bool
 	}
 )
 
 var columns = []string{"Task", "Status", "Info"}
 
-func newMenu(title string, items ...*menuItem) *menu {
+func newMenu(ctx *releaser.Context, title string, items ...*menuItem) *menu {
 	return &menu{
+		ctx:     ctx,
 		columns: columns,
 		title:   title,
 		items:   items,
@@ -87,7 +91,7 @@ func (m *menu) At(row, cell int) string {
 	switch {
 	case m.idx != row:
 		prefix = "   " // this is not the line we are standing on
-	case item.act == nil:
+	case isActBlocked(m.ctx, item):
 		prefix = "  :" // we are standing on this line, but it has no action
 	default:
 		prefix = "-> "
@@ -130,7 +134,7 @@ func (m *menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.idx = (m.idx + 1) % size
 		case "enter":
 			selected := m.items[m.idx]
-			if selected.act == nil {
+			if isActBlocked(m.ctx, selected) {
 				return m, nil
 			}
 			var cmd tea.Cmd
@@ -152,6 +156,10 @@ func (m *menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	return m, nil
+}
+
+func isActBlocked(ctx *releaser.Context, mi *menuItem) bool {
+	return mi.act == nil || mi.blockActIfNoReleaseIssue && ctx.IssueLink == ""
 }
 
 func (m *menu) View() string {
