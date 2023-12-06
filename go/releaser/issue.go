@@ -160,15 +160,11 @@ func (ctx *Context) LoadIssue() {
 			if strings.Contains(line, checkSummaryItem) {
 				newIssue.CheckSummary = strings.HasPrefix(line, markdownItemDone)
 			}
-			if strings.Contains(line, backportItem) {
-				if isNextLineAList(lines, i) {
-					s = stateReadingBackport
-				}
+			if strings.Contains(line, backportItem) && isNextLineAList(lines, i) {
+				s = stateReadingBackport
 			}
-			if strings.Contains(line, releaseBlockerItem) {
-				if isNextLineAList(lines, i) {
-					s = stateReadingReleaseBlockerIssue
-				}
+			if strings.Contains(line, releaseBlockerItem) && isNextLineAList(lines, i) {
+				s = stateReadingReleaseBlockerIssue
 			}
 			if strings.Contains(line, codeFreezeItem) {
 				newIssue.CodeFreeze.Done = strings.HasPrefix(line, markdownItemDone)
@@ -183,40 +179,37 @@ func (ctx *Context) LoadIssue() {
 				}
 			}
 		case stateReadingBackport:
-			line = strings.TrimSpace(line)
-			newIssue.CheckBackport.Items = append(newIssue.CheckBackport.Items, ItemWithLink{
-				Done: strings.HasPrefix(line, markdownItemDone),
-				URL:  strings.TrimSpace(line[len(markdownItemDone):]),
-			})
-			if i+1 == len(lines) || !strings.HasPrefix(lines[i+1], "  -") {
-				s = stateReadingItem
-			}
+			newIssue.CheckBackport.Items = append(newIssue.CheckBackport.Items, handleNewListItem(lines, i, &s))
 		case stateReadingReleaseBlockerIssue:
-			line = strings.TrimSpace(line)
-			newIssue.ReleaseBlocker.Items = append(newIssue.ReleaseBlocker.Items, ItemWithLink{
-				Done: strings.HasPrefix(line, markdownItemDone),
-				URL:  strings.TrimSpace(line[len(markdownItemDone):]),
-			})
-			if i+1 == len(lines) || !strings.HasPrefix(lines[i+1], "  -") {
-				s = stateReadingItem
-			}
+			newIssue.ReleaseBlocker.Items = append(newIssue.ReleaseBlocker.Items, handleNewListItem(lines, i, &s))
 		case stateReadingCodeFreezeItem:
-			line = strings.TrimSpace(line)
-			if line[0] == '-' {
-				line = strings.TrimSpace(line[1:])
-			}
-			newIssue.CodeFreeze.URL = line
-			s = stateReadingItem
+			newIssue.CodeFreeze.URL = handleSingleTextItem(line, &s)
 		case stateReadingNewMilestoneItem:
-			line = strings.TrimSpace(line)
-			if line[0] == '-' {
-				line = strings.TrimSpace(line[1:])
-			}
-			newIssue.NewGitHubMilestone.URL = line
-			s = stateReadingItem
+			newIssue.NewGitHubMilestone.URL = handleSingleTextItem(line, &s)
 		}
 	}
 	ctx.Issue = newIssue
+}
+
+func handleNewListItem(lines []string, i int, s *int) ItemWithLink {
+	line := strings.TrimSpace(lines[i])
+	newItem := ItemWithLink{
+		Done: strings.HasPrefix(line, markdownItemDone),
+		URL:  strings.TrimSpace(line[len(markdownItemDone):]),
+	}
+	if i+1 == len(lines) || !strings.HasPrefix(lines[i+1], "  -") {
+		*s = stateReadingItem
+	}
+	return newItem
+}
+
+func handleSingleTextItem(line string, s *int) string {
+	line = strings.TrimSpace(line)
+	if line[0] == '-' {
+		line = strings.TrimSpace(line[1:])
+	}
+	*s = stateReadingItem
+	return line
 }
 
 func isNextLineAList(lines []string, i int) bool {
