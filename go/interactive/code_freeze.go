@@ -38,8 +38,8 @@ func codeFreezeMenuItem(ctx *releaser.Context) *menuItem {
 type codeFreezeUrl string
 
 func codeFreezeUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
-	url, ok := msg.(codeFreezeUrl)
-	if !ok || len(url) == 0 {
+	_, ok := msg.(codeFreezeUrl)
+	if !ok {
 		return mi, nil
 	}
 

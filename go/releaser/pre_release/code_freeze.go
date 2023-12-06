@@ -20,7 +20,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
+	"strings"
 	"time"
 
 	"vitess.io/vitess-releaser/go/releaser"
@@ -43,41 +45,10 @@ const (
 // Request must be forced-merged by a Vitess maintainer, this step cannot be automated.
 func CodeFreeze(ctx *releaser.Context) (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
-		TotalSteps: 10,
+		TotalSteps: 12,
 	}
 
-	return pl, func() string {
-		git.CorrectCleanRepo(ctx.VitessRepo)
-		nextRelease, branchName := releaser.FindNextRelease(ctx.MajorRelease)
-
-		pl.NewStepf("Fetch from git remote")
-		remote := git.FindRemoteName(ctx.VitessRepo)
-		git.ResetHard(remote, branchName)
-
-		pl.NewStepf("Create new branch based on %s/%s", remote, branchName)
-		newBranchName := findNewBranchForCodeFreeze(remote, branchName)
-
-		pl.NewStepf("Turn on code freeze on branch %s", newBranchName)
-		activateCodeFreeze()
-
-		pl.NewStepf("Commit and push to branch %s", newBranchName)
-		if git.CommitAll(fmt.Sprintf("Code Freeze of %s", branchName)) {
-			pl.TotalSteps = 5
-			pl.NewStepf("Nothing to commit, seems like code freeze is already done.", newBranchName)
-			return ""
-		}
-		git.Push(remote, newBranchName)
-
-		pl.NewStepf("Create Pull Request")
-		pr := github.PR{
-			Title:  fmt.Sprintf("[%s] Code Freeze for `v%s`", branchName, nextRelease),
-			Body:   fmt.Sprintf("This Pull Request freezes the branch `%s` for `v%s`", branchName, nextRelease),
-			Branch: newBranchName,
-			Base:   branchName,
-			Labels: []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}},
-		}
-		nb, url := pr.Create(ctx.VitessRepo)
-		pl.NewStepf("PR created %s", url)
+	waitForPRToBeMerged := func(nb int) {
 		pl.NewStepf("Waiting for the PR to be merged. You must enable bypassing the branch protection rules in: https://github.com/vitessio/vitess/settings/branches")
 	outer:
 		for {
@@ -89,14 +60,77 @@ func CodeFreeze(ctx *releaser.Context) (*logging.ProgressLogging, func() string)
 			}
 		}
 		pl.NewStepf("PR has been merged")
+	}
 
-		ctx.Issue.CodeFreeze.Done = true
-		ctx.Issue.CodeFreeze.URL = url
-		pl.NewStepf("Update Issue %s on GitHub", ctx.IssueLink)
-		_, fn := ctx.UploadIssue()
-		issueLink := fn()
+	var done bool
+	var url string
+	var nb int
+	return pl, func() string {
+		defer func() {
+			ctx.Issue.CodeFreeze.Done = done
+			ctx.Issue.CodeFreeze.URL = url
+			pl.NewStepf("Update Issue %s on GitHub", ctx.IssueLink)
+			_, fn := ctx.UploadIssue()
+			issueLink := fn()
 
-		pl.NewStepf("Issue updated, see: %s", issueLink)
+			pl.NewStepf("Issue updated, see: %s", issueLink)
+		}()
+
+		git.CorrectCleanRepo(ctx.VitessRepo)
+		nextRelease, branchName := releaser.FindNextRelease(ctx.MajorRelease)
+
+		pl.NewStepf("Fetch from git remote")
+		remote := git.FindRemoteName(ctx.VitessRepo)
+		git.ResetHard(remote, branchName)
+
+		codeFreezePRName := fmt.Sprintf("[%s] Code Freeze for `v%s`", branchName, nextRelease)
+
+		// look for existing code freeze PRs
+		pl.NewStepf("Look for existing an Code Freeze Pull Request")
+		if nb, url = github.FindCodeFreezePR(ctx.VitessRepo, codeFreezePRName); url != "" {
+			pl.TotalSteps = 7 // only 7 total steps in this situation
+			pl.NewStepf("An opened Code Freeze Pull Request was found: %s", url)
+			waitForPRToBeMerged(nb)
+			done = true
+			return url
+		}
+
+		// check if the branch is already frozen or not
+		pl.NewStepf("Check if branch %s is already frozen", branchName)
+		if isCurrentBranchFrozen() {
+			pl.TotalSteps = 6 // only 6 total steps in this situation
+			pl.NewStepf("Branch %s is already frozen, no action needed.", branchName)
+			done = true
+			return ""
+		}
+
+		pl.NewStepf("Create new branch based on %s/%s", remote, branchName)
+		newBranchName := findNewBranchForCodeFreeze(remote, branchName)
+
+		pl.NewStepf("Turn on code freeze on branch %s", newBranchName)
+		activateCodeFreeze()
+
+		pl.NewStepf("Commit and push to branch %s", newBranchName)
+		if git.CommitAll(fmt.Sprintf("Code Freeze of %s", branchName)) {
+			pl.TotalSteps = 9 // only 9 total steps in this situation
+			pl.NewStepf("Nothing to commit, seems like code freeze is already done.", newBranchName)
+			done = true
+			return ""
+		}
+		git.Push(remote, newBranchName)
+
+		pl.NewStepf("Create Pull Request")
+		pr := github.PR{
+			Title:  codeFreezePRName,
+			Body:   fmt.Sprintf("This Pull Request freezes the branch `%s` for `v%s`", branchName, nextRelease),
+			Branch: newBranchName,
+			Base:   branchName,
+			Labels: []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}},
+		}
+		nb, url = pr.Create(ctx.VitessRepo)
+		pl.NewStepf("PR created %s", url)
+		waitForPRToBeMerged(nb)
+		done = true
 		return url
 	}
 }
@@ -117,6 +151,15 @@ func findNewBranchForCodeFreeze(remote, baseBranch string) string {
 		break
 	}
 	return newBranch
+}
+
+func isCurrentBranchFrozen() bool {
+	b, err := os.ReadFile(codeFreezeWorkflowFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	str := string(b)
+	return strings.Contains(str, "exit 1")
 }
 
 func activateCodeFreeze() {

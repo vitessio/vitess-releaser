@@ -178,6 +178,9 @@ func (ctx *Context) LoadIssue() {
 					s = stateReadingNewMilestoneItem
 				}
 			}
+			if strings.Contains(line, postSlackAnnouncementItem) {
+				newIssue.SlackPostRelease = strings.HasPrefix(line, markdownItemDone)
+			}
 		case stateReadingBackport:
 			newIssue.CheckBackport.Items = append(newIssue.CheckBackport.Items, handleNewListItem(lines, i, &s))
 		case stateReadingReleaseBlockerIssue:
