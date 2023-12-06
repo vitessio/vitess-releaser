@@ -18,10 +18,7 @@ package interactive
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
-	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/issue"
-	"vitess.io/vitess-releaser/go/releaser/logging"
 	"vitess.io/vitess-releaser/go/releaser/slack"
 	"vitess.io/vitess-releaser/go/releaser/steps"
 )
@@ -39,23 +36,24 @@ const (
 func slackAnnouncementMenuItem(ctx *releaser.Context, announcementType slackAnnouncementType) *menuItem {
 	var name string
 	var act func(*menuItem) (*menuItem, tea.Cmd)
+	var isDone bool
 	switch announcementType {
 	case slackAnnouncementPreRequisite:
 		act = slackAnnouncementPreRequisiteAct
 		name = steps.SlackAnnouncement
+		isDone = ctx.Issue.SlackPreRequisite
 	case slackAnnouncementPostRelease:
 		act = slackAnnouncementPostReleaseAct
 		name = steps.SlackAnnouncementPost
+		isDone = ctx.Issue.SlackPostRelease
 	}
-
-	// TODO: find out the initial status of this task by reading the GitHub Issue
 
 	return &menuItem{
 		ctx:    ctx,
 		name:   name,
 		act:    act,
 		update: slackAnnouncementUpdate,
-		status: state.ToDo,
+		isDone: isDone,
 	}
 }
 
@@ -72,17 +70,29 @@ func slackAnnouncementPostReleaseAct(mi *menuItem) (*menuItem, tea.Cmd) {
 }
 
 func slackAnnouncementUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
-	slackMsg, ok := msg.(slackMessage)
-	if !ok {
-		return mi, nil
+	switch msg := msg.(type) {
+	case slackMessage:
+		return mi, pushDialog(&doneDialog{
+			stepName: mi.name,
+			title:    "The following message must be posted on the #general and #releases OSS Slack channels",
+			message:  []string{string(msg)},
+			isDone:   mi.isDone,
+		})
+	case doneDialogAction:
+		if string(msg) != mi.name {
+			return mi, nil
+		}
+		if mi.name == steps.SlackAnnouncement {
+			mi.ctx.Issue.SlackPreRequisite = !mi.ctx.Issue.SlackPreRequisite
+		} else if mi.name == steps.SlackAnnouncementPost {
+			mi.ctx.Issue.SlackPostRelease = !mi.ctx.Issue.SlackPostRelease
+		}
+		mi.isDone = !mi.isDone
+		pl, fn := mi.ctx.UploadIssue()
+		return mi, tea.Batch(func() tea.Msg {
+			fn()
+			return tea.Msg("")
+		}, pushDialog(newProgressDialog("Updating the Release Issue", pl)))
 	}
-
-	return mi, pushDialog(doneDialog{
-		title:   "The following message must be posted on the #general and #releases OSS Slack channels",
-		message: []string{string(slackMsg)},
-		status:  &mi.status,
-		onDoneAsync: func() (*logging.ProgressLogging, func()) {
-			return issue.InverseStepStatus(mi.ctx, mi.name)
-		},
-	})
+	return mi, nil
 }

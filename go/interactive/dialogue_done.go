@@ -23,24 +23,25 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
 	"vitess.io/vitess-releaser/go/interactive/state"
-	"vitess.io/vitess-releaser/go/releaser/logging"
 )
+
+type doneDialogAction string
 
 type doneDialog struct {
 	height, width int
 	title         string
 	message       []string
-	status        *string
-	onDoneAsync   func() (*logging.ProgressLogging, func())
+	isDone        bool
+	stepName      string
 }
 
-var _ tea.Model = doneDialog{}
+var _ tea.Model = &doneDialog{}
 
-func (c doneDialog) Init() tea.Cmd {
+func (c *doneDialog) Init() tea.Cmd {
 	return nil
 }
 
-func (c doneDialog) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (c *doneDialog) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		c.height = msg.Height
@@ -53,27 +54,12 @@ func (c doneDialog) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return c, popDialog
 		case tea.KeyRunes:
 			switch string(msg.Runes) {
+			case "q":
+				return c, popDialog
 			case "x":
-
-				// TODO: update the Release Issue on GitHub
-
-				if c.status == nil {
-					return c, nil
-				}
-				switch *(c.status) {
-				case state.ToDo:
-					*(c.status) = state.Done
-				case state.Done:
-					*(c.status) = state.ToDo
-				}
-
-				// call the callback
-				if c.onDoneAsync != nil {
-					pl, fn := c.onDoneAsync()
-					return c, tea.Batch(func() tea.Msg {
-						fn()
-						return ""
-					}, pushDialog(newProgressDialog("Loading ...", pl)))
+				return c, func() tea.Msg {
+					c.isDone = !c.isDone
+					return doneDialogAction(c.stepName)
 				}
 			}
 		}
@@ -82,28 +68,23 @@ func (c doneDialog) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return c, nil
 }
 
-func (c doneDialog) View() string {
+func (c *doneDialog) View() string {
 	var rows [][]string
 	for _, s := range c.message {
 		rows = append(rows, []string{s})
 	}
 
-	s := "Unknown"
-	if c.status != nil {
-		s = *(c.status)
-	}
-
 	lines := []string{
 		c.title,
 		"",
-		fmt.Sprintf("Task status is: %s", s),
+		fmt.Sprintf("Task status is: %s", state.Fmt(c.isDone)),
 	}
 	lines = append(lines, table.New().Data(table.NewStringData(rows...)).Width(c.width).Render())
 	lines = append(
 		lines,
 		"",
 		"Press 'x' to mark the item as Done/To do.",
-		"Press 'enter' to quit.",
+		"Press 'q' or 'enter' to quit.",
 	)
 
 	return lipgloss.JoinVertical(lipgloss.Center, lines...)

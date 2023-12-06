@@ -23,8 +23,7 @@ import (
 	"strings"
 
 	gh "github.com/cli/go-gh"
-	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/vitess"
+	"vitess.io/vitess-releaser/go/releaser/git"
 )
 
 type Label struct {
@@ -32,11 +31,11 @@ type Label struct {
 }
 
 type PR struct {
-	Title  string `json:"title"`
-	Body   string `json:"body,omitempty"`
-	Branch string `json:"branch,omitempty"`
-	Base   string `json:"baseRefName"`
-	URL    string `json:"url"`
+	Title  string  `json:"title"`
+	Body   string  `json:"body,omitempty"`
+	Branch string  `json:"branch,omitempty"`
+	Base   string  `json:"baseRefName"`
+	URL    string  `json:"url"`
 	Labels []Label `json:"labels"`
 }
 
@@ -68,10 +67,10 @@ func FormatPRs(prs []PR) []string {
 	return prFmt
 }
 
-func CheckBackportToPRs(ctx *releaser.Context) []PR {
-	vitess.CorrectCleanRepo(ctx.VitessRepo)
+func CheckBackportToPRs(repo, majorRelease string) []PR {
+	git.CorrectCleanRepo(repo)
 
-	byteRes, _, err := gh.Exec("pr", "list", "--json", "title,baseRefName,url,labels", "--repo", ctx.VitessRepo)
+	byteRes, _, err := gh.Exec("pr", "list", "--json", "title,baseRefName,url,labels", "--repo", repo)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -83,7 +82,7 @@ func CheckBackportToPRs(ctx *releaser.Context) []PR {
 
 	var mustClose []PR
 
-	branchName := fmt.Sprintf("release-%s.0", ctx.MajorRelease)
+	branchName := fmt.Sprintf("release-%s.0", majorRelease)
 	for _, pr := range prs {
 		if pr.Base == branchName {
 			mustClose = append(mustClose, pr)

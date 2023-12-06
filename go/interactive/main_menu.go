@@ -47,26 +47,26 @@ func MainScreen(ctx *releaser.Context) {
 	m := newMenu("Main",
 		createIssueMenuItem(ctx),
 		&menuItem{
-			status: state.ToDo,
+			isDone:   state.ToDo,
 			subItems: prereq.items,
-			name: "Prerequisites",
-			act:  subMenu(prereq)},
+			name:     "Prerequisites",
+			act:      subMenu(prereq)},
 		&menuItem{
-			status: state.ToDo,
+			isDone:   state.ToDo,
 			subItems: prerelease.items,
-			name: "Pre Release",
-			act:  subMenu(prerelease)},
+			name:     "Pre Release",
+			act:      subMenu(prerelease)},
 		&menuItem{
-			status: state.ToDo,
+			isDone:   state.ToDo,
 			subItems: nil,
-			name: "Release",
-			act:  nil,
+			name:     "Release",
+			act:      nil,
 		},
 		&menuItem{
-			status: state.ToDo,
+			isDone:   state.ToDo,
 			subItems: postRelease.items,
-			name: "Post Release",
-			act:  subMenu(postRelease),
+			name:     "Post Release",
+			act:      subMenu(postRelease),
 		},
 	)
 

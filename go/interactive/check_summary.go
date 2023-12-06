@@ -18,7 +18,6 @@ package interactive
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
-	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/prerequisite"
 	"vitess.io/vitess-releaser/go/releaser/steps"
@@ -30,23 +29,34 @@ func checkSummaryMenuItem(ctx *releaser.Context) *menuItem {
 	return &menuItem{
 		ctx:    ctx,
 		name:   steps.CheckSummary,
-		status: state.ToDo, // TODO: read initial status from Release Issue on GitHub
+		isDone: ctx.Issue.CheckSummary,
 		act:    checkSummaryAct,
 		update: checkSummaryUpdate,
 	}
 }
 
 func checkSummaryUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
-	l, ok := msg.(checkSummary)
-	if !ok {
-		return mi, nil
+	switch msg := msg.(type) {
+	case checkSummary:
+		return mi, pushDialog(&doneDialog{
+			stepName: mi.name,
+			title:    "Check release note summary",
+			message:  msg,
+			isDone:   mi.isDone,
+		})
+	case doneDialogAction:
+		if string(msg) != mi.name {
+			return mi, nil
+		}
+		mi.ctx.Issue.CheckSummary = !mi.ctx.Issue.CheckSummary
+		mi.isDone = !mi.isDone
+		pl, fn := mi.ctx.UploadIssue()
+		return mi, tea.Batch(func() tea.Msg {
+			fn()
+			return tea.Msg("")
+		}, pushDialog(newProgressDialog("Updating the Release Issue", pl)))
 	}
-
-	return mi, pushDialog(doneDialog{
-		title:   "Check release note summary",
-		message: l,
-		status:  &mi.status,
-	})
+	return mi, nil
 }
 
 func checkSummaryAct(mi *menuItem) (*menuItem, tea.Cmd) {

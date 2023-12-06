@@ -24,8 +24,7 @@ import (
 	"strings"
 
 	gh "github.com/cli/go-gh"
-	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/vitess"
+	"vitess.io/vitess-releaser/go/releaser/git"
 )
 
 type Issue struct {
@@ -89,12 +88,12 @@ func GetIssueBody(repo string, nb int) string {
 	return i.Body
 }
 
-func GetReleaseIssue(ctx *releaser.Context) string {
+func GetReleaseIssue(repo, majorRelease string) string {
 	res, _, err := gh.Exec(
 		"issue", "list",
 		"-l", "Type: Release",
 		"--json", "title,url",
-		"--repo", ctx.VitessRepo,
+		"--repo", repo,
 	)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -108,7 +107,7 @@ func GetReleaseIssue(ctx *releaser.Context) string {
 
 	for _, issue := range issues {
 		title := issue["title"]
-		if strings.HasPrefix(title, fmt.Sprintf("Release of v%s", ctx.MajorRelease)) {
+		if strings.HasPrefix(title, fmt.Sprintf("Release of v%s", majorRelease)) {
 			return issue["url"]
 		}
 	}
@@ -116,15 +115,24 @@ func GetReleaseIssue(ctx *releaser.Context) string {
 	return ""
 }
 
-func GetReleaseIssueNumber(ctx *releaser.Context) int {
-	issueURL := GetReleaseIssue(ctx)
-	lastIdx := strings.LastIndex(issueURL, "/")
-	issueNbStr := issueURL[lastIdx+1:]
-	issueNb, err := strconv.Atoi(issueNbStr)
+func GetReleaseIssueInfo(repo, majorRelease string) (nb int, url string) {
+	url = GetReleaseIssue(repo, majorRelease)
+	if url == "" {
+		// no issue found
+		return 0, ""
+	}
+	nb = URLToNb(url)
+	return nb, url
+}
+
+func URLToNb(url string) int {
+	lastIdx := strings.LastIndex(url, "/")
+	issueNbStr := url[lastIdx+1:]
+	nb, err := strconv.Atoi(issueNbStr)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	return issueNb
+	return nb
 }
 
 func FormatIssues(issues []Issue) []string {
@@ -135,10 +143,10 @@ func FormatIssues(issues []Issue) []string {
 	return prFmt
 }
 
-func CheckReleaseBlockerIssues(ctx *releaser.Context) []Issue {
-	vitess.CorrectCleanRepo(ctx.VitessRepo)
+func CheckReleaseBlockerIssues(repo, majorRelease string) []Issue {
+	git.CorrectCleanRepo(repo)
 
-	byteRes, _, err := gh.Exec("issue", "list", "--json", "title,url,labels", "--repo", ctx.VitessRepo)
+	byteRes, _, err := gh.Exec("issue", "list", "--json", "title,url,labels", "--repo", repo)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -150,7 +158,7 @@ func CheckReleaseBlockerIssues(ctx *releaser.Context) []Issue {
 
 	var mustClose []Issue
 
-	branchName := fmt.Sprintf("release-%s.0", ctx.MajorRelease)
+	branchName := fmt.Sprintf("release-%s.0", majorRelease)
 	for _, i := range issues {
 		for _, l := range i.Labels {
 			if strings.HasPrefix(l.Name, "Release Blocker: ") && strings.Contains(l.Name, branchName) {

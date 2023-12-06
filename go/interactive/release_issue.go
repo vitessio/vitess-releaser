@@ -20,56 +20,73 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/issue"
 	"vitess.io/vitess-releaser/go/releaser/steps"
-
-	"vitess.io/vitess-releaser/go/releaser/github"
 )
 
 func createIssueMenuItem(ctx *releaser.Context) *menuItem {
 	return &menuItem{
 		ctx:    ctx,
 		name:   steps.CreateReleaseIssue,
-		status: state.ToDo,
+		isDone: state.ToDo,
 		act:    createIssue,
 		init:   issueInit,
 		update: issueUpdate,
 	}
 }
 
-type releaseIssue string
+type releaseIssue struct {
+	url string
+	nb  int
+}
 
-func issueInit(ctx *releaser.Context) tea.Cmd {
+func issueInit(mi *menuItem) tea.Cmd {
 	return func() tea.Msg {
-		url := github.GetReleaseIssue(ctx)
-		return releaseIssue(url)
+		return releaseIssue{
+			url: mi.ctx.IssueLink,
+			nb:  mi.ctx.IssueNbGH,
+		}
 	}
 }
 
 func createIssue(mi *menuItem) (*menuItem, tea.Cmd) {
-	pl, createIssueFn := issue.CreateReleaseIssue(mi.ctx)
-	issueCreator := func() tea.Msg { return releaseIssue(createIssueFn()) }
+	// safeguard
+	if mi.ctx.IssueLink != "" {
+		return mi, func() tea.Msg {
+			return releaseIssue{
+				url: mi.ctx.IssueLink,
+				nb:  mi.ctx.IssueNbGH,
+			}
+		}
+	}
+
+	pl, createIssueFn := releaser.CreateReleaseIssue(mi.ctx)
 	return mi, tea.Batch(
-		issueCreator,
+		func() tea.Msg {
+			nb, url := createIssueFn()
+			return releaseIssue{
+				url: url,
+				nb:  nb,
+			}
+		},
 		pushDialog(newProgressDialog("Create Release Issue", pl)),
 	)
 }
 
 func issueUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
-	url, ok := msg.(releaseIssue)
+	ri, ok := msg.(releaseIssue)
 	if !ok {
 		return mi, nil
 	}
-	if len(url) != 0 {
-		return gotIssueURL(mi, string(url)), nil
+	if len(ri.url) != 0 && ri.nb != 0 {
+		return gotIssueURL(mi, ri), nil
 	}
 	return mi, nil
 }
 
-func gotIssueURL(item *menuItem, url string) *menuItem {
+func gotIssueURL(item *menuItem, ri releaseIssue) *menuItem {
 	item.name = steps.ReleaseIssue
-	item.info = url
-	item.status = state.Done
+	item.info = ri.url
+	item.isDone = state.Done
 	item.act = nil // We don't want to accidentally create a second one
 	return item
 }

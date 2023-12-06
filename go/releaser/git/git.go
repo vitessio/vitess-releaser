@@ -117,3 +117,12 @@ func FindRemoteName(repository string) string {
 	}
 	return ""
 }
+
+func CorrectCleanRepo(repo string) {
+	if !CheckCurrentRepo(repo + ".git") {
+		log.Fatalf("the tool should be run from the %s repository directory", repo)
+	}
+	if !CleanLocalState() {
+		log.Fatal("the vitess repository should have a clean state")
+	}
+}

@@ -17,6 +17,20 @@ limitations under the License.
 package state
 
 const (
-	ToDo = "To do"
-	Done = "Done"
+	ToDo = false
+	Done = true
 )
+
+func Fmt(b bool) string {
+	if b {
+		return "Done"
+	}
+	return "To do"
+}
+
+func FmtMd(b bool) string {
+	if b {
+		return "x"
+	}
+	return " "
+}

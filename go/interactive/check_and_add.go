@@ -17,10 +17,7 @@ limitations under the License.
 package interactive
 
 import (
-	"strings"
-
 	tea "github.com/charmbracelet/bubbletea"
-	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/prerequisite"
 	"vitess.io/vitess-releaser/go/releaser/steps"
@@ -34,7 +31,8 @@ func checkAndAddMenuItem(ctx *releaser.Context) *menuItem {
 		name:   steps.CheckAndAdd,
 		act:    checkAndAddAct,
 		update: checkAndAddUpdate,
-		status: state.ToDo, // TODO: read the initial state from the Release Issue on GitHub
+		isDone: ctx.IssueNbGH != 0 && ctx.Issue.CheckBackport.Done() && ctx.Issue.ReleaseBlocker.Done(),
+		info:   prerequisite.GetCheckAndAddInfoMsg(ctx, ctx.IssueLink),
 	}
 }
 
@@ -46,16 +44,11 @@ func checkAndAddUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 
 	outStr := string(out)
 	mi.info = outStr
-	if strings.Contains(outStr, "Found") {
-		mi.status = state.ToDo
-	} else {
-		mi.status = state.Done
-	}
+	mi.isDone = mi.ctx.Issue.CheckBackport.Done() && mi.ctx.Issue.ReleaseBlocker.Done()
 	return mi, nil
 }
 
 func checkAndAddAct(mi *menuItem) (*menuItem, tea.Cmd) {
-	mi.info = "running..."
 	pl, add := prerequisite.CheckAndAddPRsIssues(mi.ctx)
 	return mi, tea.Batch(func() tea.Msg {
 		return checkAndAdd(add())

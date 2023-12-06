@@ -18,7 +18,6 @@ package interactive
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
-	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/pre_release"
 	"vitess.io/vitess-releaser/go/releaser/steps"
@@ -27,28 +26,33 @@ import (
 type createMilestone string
 
 func createMilestoneMenuItem(ctx *releaser.Context) *menuItem {
+	act := createMilestoneAct
+	if ctx.Issue.NewGitHubMilestone.Done {
+		act = nil
+	}
 	return &menuItem{
 		ctx:    ctx,
 		name:   steps.CreateMilestone,
-		act:    createMilestoneAct,
+		act:    act,
 		update: createMilestoneUpdate,
-		status: state.ToDo,
+		info:   ctx.Issue.NewGitHubMilestone.URL,
+		isDone: ctx.Issue.NewGitHubMilestone.Done,
 	}
 }
 
 func createMilestoneUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 	milestoneLink, ok := msg.(createMilestone)
-	if !ok {
+	if !ok || milestoneLink == "" {
 		return mi, nil
 	}
 
-	mi.info = string(milestoneLink)
-	mi.status = state.Done
+	mi.info = mi.ctx.Issue.NewGitHubMilestone.URL
+	mi.isDone = mi.ctx.Issue.NewGitHubMilestone.Done
+	mi.act = nil // We don't want to accidentally create a second one
 	return mi, nil
 }
 
 func createMilestoneAct(mi *menuItem) (*menuItem, tea.Cmd) {
-	mi.info = "running..."
 	pl, create := pre_release.NewMilestone(mi.ctx)
 	return mi, tea.Batch(func() tea.Msg {
 		return createMilestone(create())

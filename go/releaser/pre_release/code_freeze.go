@@ -26,7 +26,6 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/git"
 	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/logging"
-	"vitess.io/vitess-releaser/go/releaser/vitess"
 )
 
 type codeFreezeStatus int
@@ -47,8 +46,8 @@ func CodeFreeze(ctx *releaser.Context) (*logging.ProgressLogging, func() string)
 	}
 
 	return pl, func() string {
-		vitess.CorrectCleanRepo(ctx.VitessRepo)
-		nextRelease, branchName := vitess.FindNextRelease(ctx.MajorRelease)
+		git.CorrectCleanRepo(ctx.VitessRepo)
+		nextRelease, branchName := releaser.FindNextRelease(ctx.MajorRelease)
 
 		pl.NewStepf("Fetch from git remote")
 		remote := git.FindRemoteName(ctx.VitessRepo)

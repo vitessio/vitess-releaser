@@ -20,11 +20,10 @@ import (
 	"fmt"
 
 	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/vitess"
 )
 
 func CheckSummary(ctx *releaser.Context) []string {
-	r, _ := vitess.FindNextRelease(ctx.MajorRelease)
+	r, _ := releaser.FindNextRelease(ctx.MajorRelease)
 	return []string{
 		"If the release does not contain significant changes (i.e. a small patch release) then this step can be skipped",
 		fmt.Sprintf("The summary file is located in: ./changelog/%s.0/%s/summary.md.", ctx.MajorRelease, r),

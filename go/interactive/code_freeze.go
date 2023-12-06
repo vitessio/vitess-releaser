@@ -30,9 +30,8 @@ func codeFreezeMenuItem(ctx *releaser.Context) *menuItem {
 		ctx:    ctx,
 		name:   steps.CodeFreeze,
 		act:    codeFreezeAct,
-		init:   nil,
 		update: codeFreezeUpdate,
-		status: state.ToDo, // TODO: read the initial state from the Release Issue on GitHub
+		isDone: state.ToDo, // TODO: read the initial state from the Release Issue on GitHub
 	}
 }
 
@@ -44,7 +43,7 @@ func codeFreezeUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 		return mi, nil
 	}
 	mi.info = string(url)
-	mi.status = state.Done
+	mi.isDone = state.Done
 	return mi, nil
 }
 
