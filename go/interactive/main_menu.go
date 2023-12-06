@@ -36,6 +36,7 @@ func MainScreen(ctx *releaser.Context) {
 	prerelease := newMenu(
 		"Pre Release",
 		codeFreezeMenuItem(ctx),
+		createReleasePRMenuItem(ctx),
 		createMilestoneMenuItem(ctx),
 	)
 

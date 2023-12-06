@@ -24,5 +24,6 @@ const (
 	CheckAndAdd           = "Check pending PRs/Issues"
 	CheckSummary          = "Check Release Summary"
 	CodeFreeze            = "Code Freeze"
+	CreateReleasePR       = "Create Release PR"
 	CreateMilestone       = "Create Milestone"
 )
