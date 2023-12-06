@@ -59,7 +59,12 @@ func Pull(remote, branch string) {
 }
 
 func ResetHard(remote, branch string) {
-	out, err := exec.Command("git", "reset", "--hard", remote+"/"+branch).CombinedOutput()
+	out, err := exec.Command("git", "fetch", remote).CombinedOutput()
+	if err != nil {
+		log.Fatalf("%s: %s", err, out)
+	}
+
+	out, err = exec.Command("git", "reset", "--hard", remote+"/"+branch).CombinedOutput()
 	if err != nil {
 		log.Fatalf("%s: %s", err, out)
 	}
@@ -83,7 +88,7 @@ func Push(remote, branch string) {
 	}
 }
 
-func CommitAll(msg string) {
+func CommitAll(msg string) (empty bool) {
 	out, err := exec.Command("git", "add", "--all").CombinedOutput()
 	if err != nil {
 		log.Fatalf("%s: %s", err, out)
@@ -91,8 +96,12 @@ func CommitAll(msg string) {
 
 	out, err = exec.Command("git", "commit", "-n", "-s", "-m", msg).CombinedOutput()
 	if err != nil {
+		if strings.Contains(err.Error(), "nothing to commit, working tree clean") {
+			return true
+		}
 		log.Fatalf("%s: %s", err, out)
 	}
+	return false
 }
 
 // FindRemoteName takes the output of `git remote -v` and a repository name,

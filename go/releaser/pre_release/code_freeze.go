@@ -61,7 +61,11 @@ func CodeFreeze(ctx *releaser.Context) (*logging.ProgressLogging, func() string)
 		activateCodeFreeze()
 
 		pl.NewStepf("Commit and push to branch %s", newBranchName)
-		git.CommitAll(fmt.Sprintf("Code Freeze of %s", branchName))
+		if git.CommitAll(fmt.Sprintf("Code Freeze of %s", branchName)) {
+			pl.TotalSteps = 5
+			pl.NewStepf("Nothing to commit, seems like code freeze is already done.", newBranchName)
+			return ""
+		}
 		git.Push(remote, newBranchName)
 
 		pl.NewStepf("Create Pull Request")
