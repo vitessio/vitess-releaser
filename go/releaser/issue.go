@@ -33,6 +33,7 @@ const (
 	stateReadingBackport
 	stateReadingReleaseBlockerIssue
 	stateReadingCodeFreezeItem
+	stateReadindCreateReleasePRItem
 	stateReadingNewMilestoneItem
 )
 
@@ -47,8 +48,9 @@ const (
 	releaseBlockerItem       = "Make sure release blocker Issues are closed, list below."
 
 	// Pre-Release
-	codeFreezeItem   = "Code Freeze."
-	newMilestoneItem = "Create new GitHub Milestone."
+	codeFreezeItem      = "Code Freeze."
+	createReleasePRItem = "Create Release PR."
+	newMilestoneItem    = "Create new GitHub Milestone."
 
 	// Post-Release
 	postSlackAnnouncementItem = "Notify the community on Slack for the new release."
@@ -77,6 +79,7 @@ type (
 
 		// Pre-Release
 		CodeFreeze         ItemWithLink
+		CreateReleasePR    ItemWithLink
 		NewGitHubMilestone ItemWithLink
 
 		// Post-Release
@@ -106,6 +109,10 @@ const (
 - [{{fmtStatus .CodeFreeze.Done}}] Code Freeze.
 {{- if .CodeFreeze.URL }}
   - {{ .CodeFreeze.URL }}
+{{- end }}
+- [{{fmtStatus .CreateReleasePR.Done}}] Create Release PR.
+{{- if .CreateReleasePR.URL }}
+  - {{ .CreateReleasePR.URL }}
 {{- end }}
 - [{{fmtStatus .NewGitHubMilestone.Done}}] Create new GitHub Milestone.
 {{- if .NewGitHubMilestone.URL }}
@@ -172,6 +179,12 @@ func (ctx *Context) LoadIssue() {
 					s = stateReadingCodeFreezeItem
 				}
 			}
+			if strings.Contains(line, createReleasePRItem) {
+				newIssue.CreateReleasePR.Done = strings.HasPrefix(line, markdownItemDone)
+				if isNextLineAList(lines, i) {
+					s = stateReadindCreateReleasePRItem
+				}
+			}
 			if strings.Contains(line, newMilestoneItem) {
 				newIssue.NewGitHubMilestone.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
@@ -187,6 +200,8 @@ func (ctx *Context) LoadIssue() {
 			newIssue.ReleaseBlocker.Items = append(newIssue.ReleaseBlocker.Items, handleNewListItem(lines, i, &s))
 		case stateReadingCodeFreezeItem:
 			newIssue.CodeFreeze.URL = handleSingleTextItem(line, &s)
+		case stateReadindCreateReleasePRItem:
+			newIssue.CreateReleasePR.URL = handleSingleTextItem(line, &s)
 		case stateReadingNewMilestoneItem:
 			newIssue.NewGitHubMilestone.URL = handleSingleTextItem(line, &s)
 		}
