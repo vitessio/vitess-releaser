@@ -54,6 +54,8 @@ func (c *doneDialog) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return c, popDialog
 		case tea.KeyRunes:
 			switch string(msg.Runes) {
+			case "q":
+				return c, popDialog
 			case "x":
 				return c, func() tea.Msg {
 					c.isDone = !c.isDone
@@ -82,7 +84,7 @@ func (c *doneDialog) View() string {
 		lines,
 		"",
 		"Press 'x' to mark the item as Done/To do.",
-		"Press 'enter' to quit.",
+		"Press 'q' or 'enter' to quit.",
 	)
 
 	return lipgloss.JoinVertical(lipgloss.Center, lines...)
