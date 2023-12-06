@@ -32,6 +32,8 @@ const (
 	stateReadingItem = iota
 	stateReadingBackport
 	stateReadingReleaseBlockerIssue
+	stateReadingCodeFreezeItem
+	stateReadingNewMilestoneItem
 )
 
 const (
@@ -57,7 +59,8 @@ type (
 		Done bool
 
 		// URL always uses the following format: "#111"
-		// No http links are used, only Markdown links
+		// Expect for GH milestones, where the HTTP
+		// version is used, such as "https://github.com...."
 		URL string
 	}
 
@@ -69,7 +72,7 @@ type (
 		// Prerequisites
 		SlackPreRequisite bool
 		CheckSummary      bool
-		CheckBackports    ParentOfItems
+		CheckBackport     ParentOfItems
 		ReleaseBlocker    ParentOfItems
 
 		// Pre-Release
@@ -88,8 +91,8 @@ const (
 
 - [{{fmtStatus .SlackPreRequisite}}] Notify the community on Slack.
 - [{{fmtStatus .CheckSummary}}] Make sure the release notes summary is prepared and clean.
-- [{{fmtStatus .CheckBackports.Done}}] Make sure backport Pull Requests are merged, list below.
-{{- range $item := .CheckBackports.Items }}
+- [{{fmtStatus .CheckBackport.Done}}] Make sure backport Pull Requests are merged, list below.
+{{- range $item := .CheckBackport.Items }}
   - [{{fmtStatus $item.Done}}] {{$item.URL}}
 {{- end }}
 - [{{fmtStatus .ReleaseBlocker.Done}}] Make sure release blocker Issues are closed, list below.
@@ -158,19 +161,30 @@ func (ctx *Context) LoadIssue() {
 				newIssue.CheckSummary = strings.HasPrefix(line, markdownItemDone)
 			}
 			if strings.Contains(line, backportItem) {
-				s = stateReadingBackport
+				if isNextLineAList(lines, i) {
+					s = stateReadingBackport
+				}
 			}
 			if strings.Contains(line, releaseBlockerItem) {
-				s = stateReadingReleaseBlockerIssue
+				if isNextLineAList(lines, i) {
+					s = stateReadingReleaseBlockerIssue
+				}
+			}
+			if strings.Contains(line, codeFreezeItem) {
+				newIssue.CodeFreeze.Done = strings.HasPrefix(line, markdownItemDone)
+				if isNextLineAList(lines, i) {
+					s = stateReadingCodeFreezeItem
+				}
+			}
+			if strings.Contains(line, newMilestoneItem) {
+				newIssue.NewGitHubMilestone.Done = strings.HasPrefix(line, markdownItemDone)
+				if isNextLineAList(lines, i) {
+					s = stateReadingNewMilestoneItem
+				}
 			}
 		case stateReadingBackport:
-			if !strings.HasPrefix(line, "  -") {
-				s = stateReadingItem
-				continue
-			}
-			// remove indentation from line after we have confirmed it is present
 			line = strings.TrimSpace(line)
-			newIssue.CheckBackports.Items = append(newIssue.CheckBackports.Items, ItemWithLink{
+			newIssue.CheckBackport.Items = append(newIssue.CheckBackport.Items, ItemWithLink{
 				Done: strings.HasPrefix(line, markdownItemDone),
 				URL:  strings.TrimSpace(line[len(markdownItemDone):]),
 			})
@@ -178,11 +192,6 @@ func (ctx *Context) LoadIssue() {
 				s = stateReadingItem
 			}
 		case stateReadingReleaseBlockerIssue:
-			if !strings.HasPrefix(line, "  -") {
-				s = stateReadingItem
-				continue
-			}
-			// remove indentation from line after we have confirmed it is present
 			line = strings.TrimSpace(line)
 			newIssue.ReleaseBlocker.Items = append(newIssue.ReleaseBlocker.Items, ItemWithLink{
 				Done: strings.HasPrefix(line, markdownItemDone),
@@ -191,9 +200,27 @@ func (ctx *Context) LoadIssue() {
 			if i+1 == len(lines) || !strings.HasPrefix(lines[i+1], "  -") {
 				s = stateReadingItem
 			}
+		case stateReadingCodeFreezeItem:
+			line = strings.TrimSpace(line)
+			if line[0] == '-' {
+				line = strings.TrimSpace(line[1:])
+			}
+			newIssue.CodeFreeze.URL = line
+			s = stateReadingItem
+		case stateReadingNewMilestoneItem:
+			line = strings.TrimSpace(line)
+			if line[0] == '-' {
+				line = strings.TrimSpace(line[1:])
+			}
+			newIssue.NewGitHubMilestone.URL = line
+			s = stateReadingItem
 		}
 	}
 	ctx.Issue = newIssue
+}
+
+func isNextLineAList(lines []string, i int) bool {
+	return len(lines) > i+1 && strings.HasPrefix(lines[i+1], "  -")
 }
 
 func (ctx *Context) UploadIssue() (*logging.ProgressLogging, func() string) {

@@ -38,12 +38,12 @@ func CheckAndAddPRsIssues(ctx *releaser.Context) (*logging.ProgressLogging, func
 			// separate the PR number from the URL
 			nb := pr.URL[strings.LastIndex(pr.URL, "/")+1:]
 			markdownURL := fmt.Sprintf("#%s", nb)
-			for _, pri := range ctx.Issue.CheckBackports.Items {
+			for _, pri := range ctx.Issue.CheckBackport.Items {
 				if pri.URL == markdownURL {
 					continue outerPR
 				}
 			}
-			ctx.Issue.CheckBackports.Items = append(ctx.Issue.CheckBackports.Items, releaser.ItemWithLink{
+			ctx.Issue.CheckBackport.Items = append(ctx.Issue.CheckBackport.Items, releaser.ItemWithLink{
 				URL: markdownURL,
 			})
 		}
@@ -76,7 +76,7 @@ func CheckAndAddPRsIssues(ctx *releaser.Context) (*logging.ProgressLogging, func
 }
 
 func GetCheckAndAddInfoMsg(ctx *releaser.Context, link string) string {
-	nbPRs, nbIssues := ctx.Issue.CheckBackports.ItemsLeft(), ctx.Issue.ReleaseBlocker.ItemsLeft()
+	nbPRs, nbIssues := ctx.Issue.CheckBackport.ItemsLeft(), ctx.Issue.ReleaseBlocker.ItemsLeft()
 
 	msg := fmt.Sprintf("Up to date, see: %s", link)
 	if nbPRs > 0 || nbIssues > 0 {

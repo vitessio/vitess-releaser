@@ -26,24 +26,39 @@ import (
 
 func NewMilestone(ctx *releaser.Context) (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
-		TotalSteps: 3,
+		TotalSteps: 5,
 	}
 
 	return pl, func() string {
+		var link string
+		defer func() {
+			if link == "" {
+				return
+			}
+			ctx.Issue.NewGitHubMilestone.Done = true
+			ctx.Issue.NewGitHubMilestone.URL = link
+
+			pl.NewStepf("Update Issue %s on GitHub", ctx.IssueLink)
+			_, fn := ctx.UploadIssue()
+			issueLink := fn()
+
+			pl.NewStepf("Issue updated, see: %s", issueLink)
+		}()
+
 		pl.NewStepf("Finding the next Milestone")
 		nextNextRelease := releaser.FindVersionAfterNextRelease(ctx)
 		newMilestone := fmt.Sprintf("v%s", nextNextRelease)
 
 		ms := github.GetMilestonesByName(ctx.VitessRepo, newMilestone)
 		if len(ms) > 0 {
-			pl.SetTotalStep(2)
-			pl.NewStepf("Found an existing Milestone: %s", ms[0].URL)
-			return ms[0].URL
+			pl.SetTotalStep(4) // we do one lest step if the milestone already exist
+			link = ms[0].URL
+			pl.NewStepf("Found an existing Milestone: %s", link)
+			return link
 		}
 
 		pl.NewStepf("Creating Milestone %s on GitHub", newMilestone)
-		link := github.CreateNewMilestone(ctx.VitessRepo, newMilestone)
-
+		link = github.CreateNewMilestone(ctx.VitessRepo, newMilestone)
 		pl.NewStepf("New Milestone %s created: %s", newMilestone, link)
 		return link
 	}

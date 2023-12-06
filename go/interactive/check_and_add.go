@@ -31,7 +31,7 @@ func checkAndAddMenuItem(ctx *releaser.Context) *menuItem {
 		name:   steps.CheckAndAdd,
 		act:    checkAndAddAct,
 		update: checkAndAddUpdate,
-		isDone: ctx.IssueNbGH != 0 && ctx.Issue.CheckBackports.Done() && ctx.Issue.ReleaseBlocker.Done(),
+		isDone: ctx.IssueNbGH != 0 && ctx.Issue.CheckBackport.Done() && ctx.Issue.ReleaseBlocker.Done(),
 		info:   prerequisite.GetCheckAndAddInfoMsg(ctx, ctx.IssueLink),
 	}
 }
@@ -44,12 +44,11 @@ func checkAndAddUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 
 	outStr := string(out)
 	mi.info = outStr
-	mi.isDone = mi.ctx.Issue.CheckBackports.Done() && mi.ctx.Issue.ReleaseBlocker.Done()
+	mi.isDone = mi.ctx.Issue.CheckBackport.Done() && mi.ctx.Issue.ReleaseBlocker.Done()
 	return mi, nil
 }
 
 func checkAndAddAct(mi *menuItem) (*menuItem, tea.Cmd) {
-	mi.info = "running..."
 	pl, add := prerequisite.CheckAndAddPRsIssues(mi.ctx)
 	return mi, tea.Batch(func() tea.Msg {
 		return checkAndAdd(add())
