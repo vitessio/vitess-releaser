@@ -19,7 +19,7 @@ package interactive
 import (
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/logging"
+	"vitess.io/vitess-releaser/go/releaser/pre_release"
 	"vitess.io/vitess-releaser/go/releaser/steps"
 )
 
@@ -48,8 +48,8 @@ func createReleasePRUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 }
 
 func createReleasePRAct(mi *menuItem) (*menuItem, tea.Cmd) {
-	pl := &logging.ProgressLogging{TotalSteps: 0}
+	pl, fn := pre_release.CreateReleasePR(mi.ctx)
 	return mi, tea.Batch(func() tea.Msg {
-		return createReleasePRUrl("done")
+		return createReleasePRUrl(fn())
 	}, pushDialog(newProgressDialog("Create the Release Pull Request", pl)))
 }

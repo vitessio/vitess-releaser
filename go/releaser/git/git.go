@@ -17,6 +17,7 @@ limitations under the License.
 package git
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os/exec"
@@ -24,7 +25,7 @@ import (
 )
 
 var (
-	ErrBranchExists = fmt.Errorf("branch already exists")
+	errBranchExists = fmt.Errorf("branch already exists")
 )
 
 func CheckCurrentRepo(repoWanted string) bool {
@@ -74,7 +75,7 @@ func CreateBranchAndCheckout(branch, base string) error {
 	out, err := exec.Command("git", "checkout", "-b", branch, base).CombinedOutput()
 	if err != nil {
 		if strings.Contains(string(out), fmt.Sprintf("a branch named '%s' already exists", branch)) {
-			return ErrBranchExists
+			return errBranchExists
 		}
 		log.Fatalf("%s: %s", err, out)
 	}
@@ -134,4 +135,22 @@ func CorrectCleanRepo(repo string) {
 	if !CleanLocalState() {
 		log.Fatal("the vitess repository should have a clean state")
 	}
+}
+
+func FindNewGeneratedBranch(remote, baseBranch, branchName string) string {
+	remoteAndBase := fmt.Sprintf("%s/%s", remote, baseBranch)
+
+	var newBranch string
+	for i := 1; ; i++ {
+		newBranch = fmt.Sprintf("%s-%s-%d", baseBranch, branchName, i)
+		err := CreateBranchAndCheckout(newBranch, remoteAndBase)
+		if err != nil {
+			if errors.Is(err, errBranchExists) {
+				continue
+			}
+			log.Fatal(err)
+		}
+		break
+	}
+	return newBranch
 }

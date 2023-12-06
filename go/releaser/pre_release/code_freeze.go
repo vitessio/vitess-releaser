@@ -17,7 +17,6 @@ limitations under the License.
 package pre_release
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -105,7 +104,7 @@ func CodeFreeze(ctx *releaser.Context) (*logging.ProgressLogging, func() string)
 		}
 
 		pl.NewStepf("Create new branch based on %s/%s", remote, branchName)
-		newBranchName := findNewBranchForCodeFreeze(remote, branchName)
+		newBranchName := git.FindNewGeneratedBranch(remote, branchName, "code-freeze")
 
 		pl.NewStepf("Turn on code freeze on branch %s", newBranchName)
 		activateCodeFreeze()
@@ -133,24 +132,6 @@ func CodeFreeze(ctx *releaser.Context) (*logging.ProgressLogging, func() string)
 		done = true
 		return url
 	}
-}
-
-func findNewBranchForCodeFreeze(remote, baseBranch string) string {
-	remoteAndBase := fmt.Sprintf("%s/%s", remote, baseBranch)
-
-	var newBranch string
-	for i := 1; ; i++ {
-		newBranch = fmt.Sprintf("%s-code-freeze-%d", baseBranch, i)
-		err := git.CreateBranchAndCheckout(newBranch, remoteAndBase)
-		if err != nil {
-			if errors.Is(err, git.ErrBranchExists) {
-				continue
-			}
-			log.Fatal(err)
-		}
-		break
-	}
-	return newBranch
 }
 
 func isCurrentBranchFrozen() bool {
