@@ -49,13 +49,19 @@ type (
 		// subItems is a slice of *menuItem referring to the menuItem embedded by this item
 		subItems []*menuItem
 
-		blockActIfNoReleaseIssue bool
+		previous *menuItem
 	}
 )
 
 var columns = []string{"Task", "Status", "Info"}
 
 func newMenu(ctx context.Context, title string, items ...*menuItem) *menu {
+	for i, item := range items {
+		if i == 0 {
+			continue
+		}
+		item.previous = items[i-1]
+	}
 	return &menu{
 		state:   releaser.UnwrapState(ctx),
 		columns: columns,
@@ -92,7 +98,7 @@ func (m *menu) At(row, cell int) string {
 	switch {
 	case m.idx != row:
 		prefix = "   " // this is not the line we are standing on
-	case isActBlocked(m.state.IssueLink, item):
+	case isActBlocked(item):
 		prefix = "  :" // we are standing on this line, but it has no action
 	default:
 		prefix = "-> "
@@ -135,7 +141,7 @@ func (m *menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.idx = (m.idx + 1) % size
 		case "enter":
 			selected := m.items[m.idx]
-			if isActBlocked(m.state.IssueLink, selected) {
+			if isActBlocked(selected) {
 				return m, nil
 			}
 			var cmd tea.Cmd
@@ -159,8 +165,8 @@ func (m *menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func isActBlocked(issueLink string, mi *menuItem) bool {
-	return mi.act == nil || mi.blockActIfNoReleaseIssue && issueLink == ""
+func isActBlocked(mi *menuItem) bool {
+	return mi.act == nil || mi.previous != nil && mi.previous.isDone != state.Done
 }
 
 func (m *menu) View() string {
