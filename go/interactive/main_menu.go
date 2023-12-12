@@ -27,6 +27,7 @@ import (
 
 func MainScreen(ctx *releaser.Context) {
 	prereq := newMenu(
+		ctx,
 		"Prerequisites",
 		slackAnnouncementMenuItem(ctx, slackAnnouncementPreRequisite),
 		checkAndAddMenuItem(ctx),
@@ -34,39 +35,48 @@ func MainScreen(ctx *releaser.Context) {
 	)
 
 	prerelease := newMenu(
+		ctx,
 		"Pre Release",
 		codeFreezeMenuItem(ctx),
+		createReleasePRMenuItem(ctx),
 		createMilestoneMenuItem(ctx),
 	)
 
 	postRelease := newMenu(
+		ctx,
 		"Post Release",
 		slackAnnouncementMenuItem(ctx, slackAnnouncementPostRelease),
 	)
 
-	m := newMenu("Main",
+	m := newMenu(ctx, "Main",
 		createIssueMenuItem(ctx),
 		&menuItem{
-			isDone:   state.ToDo,
-			subItems: prereq.items,
-			name:     "Prerequisites",
-			act:      subMenu(prereq)},
-		&menuItem{
-			isDone:   state.ToDo,
-			subItems: prerelease.items,
-			name:     "Pre Release",
-			act:      subMenu(prerelease)},
-		&menuItem{
-			isDone:   state.ToDo,
-			subItems: nil,
-			name:     "Release",
-			act:      nil,
+			isDone:                   state.ToDo,
+			subItems:                 prereq.items,
+			name:                     "Prerequisites",
+			act:                      subMenu(prereq),
+			blockActIfNoReleaseIssue: true,
 		},
 		&menuItem{
-			isDone:   state.ToDo,
-			subItems: postRelease.items,
-			name:     "Post Release",
-			act:      subMenu(postRelease),
+			isDone:                   state.ToDo,
+			subItems:                 prerelease.items,
+			name:                     "Pre Release",
+			act:                      subMenu(prerelease),
+			blockActIfNoReleaseIssue: true,
+		},
+		&menuItem{
+			isDone:                   state.ToDo,
+			subItems:                 nil,
+			name:                     "Release",
+			act:                      nil,
+			blockActIfNoReleaseIssue: true,
+		},
+		&menuItem{
+			isDone:                   state.ToDo,
+			subItems:                 postRelease.items,
+			name:                     "Post Release",
+			act:                      subMenu(postRelease),
+			blockActIfNoReleaseIssue: true,
 		},
 	)
 

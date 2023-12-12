@@ -88,5 +88,7 @@ func gotIssueURL(item *menuItem, ri releaseIssue) *menuItem {
 	item.info = ri.url
 	item.isDone = state.Done
 	item.act = nil // We don't want to accidentally create a second one
+	item.ctx.IssueNbGH = ri.nb
+	item.ctx.IssueLink = ri.url
 	return item
 }
