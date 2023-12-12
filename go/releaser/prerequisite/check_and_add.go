@@ -27,10 +27,13 @@ import (
 
 func CheckAndAddPRsIssues(state *releaser.State) (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
-		TotalSteps: 4,
+		TotalSteps: 5,
 	}
 
 	return pl, func() string {
+		pl.NewStepf("Read Release Issue")
+		state.LoadIssue()
+
 		pl.NewStepf("Check and add Pull Requests")
 		prsOnGH := github.CheckBackportToPRs(state.VitessRepo, state.MajorRelease)
 	outerPR:
@@ -70,7 +73,11 @@ func CheckAndAddPRsIssues(state *releaser.State) (*logging.ProgressLogging, func
 		fn()
 
 		msg := GetCheckAndAddInfoMsg(state)
-		pl.NewStepf(msg)
+		if msg == "" {
+			pl.NewStepf("Done")
+		} else {
+			pl.NewStepf(msg)
+		}
 		return msg
 	}
 }
@@ -80,7 +87,7 @@ func GetCheckAndAddInfoMsg(state *releaser.State) string {
 
 	msg := ""
 	if nbPRs > 0 || nbIssues > 0 {
-		msg = fmt.Sprintf("Found %d PRs and %d issues, see: %s", nbPRs, nbIssues, state.IssueLink)
+		msg = fmt.Sprintf("Found %d PRs and %d issues", nbPRs, nbIssues)
 	}
 	return msg
 }

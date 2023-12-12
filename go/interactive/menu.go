@@ -71,10 +71,11 @@ func newMenu(ctx context.Context, title string, items ...*menuItem) *menu {
 }
 
 func (m *menu) moveCursorToNextElem() {
-	m.idx++
 	for _, item := range m.items {
 		if item.isDone || item.name == "" {
 			m.idx++
+		} else {
+			break
 		}
 	}
 }
@@ -199,7 +200,17 @@ func (m *menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (mi *menuItem) isActBlocked() bool {
-	return mi.act == nil || mi.previous != nil && !mi.previous.isDone || mi.isDone
+	if mi.act == nil || mi.isDone {
+		return true
+	}
+
+	currMenuItem := mi.previous
+	for currMenuItem != nil && currMenuItem.name == "" {
+		if currMenuItem.previous != nil {
+			currMenuItem = currMenuItem.previous
+		}
+	}
+	return currMenuItem != nil && !currMenuItem.isDone
 }
 
 func (m *menu) View() string {

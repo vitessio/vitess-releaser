@@ -36,14 +36,28 @@ func checkAndAddMenuItem(ctx context.Context) *menuItem {
 		isDone: state.IssueNbGH != 0 && state.Issue.CheckBackport.Done() && state.Issue.ReleaseBlocker.Done(),
 		info:   "Loading ...",
 		init:   initCheckAndAdd,
+		act:    actCheckAndAdd,
 	}
 }
 
 func initCheckAndAdd(mi *menuItem) tea.Cmd {
+	if mi.state.IssueLink == "" {
+		return nil
+	}
 	_, add := prerequisite.CheckAndAddPRsIssues(mi.state)
 	return func() tea.Msg {
 		return checkAndAdd(add())
 	}
+}
+
+func actCheckAndAdd(mi *menuItem) (*menuItem, tea.Cmd) {
+	if mi.state.IssueLink == "" {
+		return mi, nil
+	}
+	pl, add := prerequisite.CheckAndAddPRsIssues(mi.state)
+	return mi, tea.Batch(func() tea.Msg {
+		return checkAndAdd(add())
+	}, pushDialog(newProgressDialog("", pl)))
 }
 
 func checkAndAddUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
