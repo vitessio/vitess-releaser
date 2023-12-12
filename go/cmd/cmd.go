@@ -19,6 +19,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"vitess.io/vitess-releaser/go/cmd/wizard"
 
 	"github.com/spf13/cobra"
 	"vitess.io/vitess-releaser/go/cmd/flags"
@@ -53,6 +54,7 @@ func init() {
 	rootCmd.AddCommand(pre_release.PreRelease())
 	rootCmd.AddCommand(post_release.PostRelease())
 	rootCmd.AddCommand(interactive.Command())
+	rootCmd.AddCommand(wizard.Wizard)
 }
 
 func Execute() {
