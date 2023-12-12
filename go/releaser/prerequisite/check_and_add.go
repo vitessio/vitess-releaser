@@ -78,7 +78,7 @@ func CheckAndAddPRsIssues(state *releaser.State) (*logging.ProgressLogging, func
 func GetCheckAndAddInfoMsg(state *releaser.State) string {
 	nbPRs, nbIssues := state.Issue.CheckBackport.ItemsLeft(), state.Issue.ReleaseBlocker.ItemsLeft()
 
-	msg := fmt.Sprintf("Up to date, see: %s", state.IssueLink)
+	msg := ""
 	if nbPRs > 0 || nbIssues > 0 {
 		msg = fmt.Sprintf("Found %d PRs and %d issues, see: %s", nbPRs, nbIssues, state.IssueLink)
 	}

@@ -249,14 +249,14 @@ func (ctx *State) UploadIssue() (*logging.ProgressLogging, func() string) {
 	}
 }
 
-func CreateReleaseIssue(ctx *State) (*logging.ProgressLogging, func() (int, string)) {
+func CreateReleaseIssue(state *State) (*logging.ProgressLogging, func() (int, string)) {
 	pl := &logging.ProgressLogging{
 		TotalSteps: 2,
 	}
 
 	return pl, func() (int, string) {
-		CorrectCleanRepo(ctx.VitessRepo)
-		newRelease, _ := FindNextRelease(ctx.MajorRelease)
+		CorrectCleanRepo(state.VitessRepo)
+		newRelease, _ := FindNextRelease(state.MajorRelease)
 
 		var i Issue
 		pl.NewStepf("Create Release Issue on GitHub")
@@ -267,8 +267,10 @@ func CreateReleaseIssue(ctx *State) (*logging.ProgressLogging, func() (int, stri
 			Assignee: "@me",
 		}
 
-		link := newIssue.Create(ctx.VitessRepo)
+		link := newIssue.Create(state.VitessRepo)
 		nb := github.URLToNb(link)
+		state.IssueLink = link
+		state.IssueNbGH = nb
 		pl.NewStepf("Issue created: %s", link)
 		return nb, link
 	}

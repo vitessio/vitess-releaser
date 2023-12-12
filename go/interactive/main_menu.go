@@ -31,7 +31,6 @@ func MainScreen(ctx context.Context) {
 		ctx,
 		"Prerequisites",
 		slackAnnouncementMenuItem(ctx, slackAnnouncementPreRequisite),
-		checkAndAddMenuItem(ctx),
 		checkSummaryMenuItem(ctx),
 	)
 
@@ -51,6 +50,7 @@ func MainScreen(ctx context.Context) {
 
 	m := newMenu(ctx, "Main",
 		createIssueMenuItem(ctx),
+		checkAndAddMenuItem(ctx),
 		&menuItem{
 			isDone:   state.ToDo,
 			subItems: prereq.items,
@@ -76,6 +76,8 @@ func MainScreen(ctx context.Context) {
 			act:      subMenu(postRelease),
 		},
 	)
+
+	m.moveCursorToNextElem()
 
 	if _, err := tea.NewProgram(ui{state: releaser.UnwrapState(ctx), active: m}).Run(); err != nil {
 		fmt.Println("Error running program:", err)

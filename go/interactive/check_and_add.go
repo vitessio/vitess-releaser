@@ -32,10 +32,17 @@ func checkAndAddMenuItem(ctx context.Context) *menuItem {
 	return &menuItem{
 		state:  state,
 		name:   steps.CheckAndAdd,
-		act:    checkAndAddAct,
 		update: checkAndAddUpdate,
 		isDone: state.IssueNbGH != 0 && state.Issue.CheckBackport.Done() && state.Issue.ReleaseBlocker.Done(),
-		info:   prerequisite.GetCheckAndAddInfoMsg(state),
+		info:   "Loading ...",
+		init:   initCheckAndAdd,
+	}
+}
+
+func initCheckAndAdd(mi *menuItem) tea.Cmd {
+	_, add := prerequisite.CheckAndAddPRsIssues(mi.state)
+	return func() tea.Msg {
+		return checkAndAdd(add())
 	}
 }
 
@@ -49,11 +56,4 @@ func checkAndAddUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 	mi.info = outStr
 	mi.isDone = mi.state.Issue.CheckBackport.Done() && mi.state.Issue.ReleaseBlocker.Done()
 	return mi, nil
-}
-
-func checkAndAddAct(mi *menuItem) (*menuItem, tea.Cmd) {
-	pl, add := prerequisite.CheckAndAddPRsIssues(mi.state)
-	return mi, tea.Batch(func() tea.Msg {
-		return checkAndAdd(add())
-	}, pushDialog(newProgressDialog("Check and add pending PRs and release blocker Issues to Release Issue", pl)))
 }

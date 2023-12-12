@@ -70,6 +70,15 @@ func newMenu(ctx context.Context, title string, items ...*menuItem) *menu {
 	}
 }
 
+func (m *menu) moveCursorToNextElem() {
+	m.idx++
+	for _, item := range m.items {
+		if item.isDone {
+			m.idx++
+		}
+	}
+}
+
 func (m *menu) At(row, cell int) string {
 	item := m.items[row]
 	if cell == 1 {
@@ -98,7 +107,7 @@ func (m *menu) At(row, cell int) string {
 	switch {
 	case m.idx != row:
 		prefix = "   " // this is not the line we are standing on
-	case isActBlocked(item):
+	case item.isActBlocked():
 		prefix = "  :" // we are standing on this line, but it has no action
 	default:
 		prefix = "-> "
@@ -141,7 +150,7 @@ func (m *menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.idx = (m.idx + 1) % size
 		case "enter":
 			selected := m.items[m.idx]
-			if isActBlocked(selected) {
+			if selected.isActBlocked() {
 				return m, nil
 			}
 			var cmd tea.Cmd
@@ -165,8 +174,8 @@ func (m *menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func isActBlocked(mi *menuItem) bool {
-	return mi.act == nil || mi.previous != nil && mi.previous.isDone != state.Done
+func (mi *menuItem) isActBlocked() bool {
+	return mi.act == nil || mi.previous != nil && !mi.previous.isDone || mi.isDone
 }
 
 func (m *menu) View() string {

@@ -26,14 +26,18 @@ import (
 )
 
 func createIssueMenuItem(ctx context.Context) *menuItem {
-	return &menuItem{
-		state:  releaser.UnwrapState(ctx),
+	s := releaser.UnwrapState(ctx)
+	i := &menuItem{
+		state:  s,
 		name:   steps.CreateReleaseIssue,
 		isDone: state.ToDo,
 		act:    createIssue,
-		init:   issueInit,
 		update: issueUpdate,
 	}
+	if s.IssueLink != "" {
+		gotIssueURL(i)
+	}
+	return i
 }
 
 type releaseIssue struct {
@@ -41,26 +45,7 @@ type releaseIssue struct {
 	nb  int
 }
 
-func issueInit(mi *menuItem) tea.Cmd {
-	return func() tea.Msg {
-		return releaseIssue{
-			url: mi.state.IssueLink,
-			nb:  mi.state.IssueNbGH,
-		}
-	}
-}
-
 func createIssue(mi *menuItem) (*menuItem, tea.Cmd) {
-	// safeguard
-	if mi.state.IssueLink != "" {
-		return mi, func() tea.Msg {
-			return releaseIssue{
-				url: mi.state.IssueLink,
-				nb:  mi.state.IssueNbGH,
-			}
-		}
-	}
-
 	pl, createIssueFn := releaser.CreateReleaseIssue(mi.state)
 	return mi, tea.Batch(
 		func() tea.Msg {
@@ -80,17 +65,15 @@ func issueUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 		return mi, nil
 	}
 	if len(ri.url) != 0 && ri.nb != 0 {
-		return gotIssueURL(mi, ri), nil
+		return gotIssueURL(mi), nil
 	}
 	return mi, nil
 }
 
-func gotIssueURL(item *menuItem, ri releaseIssue) *menuItem {
+func gotIssueURL(item *menuItem) *menuItem {
 	item.name = steps.ReleaseIssue
-	item.info = ri.url
+	item.info = item.state.IssueLink
 	item.isDone = state.Done
 	item.act = nil // We don't want to accidentally create a second one
-	item.state.IssueNbGH = ri.nb
-	item.state.IssueLink = ri.url
 	return item
 }

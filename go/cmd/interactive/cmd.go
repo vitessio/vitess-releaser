@@ -18,10 +18,9 @@ package interactive
 
 import (
 	"github.com/spf13/cobra"
+	"vitess.io/vitess-releaser/go/interactive"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/git"
-
-	"vitess.io/vitess-releaser/go/interactive"
 )
 
 func Command() *cobra.Command {
