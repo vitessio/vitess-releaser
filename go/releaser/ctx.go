@@ -18,6 +18,7 @@ package releaser
 
 import (
 	"context"
+	"time"
 )
 
 var (
@@ -38,4 +39,5 @@ type State struct {
 	IssueNbGH    int
 	IssueLink    string
 	Issue        Issue
+	ReleaseDate  time.Time
 }

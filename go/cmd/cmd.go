@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/spf13/cobra"
 	"vitess.io/vitess-releaser/go/cmd/flags"
@@ -34,6 +35,7 @@ import (
 
 var (
 	releaseVersion string
+	releaseDate    string
 	live           = true
 )
 
@@ -45,8 +47,15 @@ var rootCmd = &cobra.Command{
 
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&releaseVersion, flags.MajorRelease, "r", "", "Number of the major release on which we want to create a new release.")
+	rootCmd.PersistentFlags().StringVarP(&releaseDate, flags.ReleaseDate, "d", "", "Date of the release with the format: YYYY-MM-DD.")
 	rootCmd.PersistentFlags().BoolVar(&live, flags.RunLive, false, "If live is true, will run against vitessio/vitess. Otherwise everything is done against your personal repository")
-	err := rootCmd.MarkPersistentFlagRequired(flags.MajorRelease)
+
+	err := cobra.MarkFlagRequired(rootCmd.PersistentFlags(), flags.MajorRelease)
+	if err != nil {
+		panic(err)
+	}
+
+	err = cobra.MarkFlagRequired(rootCmd.PersistentFlags(), flags.ReleaseDate)
 	if err != nil {
 		panic(err)
 	}
@@ -63,7 +72,20 @@ func Execute() {
 		panic(err)
 	}
 
+	err = rootCmd.ValidateRequiredFlags()
+	if err != nil {
+		fmt.Println(err)
+		_ = rootCmd.Help()
+		os.Exit(1)
+	}
+
 	var s releaser.State
+
+	parsedReleaseDate, err := time.Parse(time.DateOnly, releaseDate)
+	if err != nil {
+		panic(err)
+	}
+	s.ReleaseDate = parsedReleaseDate
 
 	if live {
 		s.VitessRepo = "vitessio/vitess"

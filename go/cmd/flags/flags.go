@@ -18,5 +18,6 @@ package flags
 
 const (
 	MajorRelease = "release"
+	ReleaseDate  = "date"
 	RunLive      = "live"
 )
