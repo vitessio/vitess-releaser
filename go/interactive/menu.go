@@ -53,7 +53,7 @@ type (
 	}
 )
 
-var columns = []string{"Task", "Status", "Info"}
+var columns = []string{"TASK", "STATUS", "INFO"}
 
 func newMenu(ctx context.Context, title string, items ...*menuItem) *menu {
 	for i, item := range items {
@@ -73,7 +73,7 @@ func newMenu(ctx context.Context, title string, items ...*menuItem) *menu {
 func (m *menu) moveCursorToNextElem() {
 	m.idx++
 	for _, item := range m.items {
-		if item.isDone {
+		if item.isDone || item.name == "" {
 			m.idx++
 		}
 	}
@@ -197,15 +197,24 @@ func (m *menu) View() string {
 		Width(m.width).
 		Headers(m.columns...).
 		Data(m).
-		StyleFunc(func(row, _ int) lipgloss.Style {
+		Border(lipgloss.ThickBorder()).
+		BorderStyle(borderStyle).
+		StyleFunc(func(row, col int) (s lipgloss.Style) {
 			switch row {
 			case 0:
-				return headerStyle
+				s = headerStyle
 			case m.idx + 1:
-				return selectedStyle
+				s = selectedStyle
 			default:
-				return cellStyle
+				s = cellStyle
 			}
+			switch col {
+			case 0:
+				s = s.MaxWidth(10)
+			case 1:
+				s = s.MaxWidth(1)
+			}
+			return
 		}).
 		Render()
 

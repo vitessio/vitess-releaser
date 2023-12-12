@@ -52,7 +52,7 @@ func MainScreen(ctx context.Context) {
 		slackAnnouncementMenuItem(ctx, slackAnnouncementPostRelease),
 	)
 
-	m := newMenu(ctx, "Main",
+	m := newMenu(ctx, "Main Menu",
 		createIssueMenuItem(ctx),
 		checkAndAddMenuItem(ctx),
 		blankLineMenu(),
