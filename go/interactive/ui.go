@@ -113,7 +113,7 @@ func (m ui) View() string {
 	if !isMenu {
 		return m.active.View()
 	}
-	title := "Vitess Releaser"
+	title := "Vitess Releaser: 'q' = back, 'enter' = action"
 	width := m.size.Width
 	if width == 0 {
 		width = 100
