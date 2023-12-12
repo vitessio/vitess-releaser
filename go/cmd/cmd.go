@@ -17,6 +17,7 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -61,17 +62,19 @@ func Execute() {
 		panic(err)
 	}
 
-	var ctx releaser.Context
+	var s releaser.State
 
 	if live {
-		ctx.VitessRepo = "vitessio/vitess"
+		s.VitessRepo = "vitessio/vitess"
 	} else {
-		ctx.VitessRepo = github.CurrentUser() + "/vitess"
+		s.VitessRepo = github.CurrentUser() + "/vitess"
 	}
-	ctx.MajorRelease = releaseVersion
-	ctx.IssueNbGH, ctx.IssueLink = github.GetReleaseIssueInfo(ctx.VitessRepo, ctx.MajorRelease)
+	s.MajorRelease = releaseVersion
+	s.IssueNbGH, s.IssueLink = github.GetReleaseIssueInfo(s.VitessRepo, s.MajorRelease)
 
-	if err := rootCmd.ExecuteContext(&ctx); err != nil {
+	ctx := releaser.WrapState(context.Background(), &s)
+
+	if err := rootCmd.ExecuteContext(ctx); err != nil {
 		fmt.Fprintf(os.Stderr, "Whoops. There was an error while executing your CLI '%s'", err)
 		os.Exit(1)
 	}

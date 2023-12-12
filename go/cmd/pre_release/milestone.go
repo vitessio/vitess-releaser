@@ -28,7 +28,7 @@ var createMilestone = &cobra.Command{
 	Use:   "create-milestone",
 	Short: "Create the next milestone for the future release.",
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx := releaser.UnwrapCtx(cmd.Context())
+		ctx := releaser.UnwrapState(cmd.Context())
 		_, newMilestone := pre_release.NewMilestone(ctx)
 		out := newMilestone()
 		fmt.Println("New milestone created or found on GitHub:", out)

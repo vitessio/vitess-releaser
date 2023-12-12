@@ -17,6 +17,8 @@ limitations under the License.
 package interactive
 
 import (
+	"context"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/prerequisite"
@@ -25,11 +27,12 @@ import (
 
 type checkSummary []string
 
-func checkSummaryMenuItem(ctx *releaser.Context) *menuItem {
+func checkSummaryMenuItem(ctx context.Context) *menuItem {
+	state := releaser.UnwrapState(ctx)
 	return &menuItem{
-		ctx:    ctx,
+		state:  state,
 		name:   steps.CheckSummary,
-		isDone: ctx.Issue.CheckSummary,
+		isDone: state.Issue.CheckSummary,
 		act:    checkSummaryAct,
 		update: checkSummaryUpdate,
 	}
@@ -48,9 +51,9 @@ func checkSummaryUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 		if string(msg) != mi.name {
 			return mi, nil
 		}
-		mi.ctx.Issue.CheckSummary = !mi.ctx.Issue.CheckSummary
+		mi.state.Issue.CheckSummary = !mi.state.Issue.CheckSummary
 		mi.isDone = !mi.isDone
-		pl, fn := mi.ctx.UploadIssue()
+		pl, fn := mi.state.UploadIssue()
 		return mi, tea.Batch(func() tea.Msg {
 			fn()
 			return tea.Msg("")
@@ -61,6 +64,6 @@ func checkSummaryUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 
 func checkSummaryAct(mi *menuItem) (*menuItem, tea.Cmd) {
 	return mi, func() tea.Msg {
-		return checkSummary(prerequisite.CheckSummary(mi.ctx))
+		return checkSummary(prerequisite.CheckSummary(mi.state))
 	}
 }

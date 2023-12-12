@@ -17,6 +17,8 @@ limitations under the License.
 package interactive
 
 import (
+	"context"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/slack"
@@ -33,7 +35,9 @@ const (
 	slackAnnouncementPreRequisite
 )
 
-func slackAnnouncementMenuItem(ctx *releaser.Context, announcementType slackAnnouncementType) *menuItem {
+func slackAnnouncementMenuItem(ctx context.Context, announcementType slackAnnouncementType) *menuItem {
+	state := releaser.UnwrapState(ctx)
+
 	var name string
 	var act func(*menuItem) (*menuItem, tea.Cmd)
 	var isDone bool
@@ -41,15 +45,15 @@ func slackAnnouncementMenuItem(ctx *releaser.Context, announcementType slackAnno
 	case slackAnnouncementPreRequisite:
 		act = slackAnnouncementPreRequisiteAct
 		name = steps.SlackAnnouncement
-		isDone = ctx.Issue.SlackPreRequisite
+		isDone = state.Issue.SlackPreRequisite
 	case slackAnnouncementPostRelease:
 		act = slackAnnouncementPostReleaseAct
 		name = steps.SlackAnnouncementPost
-		isDone = ctx.Issue.SlackPostRelease
+		isDone = state.Issue.SlackPostRelease
 	}
 
 	return &menuItem{
-		ctx:    ctx,
+		state:  state,
 		name:   name,
 		act:    act,
 		update: slackAnnouncementUpdate,
@@ -59,13 +63,13 @@ func slackAnnouncementMenuItem(ctx *releaser.Context, announcementType slackAnno
 
 func slackAnnouncementPreRequisiteAct(mi *menuItem) (*menuItem, tea.Cmd) {
 	return mi, func() tea.Msg {
-		return slackMessage(slack.AnnouncementMessage(mi.ctx))
+		return slackMessage(slack.AnnouncementMessage(mi.state))
 	}
 }
 
 func slackAnnouncementPostReleaseAct(mi *menuItem) (*menuItem, tea.Cmd) {
 	return mi, func() tea.Msg {
-		return slackMessage(slack.PostReleaseMessage(mi.ctx))
+		return slackMessage(slack.PostReleaseMessage(mi.state))
 	}
 }
 
@@ -83,12 +87,12 @@ func slackAnnouncementUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 			return mi, nil
 		}
 		if mi.name == steps.SlackAnnouncement {
-			mi.ctx.Issue.SlackPreRequisite = !mi.ctx.Issue.SlackPreRequisite
+			mi.state.Issue.SlackPreRequisite = !mi.state.Issue.SlackPreRequisite
 		} else if mi.name == steps.SlackAnnouncementPost {
-			mi.ctx.Issue.SlackPostRelease = !mi.ctx.Issue.SlackPostRelease
+			mi.state.Issue.SlackPostRelease = !mi.state.Issue.SlackPostRelease
 		}
 		mi.isDone = !mi.isDone
-		pl, fn := mi.ctx.UploadIssue()
+		pl, fn := mi.state.UploadIssue()
 		return mi, tea.Batch(func() tea.Msg {
 			fn()
 			return tea.Msg("")

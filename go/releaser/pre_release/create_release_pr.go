@@ -26,15 +26,15 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/logging"
 )
 
-func CreateReleasePR(ctx *releaser.Context) (*logging.ProgressLogging, func() string) {
+func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
 		TotalSteps: 0,
 	}
 	return pl, func() string {
 		// setup
-		git.CorrectCleanRepo(ctx.VitessRepo)
-		nextRelease, branchName := releaser.FindNextRelease(ctx.MajorRelease)
-		remote := git.FindRemoteName(ctx.VitessRepo)
+		git.CorrectCleanRepo(state.VitessRepo)
+		nextRelease, branchName := releaser.FindNextRelease(state.MajorRelease)
+		remote := git.FindRemoteName(state.VitessRepo)
 		git.ResetHard(remote, branchName)
 
 		// find new branch to create the release
@@ -48,7 +48,7 @@ func CreateReleasePR(ctx *releaser.Context) (*logging.ProgressLogging, func() st
 		}
 		git.Push(remote, newBranchName)
 
-		generateReleaseNotes(ctx, nextRelease)
+		generateReleaseNotes(state, nextRelease)
 		if git.CommitAll("Addition of release notes") {
 			// TODO: handle
 			return ""

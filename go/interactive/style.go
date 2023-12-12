@@ -20,18 +20,17 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-const listHeight = 14
-
 var (
-	cellStyle     = lipgloss.NewStyle().Foreground(darkGray)
-	selectedStyle = lipgloss.NewStyle().Foreground(hotPink)
-	headerStyle   = lipgloss.NewStyle().Foreground(black)
+	cellStyle     = lipgloss.NewStyle().Foreground(lightGray)
+	selectedStyle = lipgloss.NewStyle().Foreground(vitessOrange).Bold(true)
+	headerStyle   = lipgloss.NewStyle().Foreground(white).AlignHorizontal(lipgloss.Center).Bold(true)
 	bgStyle       = lipgloss.NewStyle().Background(darkGray).Foreground(lightGray)
+	borderStyle   = lipgloss.NewStyle().Foreground(lightGray)
 )
 
 const (
-	hotPink   = lipgloss.Color("#FF06B7")
-	darkGray  = lipgloss.Color("#767676")
-	black     = lipgloss.Color("#00000")
-	lightGray = lipgloss.Color("#cccccc")
+	vitessOrange = lipgloss.Color("#DE6E39")
+	white        = lipgloss.Color("#FFFFFF")
+	darkGray     = lipgloss.Color("#767676")
+	lightGray    = lipgloss.Color("#c7c7c7")
 )

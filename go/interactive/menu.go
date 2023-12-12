@@ -17,6 +17,7 @@ limitations under the License.
 package interactive
 
 import (
+	"context"
 	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -28,7 +29,7 @@ import (
 
 type (
 	menu struct {
-		ctx     *releaser.Context
+		state   *releaser.State
 		items   []*menuItem
 		title   string
 		idx     int
@@ -37,7 +38,7 @@ type (
 	}
 
 	menuItem struct {
-		ctx    *releaser.Context
+		state  *releaser.State
 		name   string
 		isDone bool
 		info   string
@@ -48,23 +49,41 @@ type (
 		// subItems is a slice of *menuItem referring to the menuItem embedded by this item
 		subItems []*menuItem
 
-		blockActIfNoReleaseIssue bool
+		previous *menuItem
 	}
 )
 
-var columns = []string{"Task", "Status", "Info"}
+var columns = []string{"TASK", "STATUS", "INFO"}
 
-func newMenu(ctx *releaser.Context, title string, items ...*menuItem) *menu {
+func newMenu(ctx context.Context, title string, items ...*menuItem) *menu {
+	for i, item := range items {
+		if i == 0 {
+			continue
+		}
+		item.previous = items[i-1]
+	}
 	return &menu{
-		ctx:     ctx,
+		state:   releaser.UnwrapState(ctx),
 		columns: columns,
 		title:   title,
 		items:   items,
 	}
 }
 
+func (m *menu) moveCursorToNextElem() {
+	m.idx++
+	for _, item := range m.items {
+		if item.isDone || item.name == "" {
+			m.idx++
+		}
+	}
+}
+
 func (m *menu) At(row, cell int) string {
 	item := m.items[row]
+	if item.name == "" {
+		return ""
+	}
 	if cell == 1 {
 		if len(item.subItems) > 0 {
 			done := 0
@@ -77,11 +96,22 @@ func (m *menu) At(row, cell int) string {
 			if done == nb {
 				item.isDone = state.Done
 			}
-			return fmt.Sprintf("%s %d/%d", state.Fmt(item.isDone), done, nb)
+			if !item.isDone {
+				return fmt.Sprintf("%s %d/%d", state.Fmt(item.isDone), done, nb)
+			}
+			msg := fmt.Sprintf("%s %d/%d", state.Fmt(item.isDone), done, nb)
+			if item.isDone {
+				msg += " \U0001f44d"
+			}
+			return msg
 		}
 
 		// if there are no sub items, let's just return the current status
-		return state.Fmt(item.isDone)
+		msg := state.Fmt(item.isDone)
+		if item.isDone {
+			msg += " \U0001f44d"
+		}
+		return msg
 	}
 	if cell == 2 {
 		return item.info
@@ -91,10 +121,10 @@ func (m *menu) At(row, cell int) string {
 	switch {
 	case m.idx != row:
 		prefix = "   " // this is not the line we are standing on
-	case isActBlocked(m.ctx, item):
-		prefix = "  :" // we are standing on this line, but it has no action
+	case item.isActBlocked():
+		prefix = "\U0001f512 " // we are standing on this line, but it has no action
 	default:
-		prefix = "-> "
+		prefix = "\U0001f449 "
 	}
 
 	return prefix + item.name
@@ -129,12 +159,22 @@ func (m *menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "esc", "q":
 			return m, popDialog
 		case "up":
-			m.idx = (m.idx - 1 + size) % size
+			for {
+				m.idx = (m.idx - 1 + size) % size
+				if m.items[m.idx].name != "" {
+					break
+				}
+			}
 		case "down":
-			m.idx = (m.idx + 1) % size
+			for {
+				m.idx = (m.idx + 1) % size
+				if m.items[m.idx].name != "" {
+					break
+				}
+			}
 		case "enter":
 			selected := m.items[m.idx]
-			if isActBlocked(m.ctx, selected) {
+			if selected.isActBlocked() {
 				return m, nil
 			}
 			var cmd tea.Cmd
@@ -158,8 +198,8 @@ func (m *menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func isActBlocked(ctx *releaser.Context, mi *menuItem) bool {
-	return mi.act == nil || mi.blockActIfNoReleaseIssue && ctx.IssueLink == ""
+func (mi *menuItem) isActBlocked() bool {
+	return mi.act == nil || mi.previous != nil && !mi.previous.isDone || mi.isDone
 }
 
 func (m *menu) View() string {
@@ -168,15 +208,24 @@ func (m *menu) View() string {
 		Width(m.width).
 		Headers(m.columns...).
 		Data(m).
-		StyleFunc(func(row, _ int) lipgloss.Style {
+		Border(lipgloss.ThickBorder()).
+		BorderStyle(borderStyle).
+		StyleFunc(func(row, col int) (s lipgloss.Style) {
 			switch row {
 			case 0:
-				return headerStyle
+				s = headerStyle
 			case m.idx + 1:
-				return selectedStyle
+				s = selectedStyle
 			default:
-				return cellStyle
+				s = cellStyle
 			}
+			switch col {
+			case 0:
+				s = s.Copy().MaxWidth(3)
+			case 1:
+				s = s.Copy().MaxWidth(1)
+			}
+			return
 		}).
 		Render()
 

@@ -27,12 +27,12 @@ const (
 	postReleaseSlackMessage  = `📣 We have just released v%s. Check out the release notes on https://github.com/%s/release/tag/v%s`
 )
 
-func AnnouncementMessage(ctx *releaser.Context) string {
-	newRelease, _ := releaser.FindNextRelease(ctx.MajorRelease)
+func AnnouncementMessage(state *releaser.State) string {
+	newRelease, _ := releaser.FindNextRelease(state.MajorRelease)
 	return fmt.Sprintf(preRequisiteSlackMessage, newRelease)
 }
 
-func PostReleaseMessage(ctx *releaser.Context) string {
-	newRelease, _ := releaser.FindNextRelease(ctx.MajorRelease)
-	return fmt.Sprintf(postReleaseSlackMessage, newRelease, ctx.VitessRepo, newRelease)
+func PostReleaseMessage(state *releaser.State) string {
+	newRelease, _ := releaser.FindNextRelease(state.MajorRelease)
+	return fmt.Sprintf(postReleaseSlackMessage, newRelease, state.VitessRepo, newRelease)
 }

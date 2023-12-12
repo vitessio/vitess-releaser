@@ -22,11 +22,11 @@ import (
 	"vitess.io/vitess-releaser/go/releaser"
 )
 
-func CheckSummary(ctx *releaser.Context) []string {
-	r, _ := releaser.FindNextRelease(ctx.MajorRelease)
+func CheckSummary(state *releaser.State) []string {
+	r, _ := releaser.FindNextRelease(state.MajorRelease)
 	return []string{
 		"If the release does not contain significant changes (i.e. a small patch release) then this step can be skipped",
-		fmt.Sprintf("The summary file is located in: ./changelog/%s.0/%s/summary.md.", ctx.MajorRelease, r),
+		fmt.Sprintf("The summary file is located in: ./changelog/%s.0/%s/summary.md.", state.MajorRelease, r),
 		"The summary file for a release candidate is the same as the one for the GA release.",
 	}
 }

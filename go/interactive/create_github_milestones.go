@@ -17,6 +17,8 @@ limitations under the License.
 package interactive
 
 import (
+	"context"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/pre_release"
@@ -25,18 +27,19 @@ import (
 
 type createMilestone string
 
-func createMilestoneMenuItem(ctx *releaser.Context) *menuItem {
+func createMilestoneMenuItem(ctx context.Context) *menuItem {
+	state := releaser.UnwrapState(ctx)
 	act := createMilestoneAct
-	if ctx.Issue.NewGitHubMilestone.Done {
+	if state.Issue.NewGitHubMilestone.Done {
 		act = nil
 	}
 	return &menuItem{
-		ctx:    ctx,
+		state:  state,
 		name:   steps.CreateMilestone,
 		act:    act,
 		update: createMilestoneUpdate,
-		info:   ctx.Issue.NewGitHubMilestone.URL,
-		isDone: ctx.Issue.NewGitHubMilestone.Done,
+		info:   state.Issue.NewGitHubMilestone.URL,
+		isDone: state.Issue.NewGitHubMilestone.Done,
 	}
 }
 
@@ -46,14 +49,14 @@ func createMilestoneUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 		return mi, nil
 	}
 
-	mi.info = mi.ctx.Issue.NewGitHubMilestone.URL
-	mi.isDone = mi.ctx.Issue.NewGitHubMilestone.Done
+	mi.info = mi.state.Issue.NewGitHubMilestone.URL
+	mi.isDone = mi.state.Issue.NewGitHubMilestone.Done
 	mi.act = nil // We don't want to accidentally create a second one
 	return mi, nil
 }
 
 func createMilestoneAct(mi *menuItem) (*menuItem, tea.Cmd) {
-	pl, create := pre_release.NewMilestone(mi.ctx)
+	pl, create := pre_release.NewMilestone(mi.state)
 	return mi, tea.Batch(func() tea.Msg {
 		return createMilestone(create())
 	}, pushDialog(newProgressDialog("Creating new GitHub Milestone", pl)))

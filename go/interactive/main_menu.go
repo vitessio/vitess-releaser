@@ -17,6 +17,7 @@ limitations under the License.
 package interactive
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -25,12 +26,15 @@ import (
 	"vitess.io/vitess-releaser/go/releaser"
 )
 
-func MainScreen(ctx *releaser.Context) {
+func blankLineMenu() *menuItem {
+	return &menuItem{}
+}
+
+func MainScreen(ctx context.Context) {
 	prereq := newMenu(
 		ctx,
 		"Prerequisites",
 		slackAnnouncementMenuItem(ctx, slackAnnouncementPreRequisite),
-		checkAndAddMenuItem(ctx),
 		checkSummaryMenuItem(ctx),
 	)
 
@@ -48,39 +52,39 @@ func MainScreen(ctx *releaser.Context) {
 		slackAnnouncementMenuItem(ctx, slackAnnouncementPostRelease),
 	)
 
-	m := newMenu(ctx, "Main",
+	m := newMenu(ctx, "Main Menu",
 		createIssueMenuItem(ctx),
+		checkAndAddMenuItem(ctx),
+		blankLineMenu(),
 		&menuItem{
-			isDone:                   state.ToDo,
-			subItems:                 prereq.items,
-			name:                     "Prerequisites",
-			act:                      subMenu(prereq),
-			blockActIfNoReleaseIssue: true,
+			isDone:   state.ToDo,
+			subItems: prereq.items,
+			name:     "Prerequisites",
+			act:      subMenu(prereq),
 		},
 		&menuItem{
-			isDone:                   state.ToDo,
-			subItems:                 prerelease.items,
-			name:                     "Pre Release",
-			act:                      subMenu(prerelease),
-			blockActIfNoReleaseIssue: true,
+			isDone:   state.ToDo,
+			subItems: prerelease.items,
+			name:     "Pre Release",
+			act:      subMenu(prerelease),
 		},
 		&menuItem{
-			isDone:                   state.ToDo,
-			subItems:                 nil,
-			name:                     "Release",
-			act:                      nil,
-			blockActIfNoReleaseIssue: true,
+			isDone:   state.ToDo,
+			subItems: nil,
+			name:     "Release",
+			act:      nil,
 		},
 		&menuItem{
-			isDone:                   state.ToDo,
-			subItems:                 postRelease.items,
-			name:                     "Post Release",
-			act:                      subMenu(postRelease),
-			blockActIfNoReleaseIssue: true,
+			isDone:   state.ToDo,
+			subItems: postRelease.items,
+			name:     "Post Release",
+			act:      subMenu(postRelease),
 		},
 	)
 
-	if _, err := tea.NewProgram(ui{ctx: ctx, active: m}).Run(); err != nil {
+	m.moveCursorToNextElem()
+
+	if _, err := tea.NewProgram(ui{state: releaser.UnwrapState(ctx), active: m}).Run(); err != nil {
 		fmt.Println("Error running program:", err)
 		os.Exit(1)
 	}
