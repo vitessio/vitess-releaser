@@ -40,6 +40,9 @@ func checkAndAddMenuItem(ctx context.Context) *menuItem {
 }
 
 func initCheckAndAdd(mi *menuItem) tea.Cmd {
+	if mi.state.IssueLink == "" {
+		return nil
+	}
 	_, add := prerequisite.CheckAndAddPRsIssues(mi.state)
 	return func() tea.Msg {
 		return checkAndAdd(add())

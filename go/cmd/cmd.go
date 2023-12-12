@@ -28,6 +28,7 @@ import (
 	"vitess.io/vitess-releaser/go/cmd/pre_release"
 	"vitess.io/vitess-releaser/go/cmd/prerequisite"
 	"vitess.io/vitess-releaser/go/releaser"
+	"vitess.io/vitess-releaser/go/releaser/git"
 	"vitess.io/vitess-releaser/go/releaser/github"
 )
 
@@ -70,7 +71,11 @@ func Execute() {
 		s.VitessRepo = github.CurrentUser() + "/vitess"
 	}
 	s.MajorRelease = releaseVersion
-	s.IssueNbGH, s.IssueLink = github.GetReleaseIssueInfo(s.VitessRepo, s.MajorRelease)
+
+	git.CorrectCleanRepo(s.VitessRepo)
+	nextRelease, _ := releaser.FindNextRelease(s.MajorRelease)
+
+	s.IssueNbGH, s.IssueLink = github.GetReleaseIssueInfo(s.VitessRepo, nextRelease)
 
 	ctx := releaser.WrapState(context.Background(), &s)
 

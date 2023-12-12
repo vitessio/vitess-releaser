@@ -71,10 +71,11 @@ func newMenu(ctx context.Context, title string, items ...*menuItem) *menu {
 }
 
 func (m *menu) moveCursorToNextElem() {
-	m.idx++
 	for _, item := range m.items {
 		if item.isDone || item.name == "" {
 			m.idx++
+		} else {
+			break
 		}
 	}
 }

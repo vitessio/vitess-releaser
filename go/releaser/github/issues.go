@@ -88,7 +88,7 @@ func GetIssueBody(repo string, nb int) string {
 	return i.Body
 }
 
-func GetReleaseIssue(repo, majorRelease string) string {
+func GetReleaseIssue(repo, release string) string {
 	res, _, err := gh.Exec(
 		"issue", "list",
 		"-l", "Type: Release",
@@ -107,7 +107,7 @@ func GetReleaseIssue(repo, majorRelease string) string {
 
 	for _, issue := range issues {
 		title := issue["title"]
-		if strings.HasPrefix(title, fmt.Sprintf("Release of v%s", majorRelease)) {
+		if strings.HasPrefix(title, fmt.Sprintf("Release of v%s", release)) {
 			return issue["url"]
 		}
 	}
@@ -115,8 +115,8 @@ func GetReleaseIssue(repo, majorRelease string) string {
 	return ""
 }
 
-func GetReleaseIssueInfo(repo, majorRelease string) (nb int, url string) {
-	url = GetReleaseIssue(repo, majorRelease)
+func GetReleaseIssueInfo(repo, release string) (nb int, url string) {
+	url = GetReleaseIssue(repo, release)
 	if url == "" {
 		// no issue found
 		return 0, ""
