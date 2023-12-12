@@ -8,6 +8,16 @@ It streamlines various tasks, such as version bumping, changelog generation, iss
 ### Getting started
 
 ```bash
+# Install the binary
+
+> go install ./go/vitess-releaser.go
+
+# Move to the vitess git folder
+
+> cd ~/dev/vitess
+
+# Get going
+
 vitess-releaser -h
 ```
 
