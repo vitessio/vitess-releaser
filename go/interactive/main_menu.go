@@ -26,6 +26,10 @@ import (
 	"vitess.io/vitess-releaser/go/releaser"
 )
 
+func blankLineMenu() *menuItem {
+	return &menuItem{}
+}
+
 func MainScreen(ctx context.Context) {
 	prereq := newMenu(
 		ctx,
@@ -51,6 +55,7 @@ func MainScreen(ctx context.Context) {
 	m := newMenu(ctx, "Main",
 		createIssueMenuItem(ctx),
 		checkAndAddMenuItem(ctx),
+		blankLineMenu(),
 		&menuItem{
 			isDone:   state.ToDo,
 			subItems: prereq.items,

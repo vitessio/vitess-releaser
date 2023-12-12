@@ -81,6 +81,9 @@ func (m *menu) moveCursorToNextElem() {
 
 func (m *menu) At(row, cell int) string {
 	item := m.items[row]
+	if item.name == "" {
+		return ""
+	}
 	if cell == 1 {
 		if len(item.subItems) > 0 {
 			done := 0
@@ -145,9 +148,19 @@ func (m *menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "esc", "q":
 			return m, popDialog
 		case "up":
-			m.idx = (m.idx - 1 + size) % size
+			for {
+				m.idx = (m.idx - 1 + size) % size
+				if m.items[m.idx].name != "" {
+					break
+				}
+			}
 		case "down":
-			m.idx = (m.idx + 1) % size
+			for {
+				m.idx = (m.idx + 1) % size
+				if m.items[m.idx].name != "" {
+					break
+				}
+			}
 		case "enter":
 			selected := m.items[m.idx]
 			if selected.isActBlocked() {
