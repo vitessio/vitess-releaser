@@ -96,11 +96,22 @@ func (m *menu) At(row, cell int) string {
 			if done == nb {
 				item.isDone = state.Done
 			}
-			return fmt.Sprintf("%s %d/%d", state.Fmt(item.isDone), done, nb)
+			if !item.isDone {
+				return fmt.Sprintf("%s %d/%d", state.Fmt(item.isDone), done, nb)
+			}
+			msg := fmt.Sprintf("%s %d/%d", state.Fmt(item.isDone), done, nb)
+			if item.isDone {
+				msg += " \U0001f44d"
+			}
+			return msg
 		}
 
 		// if there are no sub items, let's just return the current status
-		return state.Fmt(item.isDone)
+		msg := state.Fmt(item.isDone)
+		if item.isDone {
+			msg += " \U0001f44d"
+		}
+		return msg
 	}
 	if cell == 2 {
 		return item.info
@@ -111,9 +122,9 @@ func (m *menu) At(row, cell int) string {
 	case m.idx != row:
 		prefix = "   " // this is not the line we are standing on
 	case item.isActBlocked():
-		prefix = "  :" // we are standing on this line, but it has no action
+		prefix = "\U0001f512 " // we are standing on this line, but it has no action
 	default:
-		prefix = "-> "
+		prefix = "\U0001f449 "
 	}
 
 	return prefix + item.name
@@ -210,9 +221,9 @@ func (m *menu) View() string {
 			}
 			switch col {
 			case 0:
-				s = s.MaxWidth(10)
+				s = s.Copy().MaxWidth(3)
 			case 1:
-				s = s.MaxWidth(1)
+				s = s.Copy().MaxWidth(1)
 			}
 			return
 		}).

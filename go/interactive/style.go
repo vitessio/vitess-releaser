@@ -21,7 +21,7 @@ import (
 )
 
 var (
-	cellStyle     = lipgloss.NewStyle().Foreground(darkGray)
+	cellStyle     = lipgloss.NewStyle().Foreground(lightGray)
 	selectedStyle = lipgloss.NewStyle().Foreground(vitessOrange).Bold(true)
 	headerStyle   = lipgloss.NewStyle().Foreground(white).AlignHorizontal(lipgloss.Center).Bold(true)
 	bgStyle       = lipgloss.NewStyle().Background(darkGray).Foreground(lightGray)
@@ -30,7 +30,7 @@ var (
 
 const (
 	vitessOrange = lipgloss.Color("#DE6E39")
-	darkGray     = lipgloss.Color("#767676")
 	white        = lipgloss.Color("#FFFFFF")
-	lightGray    = lipgloss.Color("#cccccc")
+	darkGray     = lipgloss.Color("#767676")
+	lightGray    = lipgloss.Color("#c7c7c7")
 )
