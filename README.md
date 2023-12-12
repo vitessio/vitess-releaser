@@ -8,6 +8,10 @@ It streamlines various tasks, such as version bumping, changelog generation, iss
 ### Getting started
 
 ```bash
+# Install dependencies
+
+> gh extension install valeriobelli/gh-milestone
+
 # Install the binary
 
 > go install ./go/vitess-releaser.go
