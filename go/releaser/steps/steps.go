@@ -21,7 +21,7 @@ const (
 	ReleaseIssue          = "Release Issue"
 	SlackAnnouncement     = "Slack Announcement"
 	SlackAnnouncementPost = "Slack Announcement Post-Release"
-	CheckAndAdd           = "Check pending PRs/Issues"
+	CheckAndAdd           = "Pending PRs/Issues"
 	CheckSummary          = "Check Release Summary"
 	CodeFreeze            = "Code Freeze"
 	CreateReleasePR       = "Create Release PR"

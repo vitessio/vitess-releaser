@@ -31,7 +31,7 @@ func createIssueMenuItem(ctx context.Context) *menuItem {
 		state:  s,
 		name:   steps.CreateReleaseIssue,
 		isDone: state.ToDo,
-		act:    createIssue,
+		init:   createIssue,
 		update: issueUpdate,
 	}
 	if s.IssueLink != "" {
@@ -45,18 +45,15 @@ type releaseIssue struct {
 	nb  int
 }
 
-func createIssue(mi *menuItem) (*menuItem, tea.Cmd) {
-	pl, createIssueFn := releaser.CreateReleaseIssue(mi.state)
-	return mi, tea.Batch(
-		func() tea.Msg {
-			nb, url := createIssueFn()
-			return releaseIssue{
-				url: url,
-				nb:  nb,
-			}
-		},
-		pushDialog(newProgressDialog("Create Release Issue", pl)),
-	)
+func createIssue(mi *menuItem) tea.Cmd {
+	_, createIssueFn := releaser.CreateReleaseIssue(mi.state)
+	nb, url := createIssueFn()
+	return func() tea.Msg {
+		return releaseIssue{
+			url: url,
+			nb:  nb,
+		}
+	}
 }
 
 func issueUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
@@ -74,6 +71,7 @@ func gotIssueURL(item *menuItem) *menuItem {
 	item.name = steps.ReleaseIssue
 	item.info = item.state.IssueLink
 	item.isDone = state.Done
-	item.act = nil // We don't want to accidentally create a second one
+	item.act = nil  // We don't want to accidentally create a second one
+	item.init = nil // So we cancel the init function if we already have the issue
 	return item
 }
