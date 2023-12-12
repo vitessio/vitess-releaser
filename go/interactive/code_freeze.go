@@ -17,6 +17,8 @@ limitations under the License.
 package interactive
 
 import (
+	"context"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/steps"
@@ -24,14 +26,15 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/pre_release"
 )
 
-func codeFreezeMenuItem(ctx *releaser.Context) *menuItem {
+func codeFreezeMenuItem(ctx context.Context) *menuItem {
+	state := releaser.UnwrapState(ctx)
 	return &menuItem{
-		ctx:    ctx,
+		state:  state,
 		name:   steps.CodeFreeze,
 		act:    codeFreezeAct,
 		update: codeFreezeUpdate,
-		info:   ctx.Issue.CodeFreeze.URL,
-		isDone: ctx.Issue.CodeFreeze.Done,
+		info:   state.Issue.CodeFreeze.URL,
+		isDone: state.Issue.CodeFreeze.Done,
 	}
 }
 
@@ -43,13 +46,13 @@ func codeFreezeUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 		return mi, nil
 	}
 
-	mi.info = mi.ctx.Issue.CodeFreeze.URL
-	mi.isDone = mi.ctx.Issue.CodeFreeze.Done
+	mi.info = mi.state.Issue.CodeFreeze.URL
+	mi.isDone = mi.state.Issue.CodeFreeze.Done
 	return mi, nil
 }
 
 func codeFreezeAct(mi *menuItem) (*menuItem, tea.Cmd) {
-	pl, freeze := pre_release.CodeFreeze(mi.ctx)
+	pl, freeze := pre_release.CodeFreeze(mi.state)
 	return mi, tea.Batch(func() tea.Msg {
 		return codeFreezeUrl(freeze())
 	}, pushDialog(newProgressDialog("Code freeze", pl)))

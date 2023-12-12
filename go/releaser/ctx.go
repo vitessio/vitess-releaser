@@ -18,40 +18,24 @@ package releaser
 
 import (
 	"context"
-	"time"
 )
 
-func UnwrapCtx(ctx context.Context) *Context {
-	if ctx, ok := ctx.(*Context); ok {
-		return ctx
-	}
-	panic("context should be of type releaser.Context")
+var (
+	skey = new(string)
+)
+
+func UnwrapState(ctx context.Context) *State {
+	return ctx.Value(skey).(*State)
 }
 
-type Context struct {
+func WrapState(ctx context.Context, s *State) context.Context {
+	return context.WithValue(ctx, skey, s)
+}
+
+type State struct {
 	VitessRepo   string
 	MajorRelease string
 	IssueNbGH    int
 	IssueLink    string
 	Issue        Issue
-}
-
-func (ctx *Context) Deadline() (deadline time.Time, ok bool) {
-	// TODO implement me
-	panic("implement me")
-}
-
-func (ctx *Context) Done() <-chan struct{} {
-	// TODO implement me
-	panic("implement me")
-}
-
-func (ctx *Context) Err() error {
-	// TODO implement me
-	panic("implement me")
-}
-
-func (ctx *Context) Value(key any) any {
-	// TODO implement me
-	panic("implement me")
 }

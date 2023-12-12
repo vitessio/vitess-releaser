@@ -23,7 +23,7 @@ import (
 	"strings"
 )
 
-func FindVersionAfterNextRelease(ctx *Context) string {
+func FindVersionAfterNextRelease(ctx *State) string {
 	CorrectCleanRepo(ctx.VitessRepo)
 	nextRelease, _ := FindNextRelease(ctx.MajorRelease)
 

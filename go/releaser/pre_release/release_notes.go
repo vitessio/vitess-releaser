@@ -47,7 +47,7 @@ type (
 	}
 
 	releaseNote struct {
-		ctx                        *releaser.Context
+		ctx                        *releaser.State
 		Version, VersionUnderscore string
 		Announcement               string
 		KnownIssues                string
@@ -115,7 +115,7 @@ The entire changelog for this release can be found [here]({{ .PathToChangeLogFil
 	prefixComponent = "Component: "
 )
 
-func generateReleaseNotes(ctx *releaser.Context, version string) {
+func generateReleaseNotes(state *releaser.State, version string) {
 	// There should be 4 sub-matches, input: "14.0.0", output: ["14.0.0", "14", "0", "0"].
 	rx := regexp.MustCompile(`([0-9]+)\.([0-9]+)\.([0-9]+)`)
 	versionMatch := rx.FindStringSubmatch(version)
@@ -136,7 +136,7 @@ func generateReleaseNotes(ctx *releaser.Context, version string) {
 	}
 
 	releaseNotes := releaseNote{
-		ctx:               ctx,
+		ctx:               state,
 		Version:           version,
 		VersionUnderscore: fmt.Sprintf("%s_%s_%s", versionMatch[1], versionMatch[2], versionMatch[3]), // v14.0.0 -> 14_0_0, this is used to format filenames.
 		SubDirPath:        releaseNotesPath,
@@ -148,13 +148,13 @@ func generateReleaseNotes(ctx *releaser.Context, version string) {
 	}
 
 	// known issues
-	knownIssues := github.LoadKnownIssues(ctx.VitessRepo, ctx.MajorRelease)
+	knownIssues := github.LoadKnownIssues(state.VitessRepo, state.MajorRelease)
 	releaseNotes.KnownIssues = getStringForKnownIssues(knownIssues)
 
 	// changelog with pull requests
-	prs, authors := github.GetMergedPRsAndAuthorsByMilestone(ctx.VitessRepo, version)
+	prs, authors := github.GetMergedPRsAndAuthorsByMilestone(state.VitessRepo, version)
 
-	releaseNotes.ChangeLog = groupAndStringifyPullRequest(ctx.VitessRepo, prs)
+	releaseNotes.ChangeLog = groupAndStringifyPullRequest(state.VitessRepo, prs)
 
 	// changelog metrics
 	if len(prs) > 0 && len(authors) > 0 {

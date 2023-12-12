@@ -17,6 +17,7 @@ limitations under the License.
 package interactive
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -25,7 +26,7 @@ import (
 	"vitess.io/vitess-releaser/go/releaser"
 )
 
-func MainScreen(ctx *releaser.Context) {
+func MainScreen(ctx context.Context) {
 	prereq := newMenu(
 		ctx,
 		"Prerequisites",
@@ -80,7 +81,7 @@ func MainScreen(ctx *releaser.Context) {
 		},
 	)
 
-	if _, err := tea.NewProgram(ui{ctx: ctx, active: m}).Run(); err != nil {
+	if _, err := tea.NewProgram(ui{state: releaser.UnwrapState(ctx), active: m}).Run(); err != nil {
 		fmt.Println("Error running program:", err)
 		os.Exit(1)
 	}

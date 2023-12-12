@@ -30,13 +30,14 @@ func Command() *cobra.Command {
 		Aliases: []string{"i"},
 		Short:   "Runs the releaser in interactive mode",
 		Run: func(cmd *cobra.Command, args []string) {
-			ctx := releaser.UnwrapCtx(cmd.Context())
-			git.CorrectCleanRepo(ctx.VitessRepo)
+			ctx := cmd.Context()
+			state := releaser.UnwrapState(ctx)
+			git.CorrectCleanRepo(state.VitessRepo)
 
 			// TODO: The assumption that the Release Manager won't be
 			// modifying the release issue while using vitess-releaser
 			// is made here, perhaps there is a better way of doing it
-			ctx.LoadIssue()
+			state.LoadIssue()
 
 			interactive.MainScreen(ctx)
 		},

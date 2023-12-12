@@ -17,6 +17,7 @@ limitations under the License.
 package interactive
 
 import (
+	"context"
 	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -28,7 +29,7 @@ import (
 
 type (
 	menu struct {
-		ctx     *releaser.Context
+		state   *releaser.State
 		items   []*menuItem
 		title   string
 		idx     int
@@ -37,7 +38,7 @@ type (
 	}
 
 	menuItem struct {
-		ctx    *releaser.Context
+		state  *releaser.State
 		name   string
 		isDone bool
 		info   string
@@ -54,9 +55,9 @@ type (
 
 var columns = []string{"Task", "Status", "Info"}
 
-func newMenu(ctx *releaser.Context, title string, items ...*menuItem) *menu {
+func newMenu(ctx context.Context, title string, items ...*menuItem) *menu {
 	return &menu{
-		ctx:     ctx,
+		state:   releaser.UnwrapState(ctx),
 		columns: columns,
 		title:   title,
 		items:   items,
@@ -91,7 +92,7 @@ func (m *menu) At(row, cell int) string {
 	switch {
 	case m.idx != row:
 		prefix = "   " // this is not the line we are standing on
-	case isActBlocked(m.ctx, item):
+	case isActBlocked(m.state.IssueLink, item):
 		prefix = "  :" // we are standing on this line, but it has no action
 	default:
 		prefix = "-> "
@@ -134,7 +135,7 @@ func (m *menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.idx = (m.idx + 1) % size
 		case "enter":
 			selected := m.items[m.idx]
-			if isActBlocked(m.ctx, selected) {
+			if isActBlocked(m.state.IssueLink, selected) {
 				return m, nil
 			}
 			var cmd tea.Cmd
@@ -158,8 +159,8 @@ func (m *menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func isActBlocked(ctx *releaser.Context, mi *menuItem) bool {
-	return mi.act == nil || mi.blockActIfNoReleaseIssue && ctx.IssueLink == ""
+func isActBlocked(issueLink string, mi *menuItem) bool {
+	return mi.act == nil || mi.blockActIfNoReleaseIssue && issueLink == ""
 }
 
 func (m *menu) View() string {

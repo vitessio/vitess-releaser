@@ -25,62 +25,62 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/logging"
 )
 
-func CheckAndAddPRsIssues(ctx *releaser.Context) (*logging.ProgressLogging, func() string) {
+func CheckAndAddPRsIssues(state *releaser.State) (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
 		TotalSteps: 4,
 	}
 
 	return pl, func() string {
 		pl.NewStepf("Check and add Pull Requests")
-		prsOnGH := github.CheckBackportToPRs(ctx.VitessRepo, ctx.MajorRelease)
+		prsOnGH := github.CheckBackportToPRs(state.VitessRepo, state.MajorRelease)
 	outerPR:
 		for _, pr := range prsOnGH {
 			// separate the PR number from the URL
 			nb := pr.URL[strings.LastIndex(pr.URL, "/")+1:]
 			markdownURL := fmt.Sprintf("#%s", nb)
-			for _, pri := range ctx.Issue.CheckBackport.Items {
+			for _, pri := range state.Issue.CheckBackport.Items {
 				if pri.URL == markdownURL {
 					continue outerPR
 				}
 			}
-			ctx.Issue.CheckBackport.Items = append(ctx.Issue.CheckBackport.Items, releaser.ItemWithLink{
+			state.Issue.CheckBackport.Items = append(state.Issue.CheckBackport.Items, releaser.ItemWithLink{
 				URL: markdownURL,
 			})
 		}
 
 		pl.NewStepf("Check and add Release Blocker Issues")
-		issuesOnGH := github.CheckReleaseBlockerIssues(ctx.VitessRepo, ctx.MajorRelease)
+		issuesOnGH := github.CheckReleaseBlockerIssues(state.VitessRepo, state.MajorRelease)
 	outerRBI:
 		for _, i := range issuesOnGH {
 			// separate the Issue number from the URL
 			nb := i.URL[strings.LastIndex(i.URL, "/")+1:]
 			markdownURL := fmt.Sprintf("#%s", nb)
-			for _, rbi := range ctx.Issue.ReleaseBlocker.Items {
+			for _, rbi := range state.Issue.ReleaseBlocker.Items {
 				if rbi.URL == markdownURL {
 					continue outerRBI
 				}
 			}
-			ctx.Issue.ReleaseBlocker.Items = append(ctx.Issue.ReleaseBlocker.Items, releaser.ItemWithLink{
+			state.Issue.ReleaseBlocker.Items = append(state.Issue.ReleaseBlocker.Items, releaser.ItemWithLink{
 				URL: markdownURL,
 			})
 		}
 
-		pl.NewStepf("Update Issue %s on GitHub", ctx.IssueLink)
-		_, fn := ctx.UploadIssue()
-		link := fn()
+		pl.NewStepf("Update Issue %s on GitHub", state.IssueLink)
+		_, fn := state.UploadIssue()
+		fn()
 
-		msg := GetCheckAndAddInfoMsg(ctx, link)
+		msg := GetCheckAndAddInfoMsg(state)
 		pl.NewStepf(msg)
 		return msg
 	}
 }
 
-func GetCheckAndAddInfoMsg(ctx *releaser.Context, link string) string {
-	nbPRs, nbIssues := ctx.Issue.CheckBackport.ItemsLeft(), ctx.Issue.ReleaseBlocker.ItemsLeft()
+func GetCheckAndAddInfoMsg(state *releaser.State) string {
+	nbPRs, nbIssues := state.Issue.CheckBackport.ItemsLeft(), state.Issue.ReleaseBlocker.ItemsLeft()
 
-	msg := fmt.Sprintf("Up to date, see: %s", link)
+	msg := fmt.Sprintf("Up to date, see: %s", state.IssueLink)
 	if nbPRs > 0 || nbIssues > 0 {
-		msg = fmt.Sprintf("Found %d PRs and %d issues, see: %s", nbPRs, nbIssues, link)
+		msg = fmt.Sprintf("Found %d PRs and %d issues, see: %s", nbPRs, nbIssues, state.IssueLink)
 	}
 	return msg
 }

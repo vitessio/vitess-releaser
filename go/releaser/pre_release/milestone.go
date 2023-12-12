@@ -24,7 +24,7 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/logging"
 )
 
-func NewMilestone(ctx *releaser.Context) (*logging.ProgressLogging, func() string) {
+func NewMilestone(state *releaser.State) (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
 		TotalSteps: 5,
 	}
@@ -35,21 +35,21 @@ func NewMilestone(ctx *releaser.Context) (*logging.ProgressLogging, func() strin
 			if link == "" {
 				return
 			}
-			ctx.Issue.NewGitHubMilestone.Done = true
-			ctx.Issue.NewGitHubMilestone.URL = link
+			state.Issue.NewGitHubMilestone.Done = true
+			state.Issue.NewGitHubMilestone.URL = link
 
-			pl.NewStepf("Update Issue %s on GitHub", ctx.IssueLink)
-			_, fn := ctx.UploadIssue()
+			pl.NewStepf("Update Issue %s on GitHub", state.IssueLink)
+			_, fn := state.UploadIssue()
 			issueLink := fn()
 
 			pl.NewStepf("Issue updated, see: %s", issueLink)
 		}()
 
 		pl.NewStepf("Finding the next Milestone")
-		nextNextRelease := releaser.FindVersionAfterNextRelease(ctx)
+		nextNextRelease := releaser.FindVersionAfterNextRelease(state)
 		newMilestone := fmt.Sprintf("v%s", nextNextRelease)
 
-		ms := github.GetMilestonesByName(ctx.VitessRepo, newMilestone)
+		ms := github.GetMilestonesByName(state.VitessRepo, newMilestone)
 		if len(ms) > 0 {
 			pl.SetTotalStep(4) // we do one lest step if the milestone already exist
 			link = ms[0].URL
@@ -58,7 +58,7 @@ func NewMilestone(ctx *releaser.Context) (*logging.ProgressLogging, func() strin
 		}
 
 		pl.NewStepf("Creating Milestone %s on GitHub", newMilestone)
-		link = github.CreateNewMilestone(ctx.VitessRepo, newMilestone)
+		link = github.CreateNewMilestone(state.VitessRepo, newMilestone)
 		pl.NewStepf("New Milestone %s created: %s", newMilestone, link)
 		return link
 	}

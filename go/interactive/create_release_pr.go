@@ -17,20 +17,23 @@ limitations under the License.
 package interactive
 
 import (
+	"context"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/pre_release"
 	"vitess.io/vitess-releaser/go/releaser/steps"
 )
 
-func createReleasePRMenuItem(ctx *releaser.Context) *menuItem {
+func createReleasePRMenuItem(ctx context.Context) *menuItem {
+	state := releaser.UnwrapState(ctx)
 	return &menuItem{
-		ctx:    ctx,
+		state:  state,
 		name:   steps.CreateReleasePR,
 		act:    createReleasePRAct,
 		update: createReleasePRUpdate,
-		info:   ctx.Issue.CreateReleasePR.URL,
-		isDone: ctx.Issue.CreateReleasePR.Done,
+		info:   state.Issue.CreateReleasePR.URL,
+		isDone: state.Issue.CreateReleasePR.Done,
 	}
 }
 
@@ -42,13 +45,13 @@ func createReleasePRUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 		return mi, nil
 	}
 
-	mi.info = mi.ctx.Issue.CreateReleasePR.URL
-	mi.isDone = mi.ctx.Issue.CreateReleasePR.Done
+	mi.info = mi.state.Issue.CreateReleasePR.URL
+	mi.isDone = mi.state.Issue.CreateReleasePR.Done
 	return mi, nil
 }
 
 func createReleasePRAct(mi *menuItem) (*menuItem, tea.Cmd) {
-	pl, fn := pre_release.CreateReleasePR(mi.ctx)
+	pl, fn := pre_release.CreateReleasePR(mi.state)
 	return mi, tea.Batch(func() tea.Msg {
 		return createReleasePRUrl(fn())
 	}, pushDialog(newProgressDialog("Create the Release Pull Request", pl)))

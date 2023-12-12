@@ -143,7 +143,7 @@ func (pi ParentOfItems) Done() bool {
 	return true
 }
 
-func (ctx *Context) LoadIssue() {
+func (ctx *State) LoadIssue() {
 	if ctx.IssueNbGH == 0 {
 		// we are in the case where we start vitess-releaser
 		// and the Release Issue hasn't been created yet.
@@ -234,7 +234,7 @@ func isNextLineAList(lines []string, i int) bool {
 	return len(lines) > i+1 && strings.HasPrefix(lines[i+1], "  -")
 }
 
-func (ctx *Context) UploadIssue() (*logging.ProgressLogging, func() string) {
+func (ctx *State) UploadIssue() (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
 		TotalSteps: 2,
 	}
@@ -249,7 +249,7 @@ func (ctx *Context) UploadIssue() (*logging.ProgressLogging, func() string) {
 	}
 }
 
-func CreateReleaseIssue(ctx *Context) (*logging.ProgressLogging, func() (int, string)) {
+func CreateReleaseIssue(ctx *State) (*logging.ProgressLogging, func() (int, string)) {
 	pl := &logging.ProgressLogging{
 		TotalSteps: 2,
 	}

@@ -17,15 +17,17 @@ limitations under the License.
 package interactive
 
 import (
+	"context"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/steps"
 )
 
-func createIssueMenuItem(ctx *releaser.Context) *menuItem {
+func createIssueMenuItem(ctx context.Context) *menuItem {
 	return &menuItem{
-		ctx:    ctx,
+		state:  releaser.UnwrapState(ctx),
 		name:   steps.CreateReleaseIssue,
 		isDone: state.ToDo,
 		act:    createIssue,
@@ -42,24 +44,24 @@ type releaseIssue struct {
 func issueInit(mi *menuItem) tea.Cmd {
 	return func() tea.Msg {
 		return releaseIssue{
-			url: mi.ctx.IssueLink,
-			nb:  mi.ctx.IssueNbGH,
+			url: mi.state.IssueLink,
+			nb:  mi.state.IssueNbGH,
 		}
 	}
 }
 
 func createIssue(mi *menuItem) (*menuItem, tea.Cmd) {
 	// safeguard
-	if mi.ctx.IssueLink != "" {
+	if mi.state.IssueLink != "" {
 		return mi, func() tea.Msg {
 			return releaseIssue{
-				url: mi.ctx.IssueLink,
-				nb:  mi.ctx.IssueNbGH,
+				url: mi.state.IssueLink,
+				nb:  mi.state.IssueNbGH,
 			}
 		}
 	}
 
-	pl, createIssueFn := releaser.CreateReleaseIssue(mi.ctx)
+	pl, createIssueFn := releaser.CreateReleaseIssue(mi.state)
 	return mi, tea.Batch(
 		func() tea.Msg {
 			nb, url := createIssueFn()
@@ -88,7 +90,7 @@ func gotIssueURL(item *menuItem, ri releaseIssue) *menuItem {
 	item.info = ri.url
 	item.isDone = state.Done
 	item.act = nil // We don't want to accidentally create a second one
-	item.ctx.IssueNbGH = ri.nb
-	item.ctx.IssueLink = ri.url
+	item.state.IssueNbGH = ri.nb
+	item.state.IssueLink = ri.url
 	return item
 }

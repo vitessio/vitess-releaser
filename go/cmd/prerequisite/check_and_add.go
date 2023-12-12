@@ -28,7 +28,7 @@ var checkAndAdd = &cobra.Command{
 	Use:   "check-and-add",
 	Short: "Checks and adds pending Pull Request and Release Blocker Issues to the release Issue",
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx := releaser.UnwrapCtx(cmd.Context())
+		ctx := releaser.UnwrapState(cmd.Context())
 		_, check := prerequisite.CheckAndAddPRsIssues(ctx)
 		msg := check()
 		fmt.Println(msg)

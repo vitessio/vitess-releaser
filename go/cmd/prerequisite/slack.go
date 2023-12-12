@@ -28,9 +28,9 @@ var slackAnnouncement = &cobra.Command{
 	Use:   "slack",
 	Short: "Prompts the Slack announcement for the prerequisite step",
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx := releaser.UnwrapCtx(cmd.Context())
+		ctx := releaser.UnwrapState(cmd.Context())
 		msg := slack.AnnouncementMessage(ctx)
 		fmt.Print("Please post this message in the #general and #releases channels:\n\n")
-		fmt.Println("\t"+msg)
+		fmt.Println("\t" + msg)
 	},
 }
