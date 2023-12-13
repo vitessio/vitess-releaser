@@ -30,13 +30,14 @@ type checkAndAdd string
 func checkAndAddMenuItem(ctx context.Context) *menuItem {
 	state := releaser.UnwrapState(ctx)
 	return &menuItem{
-		state:  state,
-		name:   steps.CheckAndAdd,
-		update: checkAndAddUpdate,
-		isDone: state.IssueNbGH != 0 && state.Issue.CheckBackport.Done() && state.Issue.ReleaseBlocker.Done(),
-		info:   "Loading ...",
-		init:   initCheckAndAdd,
-		act:    actCheckAndAdd,
+		state:               state,
+		name:                steps.CheckAndAdd,
+		update:              checkAndAddUpdate,
+		isDone:              state.IssueNbGH != 0 && state.Issue.CheckBackport.Done() && state.Issue.ReleaseBlocker.Done(),
+		info:                "Loading ...",
+		init:                initCheckAndAdd,
+		act:                 actCheckAndAdd,
+		dontCountInProgress: true,
 	}
 }
 
