@@ -88,7 +88,7 @@ func IsPRMerged(repo string, nb int) bool {
 	return !strings.Contains(stdOut.String(), "null")
 }
 
-func CheckBackportToPRs(repo, majorRelease string) []PR {
+func CheckBackportToPRs(repo, majorRelease string) map[string]any {
 	git.CorrectCleanRepo(repo)
 
 	byteRes, _, err := gh.Exec("pr", "list", "--json", "title,baseRefName,url,labels", "--repo", repo)
@@ -114,7 +114,14 @@ func CheckBackportToPRs(repo, majorRelease string) []PR {
 			}
 		}
 	}
-	return mustClose
+
+	m := make(map[string]any, len(mustClose))
+	for _, pr := range mustClose {
+		nb := pr.URL[strings.LastIndex(pr.URL, "/")+1:]
+		markdownURL := fmt.Sprintf("#%s", nb)
+		m[markdownURL] = nil
+	}
+	return m
 }
 
 func FindCodeFreezePR(repo, prTitle string) (nb int, url string) {
