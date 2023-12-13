@@ -206,7 +206,7 @@ func (mi *menuItem) isActBlocked() bool {
 	}
 
 	currMenuItem := mi.previous
-	for currMenuItem != nil && currMenuItem.name == "" || !currMenuItem.dontCountInProgress {
+	for currMenuItem != nil && currMenuItem.name == "" || currMenuItem.dontCountInProgress {
 		if currMenuItem.previous != nil {
 			currMenuItem = currMenuItem.previous
 		} else {
