@@ -23,13 +23,13 @@ import (
 )
 
 const (
-	preRequisiteSlackMessage = `📣 The Vitess maintainers are planning on releasing v%s on <DATE>.`
+	preRequisiteSlackMessage = `📣 The Vitess maintainers are planning on releasing v%s on %s.`
 	postReleaseSlackMessage  = `📣 We have just released v%s. Check out the release notes on https://github.com/%s/release/tag/v%s`
 )
 
 func AnnouncementMessage(state *releaser.State) string {
 	newRelease, _ := releaser.FindNextRelease(state.MajorRelease)
-	return fmt.Sprintf(preRequisiteSlackMessage, newRelease)
+	return fmt.Sprintf(preRequisiteSlackMessage, newRelease, state.Issue.Date.Format("Mon _2 Jan"))
 }
 
 func PostReleaseMessage(state *releaser.State) string {

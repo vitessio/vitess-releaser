@@ -18,6 +18,7 @@ package interactive
 
 import (
 	"fmt"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -121,7 +122,7 @@ func (m ui) View() string {
 	lft := bgStyle.Render(title)
 	width -= len(title)
 	s := bgStyle.Copy().Width(width).Align(lipgloss.Right)
-	rgt := fmt.Sprintf("Repo: %s Releasing Branch: %s", m.state.VitessRepo, m.state.MajorRelease)
+	rgt := fmt.Sprintf("Repo: %s | Releasing Branch: %s | Release Date: %s", m.state.VitessRepo, m.state.MajorRelease, m.state.Issue.Date.Format(time.DateOnly))
 	statusBar := lft + s.Render(rgt)
 	return lipgloss.JoinVertical(
 		lipgloss.Right,

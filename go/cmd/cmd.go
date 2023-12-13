@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/spf13/cobra"
 	"vitess.io/vitess-releaser/go/cmd/flags"
@@ -34,6 +35,7 @@ import (
 
 var (
 	releaseVersion string
+	releaseDate    string
 	live           = true
 )
 
@@ -45,8 +47,10 @@ var rootCmd = &cobra.Command{
 
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&releaseVersion, flags.MajorRelease, "r", "", "Number of the major release on which we want to create a new release.")
+	rootCmd.PersistentFlags().StringVarP(&releaseDate, flags.ReleaseDate, "d", "", "Date of the release with the format: YYYY-MM-DD. Required when initiating a release.")
 	rootCmd.PersistentFlags().BoolVar(&live, flags.RunLive, false, "If live is true, will run against vitessio/vitess. Otherwise everything is done against your personal repository")
-	err := rootCmd.MarkPersistentFlagRequired(flags.MajorRelease)
+
+	err := cobra.MarkFlagRequired(rootCmd.PersistentFlags(), flags.MajorRelease)
 	if err != nil {
 		panic(err)
 	}
@@ -63,6 +67,13 @@ func Execute() {
 		panic(err)
 	}
 
+	err = rootCmd.ValidateRequiredFlags()
+	if err != nil {
+		fmt.Println(err)
+		_ = rootCmd.Help()
+		os.Exit(1)
+	}
+
 	var s releaser.State
 
 	if live {
@@ -76,6 +87,20 @@ func Execute() {
 	nextRelease, _ := releaser.FindNextRelease(s.MajorRelease)
 
 	s.IssueNbGH, s.IssueLink = github.GetReleaseIssueInfo(s.VitessRepo, nextRelease)
+
+	// We only require the release date if the release issue does not exist on GH
+	// If the issue already exist we ignore the flag, the value will be loaded from the Issue
+	if s.IssueLink != "" && releaseDate == "" {
+		fmt.Println("--date flag missing")
+		_ = rootCmd.Help()
+		os.Exit(1)
+	} else if s.IssueLink == "" {
+		parsedReleaseDate, err := time.Parse(time.DateOnly, releaseDate)
+		if err != nil {
+			panic(err)
+		}
+		s.Issue.Date = parsedReleaseDate
+	}
 
 	ctx := releaser.WrapState(context.Background(), &s)
 

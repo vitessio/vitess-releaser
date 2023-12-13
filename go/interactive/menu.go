@@ -49,7 +49,8 @@ type (
 		// subItems is a slice of *menuItem referring to the menuItem embedded by this item
 		subItems []*menuItem
 
-		previous *menuItem
+		previous            *menuItem
+		dontCountInProgress bool
 	}
 )
 
@@ -205,9 +206,11 @@ func (mi *menuItem) isActBlocked() bool {
 	}
 
 	currMenuItem := mi.previous
-	for currMenuItem != nil && currMenuItem.name == "" {
+	for currMenuItem != nil && currMenuItem.name == "" || currMenuItem.dontCountInProgress {
 		if currMenuItem.previous != nil {
 			currMenuItem = currMenuItem.previous
+		} else {
+			break
 		}
 	}
 	return currMenuItem != nil && !currMenuItem.isDone

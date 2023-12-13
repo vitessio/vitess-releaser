@@ -22,6 +22,7 @@ import (
 	"log"
 	"strings"
 	"text/template"
+	"time"
 
 	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser/github"
@@ -40,6 +41,9 @@ const (
 const (
 	markdownItemDone = "- [x]"
 	markdownItemToDo = "- [ ]"
+
+	// Divers
+	dateItem = "This release is scheduled for"
 
 	// Prerequisites
 	preSlackAnnouncementItem = "Notify the community on Slack."
@@ -71,6 +75,8 @@ type (
 	}
 
 	Issue struct {
+		Date time.Time
+
 		// Prerequisites
 		SlackPreRequisite bool
 		CheckSummary      bool
@@ -88,7 +94,7 @@ type (
 )
 
 const (
-	releaseIssueTemplate = `This release is scheduled for ...
+	releaseIssueTemplate = `This release is scheduled for {{fmtDate .Date }}
 
 ### Prerequisites for Release
 
@@ -161,6 +167,14 @@ func (ctx *State) LoadIssue() {
 	for i, line := range lines {
 		switch s {
 		case stateReadingItem:
+			if strings.HasPrefix(line, dateItem) {
+				nline := strings.TrimSpace(line[len(dateItem):])
+				parsedDate, err := time.Parse("Mon _2 Jan 2006", nline)
+				if err != nil {
+					log.Fatal(err)
+				}
+				newIssue.Date = parsedDate
+			}
 			if strings.Contains(line, preSlackAnnouncementItem) {
 				newIssue.SlackPreRequisite = strings.HasPrefix(line, markdownItemDone)
 			}
@@ -258,11 +272,10 @@ func CreateReleaseIssue(state *State) (*logging.ProgressLogging, func() (int, st
 		CorrectCleanRepo(state.VitessRepo)
 		newRelease, _ := FindNextRelease(state.MajorRelease)
 
-		var i Issue
 		pl.NewStepf("Create Release Issue on GitHub")
 		newIssue := github.Issue{
 			Title:    fmt.Sprintf("Release of v%s", newRelease),
-			Body:     i.toString(),
+			Body:     state.Issue.toString(),
 			Labels:   []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}},
 			Assignee: "@me",
 		}
@@ -280,6 +293,9 @@ func (i *Issue) toString() string {
 	tmpl := template.New("release-issue")
 	tmpl = tmpl.Funcs(template.FuncMap{
 		"fmtStatus": state.FmtMd,
+		"fmtDate": func(d time.Time) string {
+			return d.Format("Mon _2 Jan 2006")
+		},
 	})
 
 	parsed, err := tmpl.Parse(releaseIssueTemplate)
