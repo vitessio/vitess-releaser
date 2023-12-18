@@ -170,7 +170,9 @@ func GetMergedPRsAndAuthorsByMilestone(repo, milestone string) (prs []PR, author
 	for _, pr := range prs {
 		login := pr.Author.Login
 		if ok := authorMap[login]; !ok {
-			authors = append(authors, login)
+			if !strings.HasPrefix(login, "@app/") {
+				authors = append(authors, login)
+			}
 			authorMap[login] = true
 		}
 	}
