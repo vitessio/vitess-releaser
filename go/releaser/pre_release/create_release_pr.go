@@ -134,7 +134,7 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 		updateJavaDir(nextRelease)
 
 		pl.NewStepf("Commit the update to the codebase for the v%s release", nextRelease)
-		if git.CommitAll(fmt.Sprintf("Update codebase for the v%s release", nextRelease)) {
+		if !git.CommitAll(fmt.Sprintf("Update codebase for the v%s release", nextRelease)) {
 			commitCount++
 			git.Push(remote, newBranchName)
 		}
