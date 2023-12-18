@@ -18,7 +18,6 @@ package prerequisite
 
 import (
 	"fmt"
-	"strings"
 
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/github"
@@ -36,37 +35,11 @@ func CheckAndAddPRsIssues(state *releaser.State) (*logging.ProgressLogging, func
 
 		pl.NewStepf("Check and add Pull Requests")
 		prsOnGH := github.CheckBackportToPRs(state.VitessRepo, state.MajorRelease)
-	outerPR:
-		for _, pr := range prsOnGH {
-			// separate the PR number from the URL
-			nb := pr.URL[strings.LastIndex(pr.URL, "/")+1:]
-			markdownURL := fmt.Sprintf("#%s", nb)
-			for _, pri := range state.Issue.CheckBackport.Items {
-				if pri.URL == markdownURL {
-					continue outerPR
-				}
-			}
-			state.Issue.CheckBackport.Items = append(state.Issue.CheckBackport.Items, releaser.ItemWithLink{
-				URL: markdownURL,
-			})
-		}
+		state.Issue.CheckBackport = addLinksToParentOfItems(state.Issue.CheckBackport, prsOnGH)
 
 		pl.NewStepf("Check and add Release Blocker Issues")
 		issuesOnGH := github.CheckReleaseBlockerIssues(state.VitessRepo, state.MajorRelease)
-	outerRBI:
-		for _, i := range issuesOnGH {
-			// separate the Issue number from the URL
-			nb := i.URL[strings.LastIndex(i.URL, "/")+1:]
-			markdownURL := fmt.Sprintf("#%s", nb)
-			for _, rbi := range state.Issue.ReleaseBlocker.Items {
-				if rbi.URL == markdownURL {
-					continue outerRBI
-				}
-			}
-			state.Issue.ReleaseBlocker.Items = append(state.Issue.ReleaseBlocker.Items, releaser.ItemWithLink{
-				URL: markdownURL,
-			})
-		}
+		state.Issue.ReleaseBlocker = addLinksToParentOfItems(state.Issue.ReleaseBlocker, issuesOnGH)
 
 		pl.NewStepf("Update Issue %s on GitHub", state.IssueLink)
 		_, fn := state.UploadIssue()
@@ -80,6 +53,27 @@ func CheckAndAddPRsIssues(state *releaser.State) (*logging.ProgressLogging, func
 		}
 		return msg
 	}
+}
+
+func addLinksToParentOfItems(parent releaser.ParentOfItems, set map[string]any) releaser.ParentOfItems {
+	for i, item := range parent.Items {
+		if _, ok := set[item.URL]; !ok {
+			parent.Items[i].Done = true
+		}
+	}
+
+outerPR:
+	for url := range set {
+		for _, pri := range parent.Items {
+			if pri.URL == url {
+				continue outerPR
+			}
+		}
+		parent.Items = append(parent.Items, releaser.ItemWithLink{
+			URL: url,
+		})
+	}
+	return parent
 }
 
 func GetCheckAndAddInfoMsg(state *releaser.State) string {

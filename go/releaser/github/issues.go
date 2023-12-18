@@ -143,7 +143,7 @@ func FormatIssues(issues []Issue) []string {
 	return prFmt
 }
 
-func CheckReleaseBlockerIssues(repo, majorRelease string) []Issue {
+func CheckReleaseBlockerIssues(repo, majorRelease string) map[string]any {
 	git.CorrectCleanRepo(repo)
 
 	byteRes, _, err := gh.Exec("issue", "list", "--json", "title,url,labels", "--repo", repo)
@@ -166,7 +166,14 @@ func CheckReleaseBlockerIssues(repo, majorRelease string) []Issue {
 			}
 		}
 	}
-	return mustClose
+
+	m := make(map[string]any, len(mustClose))
+	for _, pr := range mustClose {
+		nb := pr.URL[strings.LastIndex(pr.URL, "/")+1:]
+		markdownURL := fmt.Sprintf("#%s", nb)
+		m[markdownURL] = nil
+	}
+	return m
 }
 
 func LoadKnownIssues(repo, majorRelease string) []Issue {

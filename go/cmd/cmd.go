@@ -90,11 +90,12 @@ func Execute() {
 
 	// We only require the release date if the release issue does not exist on GH
 	// If the issue already exist we ignore the flag, the value will be loaded from the Issue
-	if s.IssueLink != "" && releaseDate == "" {
-		fmt.Println("--date flag missing")
-		_ = rootCmd.Help()
-		os.Exit(1)
-	} else if s.IssueLink == "" {
+	if s.IssueLink == "" {
+		if releaseDate == "" {
+			fmt.Println("--date flag missing")
+			_ = rootCmd.Help()
+			os.Exit(1)
+		}
 		parsedReleaseDate, err := time.Parse(time.DateOnly, releaseDate)
 		if err != nil {
 			panic(err)

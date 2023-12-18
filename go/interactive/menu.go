@@ -206,7 +206,7 @@ func (mi *menuItem) isActBlocked() bool {
 	}
 
 	currMenuItem := mi.previous
-	for currMenuItem != nil && currMenuItem.name == "" || currMenuItem.dontCountInProgress {
+	for currMenuItem != nil && (currMenuItem.name == "" || currMenuItem.dontCountInProgress) {
 		if currMenuItem.previous != nil {
 			currMenuItem = currMenuItem.previous
 		} else {
@@ -247,4 +247,13 @@ func (m *menu) View() string {
 		m.title,
 		list,
 	)
+}
+
+func (m *menu) done() bool {
+	for _, item := range m.items {
+		if !item.isDone {
+			return state.ToDo
+		}
+	}
+	return state.Done
 }
