@@ -17,17 +17,21 @@ limitations under the License.
 package pre_release
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
+	"vitess.io/vitess-releaser/go/releaser"
+
+	"vitess.io/vitess-releaser/go/releaser/pre_release"
 )
 
-func PreRelease() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "pre-release",
-		Short: "Runs the pre-release steps of a release",
-	}
-
-	cmd.AddCommand(codeFreeze)
-	cmd.AddCommand(createReleasePR)
-	cmd.AddCommand(createMilestone)
-	return cmd
+var createReleasePR = &cobra.Command{
+	Use:   "release-pr",
+	Short: "Create the Release Pull Request",
+	Run: func(cmd *cobra.Command, args []string) {
+		state := releaser.UnwrapState(cmd.Context())
+		_, freeze := pre_release.CreateReleasePR(state)
+		out := freeze()
+		fmt.Println("Release Pull Request created:", out)
+	},
 }
