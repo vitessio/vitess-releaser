@@ -143,7 +143,10 @@ func generateReleaseNotes(state *releaser.State, version string) {
 	}
 
 	// summary of the release
-	if summaryFile != "" {
+	_, err = os.Stat(summaryFile)
+	if err != nil && !os.IsNotExist(err) {
+		log.Fatal(err)
+	} else if err == nil {
 		releaseNotes.Announcement = releaseSummary(summaryFile)
 	}
 

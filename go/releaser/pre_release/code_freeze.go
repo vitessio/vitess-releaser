@@ -85,8 +85,8 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 		codeFreezePRName := fmt.Sprintf("[%s] Code Freeze for `v%s`", branchName, nextRelease)
 
 		// look for existing code freeze PRs
-		pl.NewStepf("Look for existing an Code Freeze Pull Request")
-		if nb, url = github.FindCodeFreezePR(state.VitessRepo, codeFreezePRName); url != "" {
+		pl.NewStepf("Look for an existing Code Freeze Pull Request named '%s'", codeFreezePRName)
+		if nb, url = github.FindPR(state.VitessRepo, codeFreezePRName); url != "" {
 			pl.TotalSteps = 7 // only 7 total steps in this situation
 			pl.NewStepf("An opened Code Freeze Pull Request was found: %s", url)
 			waitForPRToBeMerged(nb)
@@ -127,7 +127,7 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 			Labels: []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}},
 		}
 		nb, url = pr.Create(state.VitessRepo)
-		pl.NewStepf("PR created %s", url)
+		pl.NewStepf("Pull Request created %s", url)
 		waitForPRToBeMerged(nb)
 		done = true
 		return url
