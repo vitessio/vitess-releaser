@@ -124,7 +124,7 @@ func CheckBackportToPRs(repo, majorRelease string) map[string]any {
 	return m
 }
 
-func FindCodeFreezePR(repo, prTitle string) (nb int, url string) {
+func FindPR(repo, prTitle string) (nb int, url string) {
 	byteRes, _, err := gh.Exec(
 		"pr", "list",
 		"--json", "url",

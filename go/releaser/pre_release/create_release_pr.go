@@ -20,20 +20,68 @@ import (
 	"fmt"
 	"io/fs"
 	"log"
+	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/git"
+	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/logging"
+)
+
+const (
+	examplesOperator = "./examples/operator"
+	examplesCompose  = "./examples/compose/"
+
+	versionGoFile = "./go/vt/servenv/version.go"
+	versionGo     = `/*
+Copyright %d The Vitess Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package servenv
+
+// DO NOT EDIT
+// THIS FILE IS AUTO-GENERATED DURING NEW RELEASES BY THE VITESS-RELEASER
+
+const versionName = "%s"
+`
 )
 
 func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
-		TotalSteps: 8,
+		TotalSteps: 15,
 	}
+
+	var done bool
+	var url string
+	var commitCount int
 	return pl, func() string {
+		defer func() {
+			state.Issue.CreateReleasePR.Done = done
+			state.Issue.CreateReleasePR.URL = url
+			pl.NewStepf("Update Issue %s on GitHub", state.IssueLink)
+			_, fn := state.UploadIssue()
+			issueLink := fn()
+
+			pl.NewStepf("Issue updated, see: %s", issueLink)
+		}()
+
 		// setup
 		git.CorrectCleanRepo(state.VitessRepo)
 		nextRelease, branchName := releaser.FindNextRelease(state.MajorRelease)
@@ -41,6 +89,17 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 		pl.NewStepf("Fetch from git remote")
 		remote := git.FindRemoteName(state.VitessRepo)
 		git.ResetHard(remote, branchName)
+
+		releasePRName := fmt.Sprintf("[%s] Release of `v%s`", branchName, nextRelease)
+
+		// look for existing code freeze PRs
+		pl.NewStepf("Look for an existing Release Pull Request named '%s'", releasePRName)
+		if _, url = github.FindPR(state.VitessRepo, releasePRName); url != "" {
+			pl.TotalSteps = 5 // only 5 total steps in this situation
+			pl.NewStepf("An opened Release Pull Request was found: %s", url)
+			done = true
+			return url
+		}
 
 		// find new branch to create the release
 		pl.NewStepf("Create temporary branch from %s", branchName)
@@ -51,30 +110,54 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 		deactivateCodeFreeze()
 
 		pl.NewStepf("Commit unfreezing the branch %s", branchName)
-		if git.CommitAll(fmt.Sprintf("Unfreeze branch %s", branchName)) {
-			// TODO: handle
-			return ""
+		if !git.CommitAll(fmt.Sprintf("Unfreeze branch %s", branchName)) {
+			commitCount++
+			git.Push(remote, newBranchName)
 		}
-		git.Push(remote, newBranchName)
 
 		pl.NewStepf("Generate the release notes")
 		generateReleaseNotes(state, nextRelease)
 
 		pl.NewStepf("Commit the release notes")
-		if git.CommitAll("Addition of release notes") {
-			// TODO: handle
+		if !git.CommitAll("Addition of release notes") {
+			commitCount++
+			git.Push(remote, newBranchName)
+		}
+
+		pl.NewStepf("Update the code examples")
+		updateExamples(nextRelease, "") // TODO: vitess-operator version not implemented
+
+		pl.NewStepf("Update version.go")
+		updateVersionGoFile(nextRelease)
+
+		pl.NewStepf("Update the Java directory")
+		updateJavaDir(nextRelease)
+
+		pl.NewStepf("Commit the update to the codebase for the v%s release", nextRelease)
+		if git.CommitAll(fmt.Sprintf("Update codebase for the v%s release", nextRelease)) {
+			commitCount++
+			git.Push(remote, newBranchName)
+		}
+
+		if commitCount == 0 {
+			pl.TotalSteps = 14
+			pl.NewStepf("Nothing was commit and pushed, seems like there is no need to create the Release Pull Request")
+			done = true
 			return ""
 		}
-		git.Push(remote, newBranchName)
 
-		pl.NewStepf("Update the examples")
-		// TODO: handle vtop version
-		updateExamples(nextRelease, "")
-
-		// TODO: Do the version change throughout the code base
-
-		pl.NewStepf("...")
-		return ""
+		pl.NewStepf("Create Pull Request")
+		pr := github.PR{
+			Title:  releasePRName,
+			Body:   fmt.Sprintf("Includes the release notes and release commit for the `v%s` release. Once this PR is merged, we will be able to tag `v%s` on the merge commit.", nextRelease, nextRelease),
+			Branch: newBranchName,
+			Base:   branchName,
+			Labels: []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}, {Name: "Do Not Merge"}},
+		}
+		_, url = pr.Create(state.VitessRepo)
+		pl.NewStepf("Pull Request created %s", url)
+		done = true
+		return url
 	}
 }
 
@@ -87,7 +170,7 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 //	vtop_example_files=$(find -E ./examples/operator -name "*.yaml")
 func findFilesRecursive() []string {
 	var files []string
-	dirs := []string{"./examples/compose/", "./examples/operator"}
+	dirs := []string{examplesCompose, examplesOperator}
 	for _, dir := range dirs {
 		err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
 			if err != nil {
@@ -143,6 +226,24 @@ func updateExamples(newVersion, vtopNewVersion string) {
 	}
 	args = append([]string{"-f"}, filesBackups...)
 	out, err = exec.Command("rm", args...).CombinedOutput()
+	if err != nil {
+		log.Fatalf("%s: %s", err, out)
+	}
+}
+
+func updateVersionGoFile(newVersion string) {
+	err := os.WriteFile(versionGoFile, []byte(fmt.Sprintf(versionGo, time.Now().Year(), newVersion)), os.ModePerm)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func updateJavaDir(newVersion string) {
+	//  cd $ROOT/java || exit 1
+	//  mvn versions:set -DnewVersion=$1
+	cmd := exec.Command("mvn", "versions:set", fmt.Sprintf("-DnewVersion=%s", newVersion))
+	cmd.Dir = path.Join(os.Getenv("PWD"), "/java")
+	out, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Fatalf("%s: %s", err, out)
 	}

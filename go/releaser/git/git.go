@@ -97,7 +97,7 @@ func CommitAll(msg string) (empty bool) {
 
 	out, err = exec.Command("git", "commit", "-n", "-s", "-m", msg).CombinedOutput()
 	if err != nil {
-		if strings.Contains(err.Error(), "nothing to commit, working tree clean") {
+		if strings.Contains(string(out), "nothing to commit, working tree clean") {
 			return true
 		}
 		log.Fatalf("%s: %s", err, out)
