@@ -57,13 +57,13 @@ func MainScreen(ctx context.Context) {
 		checkAndAddMenuItem(ctx),
 		blankLineMenu(),
 		&menuItem{
-			isDone:   state.ToDo,
+			isDone:   prereq.done(),
 			subItems: prereq.items,
 			name:     "Prerequisites",
 			act:      subMenu(prereq),
 		},
 		&menuItem{
-			isDone:   state.ToDo,
+			isDone:   prerelease.done(),
 			subItems: prerelease.items,
 			name:     "Pre Release",
 			act:      subMenu(prerelease),
@@ -75,7 +75,7 @@ func MainScreen(ctx context.Context) {
 			act:      nil,
 		},
 		&menuItem{
-			isDone:   state.ToDo,
+			isDone:   postRelease.done(),
 			subItems: postRelease.items,
 			name:     "Post Release",
 			act:      subMenu(postRelease),

@@ -248,3 +248,12 @@ func (m *menu) View() string {
 		list,
 	)
 }
+
+func (m *menu) done() bool {
+	for _, item := range m.items {
+		if !item.isDone {
+			return state.ToDo
+		}
+	}
+	return state.Done
+}
