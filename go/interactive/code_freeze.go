@@ -28,10 +28,14 @@ import (
 
 func codeFreezeMenuItem(ctx context.Context) *menuItem {
 	state := releaser.UnwrapState(ctx)
+	act := codeFreezeAct
+	if state.Issue.CodeFreeze.Done {
+		act = nil
+	}
 	return &menuItem{
 		state:  state,
 		name:   steps.CodeFreeze,
-		act:    codeFreezeAct,
+		act:    act,
 		update: codeFreezeUpdate,
 		info:   state.Issue.CodeFreeze.URL,
 		isDone: state.Issue.CodeFreeze.Done,
