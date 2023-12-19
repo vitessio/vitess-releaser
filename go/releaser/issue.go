@@ -125,6 +125,19 @@ const (
   - {{ .NewGitHubMilestone.URL }}
 {{- end }}
 
+### Release
+
+- [ ] Merge the Release PR.
+- [ ] Tag the release.
+- [ ] Java release.
+- [ ] Update release notes on main.
+- [ ] Go back to dev mode on the release branch.
+- [ ] Update the website documentation.
+- [ ] Make sure the release is benchmarked by arewefastyet.
+- [ ] Docker Images available on DockerHub.
+- [ ] Close current GitHub Milestone.
+
+
 ### Post-Release
 - [{{fmtStatus .SlackPostRelease}}] Notify the community on Slack for the new release.
 `
