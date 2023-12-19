@@ -88,6 +88,17 @@ type (
 		CreateReleasePR    ItemWithLink
 		NewGitHubMilestone ItemWithLink
 
+		// Release
+		MergeReleasePR       ItemWithLink
+		TagRelease           ItemWithLink
+		JavaRelease          bool
+		ReleaseNotesOnMain   ItemWithLink
+		BackToDevMode        ItemWithLink
+		WebsiteDocumentation ItemWithLink
+		Benchmarked          bool
+		DockerImages         bool
+		CloseMilestone       ItemWithLink
+
 		// Post-Release
 		SlackPostRelease bool
 	}
@@ -127,15 +138,33 @@ const (
 
 ### Release
 
-- [ ] Merge the Release PR.
-- [ ] Tag the release.
-- [ ] Java release.
-- [ ] Update release notes on main.
-- [ ] Go back to dev mode on the release branch.
-- [ ] Update the website documentation.
-- [ ] Make sure the release is benchmarked by arewefastyet.
-- [ ] Docker Images available on DockerHub.
-- [ ] Close current GitHub Milestone.
+- [{{fmtStatus .MergeReleasePR.Done}}] Merge the Release PR.
+{{- if .MergeReleasePR.URL }}
+  - {{ .MergeReleasePR.URL }}
+{{- end }}
+- [{{fmtStatus .TagRelease.Done}}] Tag the release.
+{{- if .TagRelease.URL }}
+  - {{ .TagRelease.URL }}
+{{- end }}
+- [{{fmtStatus .JavaRelease}}] Java release.
+- [{{fmtStatus .ReleaseNotesOnMain.Done}}] Update release notes on main.
+{{- if .ReleaseNotesOnMain.URL }}
+  - {{ .ReleaseNotesOnMain.URL }}
+{{- end }}
+- [{{fmtStatus .BackToDevMode.Done}}] Go back to dev mode on the release branch.
+{{- if .BackToDevMode.URL }}
+  - {{ .BackToDevMode.URL }}
+{{- end }}
+- [{{fmtStatus .WebsiteDocumentation.Done}}] Update the website documentation.
+{{- if .WebsiteDocumentation.URL }}
+  - {{ .WebsiteDocumentation.URL }}
+{{- end }}
+- [{{fmtStatus .Benchmarked}}] Make sure the release is benchmarked by arewefastyet.
+- [{{fmtStatus .DockerImages}}] Docker Images available on DockerHub.
+- [{{fmtStatus .CloseMilestone.Done}}] Close current GitHub Milestone.
+{{- if .CloseMilestone.URL }}
+  - {{ .CloseMilestone.URL }}
+{{- end }}
 
 
 ### Post-Release
