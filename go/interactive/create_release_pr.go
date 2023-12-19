@@ -27,10 +27,14 @@ import (
 
 func createReleasePRMenuItem(ctx context.Context) *menuItem {
 	state := releaser.UnwrapState(ctx)
+	act := createMilestoneAct
+	if state.Issue.CreateReleasePR.Done {
+		act = nil
+	}
 	return &menuItem{
 		state:  state,
 		name:   steps.CreateReleasePR,
-		act:    createReleasePRAct,
+		act:    act,
 		update: createReleasePRUpdate,
 		info:   state.Issue.CreateReleasePR.URL,
 		isDone: state.Issue.CreateReleasePR.Done,

@@ -100,11 +100,11 @@ const (
 
 - [{{fmtStatus .SlackPreRequisite}}] Notify the community on Slack.
 - [{{fmtStatus .CheckSummary}}] Make sure the release notes summary is prepared and clean.
-- [{{fmtStatus .CheckBackport.Done}}] Make sure backport Pull Requests are merged, list below.
+- Make sure backport Pull Requests are merged, list below.
 {{- range $item := .CheckBackport.Items }}
   - [{{fmtStatus $item.Done}}] {{$item.URL}}
 {{- end }}
-- [{{fmtStatus .ReleaseBlocker.Done}}] Make sure release blocker Issues are closed, list below.
+- Make sure release blocker Issues are closed, list below.
 {{- range $item := .ReleaseBlocker.Items }}
   - [{{fmtStatus $item.Done}}] {{$item.URL}}
 {{- end }}

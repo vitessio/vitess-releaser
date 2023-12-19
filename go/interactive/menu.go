@@ -25,6 +25,7 @@ import (
 	tbl "github.com/charmbracelet/lipgloss/table"
 	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser"
+	"vitess.io/vitess-releaser/go/releaser/steps"
 )
 
 type (
@@ -72,13 +73,29 @@ func newMenu(ctx context.Context, title string, items ...*menuItem) *menu {
 }
 
 func (m *menu) moveCursorToNextElem() {
-	for _, item := range m.items {
-		if item.isDone || item.name == "" {
+	for i, item := range m.items {
+		// We do a little special handling if the Check PRs/Issues task is listed.
+		// We skip it only if the next task is marked as done too.
+		// That way, it is not the first task the user has to do.
+		if item.isDone || item.name == "" || item.name == steps.CheckAndAdd && m.isNextTaskDone(i+1) {
 			m.idx++
 		} else {
 			break
 		}
 	}
+}
+
+func (m *menu) isNextTaskDone(i int) bool {
+	// we skip all placeholder menu items
+	for ; i < len(m.items); i++ {
+		if m.items[i].name != "" {
+			break
+		}
+	}
+	if i == len(m.items) {
+		return true
+	}
+	return m.items[i].isDone
 }
 
 func (m *menu) At(row, cell int) string {
@@ -201,19 +218,7 @@ func (m *menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (mi *menuItem) isActBlocked() bool {
-	if mi.act == nil || mi.isDone {
-		return true
-	}
-
-	currMenuItem := mi.previous
-	for currMenuItem != nil && (currMenuItem.name == "" || currMenuItem.dontCountInProgress) {
-		if currMenuItem.previous != nil {
-			currMenuItem = currMenuItem.previous
-		} else {
-			break
-		}
-	}
-	return currMenuItem != nil && !currMenuItem.isDone
+	return mi.act == nil
 }
 
 func (m *menu) View() string {
