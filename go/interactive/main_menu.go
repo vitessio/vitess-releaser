@@ -24,7 +24,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/pre_release"
 	"vitess.io/vitess-releaser/go/interactive/prerequisites"
-	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
 )
@@ -47,6 +46,12 @@ func MainScreen(ctx context.Context) {
 		pre_release.CodeFreezeMenuItem(ctx),
 		pre_release.CreateReleasePRMenuItem(ctx),
 		pre_release.CreateMilestoneMenuItem(ctx),
+	)
+
+	release := ui.NewMenu(
+		ctx,
+		"Release",
+		nil,
 	)
 
 	postRelease := ui.NewMenu(
@@ -72,10 +77,10 @@ func MainScreen(ctx context.Context) {
 			Act:      subMenu(prerelease),
 		},
 		&ui.MenuItem{
-			IsDone:   state.ToDo,
-			SubItems: nil,
+			IsDone:   release.Done(),
+			SubItems: release.Items,
 			Name:     "Release",
-			Act:      nil,
+			Act:      subMenu(release),
 		},
 		&ui.MenuItem{
 			IsDone:   postRelease.Done(),

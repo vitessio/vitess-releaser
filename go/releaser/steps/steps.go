@@ -17,13 +17,30 @@ limitations under the License.
 package steps
 
 const (
-	CreateReleaseIssue    = "Create Release Issue"
-	ReleaseIssue          = "Release Issue"
-	SlackAnnouncement     = "Slack Announcement"
+	CreateReleaseIssue = "Create Release Issue"
+	ReleaseIssue       = "Release Issue"
+
+	// Prerequisite
+	SlackAnnouncement = "Slack Announcement"
+	CheckAndAdd       = "Pending PRs/Issues"
+	CheckSummary      = "Check Release Summary"
+
+	// Pre-Release
+	CodeFreeze      = "Code Freeze"
+	CreateReleasePR = "Create Release PR"
+	CreateMilestone = "Create Milestone"
+
+	// Release
+	MergeReleasePR       = "Merge Release PR"
+	TagRelease           = "Tag Release"
+	JavaRelease          = "Java Release"
+	ReleaseNotesOnMain   = "Release Notes on Main"
+	BackToDev            = "Back To Dev Mode"
+	WebsiteDocumentation = "Website Documentation"
+	Benchmarked          = "Benchmarks"
+	DockerImages         = "Docker Images"
+	CloseMilestone       = "Close Milestone"
+
+	// Post-Release
 	SlackAnnouncementPost = "Slack Announcement Post-Release"
-	CheckAndAdd           = "Pending PRs/Issues"
-	CheckSummary          = "Check Release Summary"
-	CodeFreeze            = "Code Freeze"
-	CreateReleasePR       = "Create Release PR"
-	CreateMilestone       = "Create Milestone"
 )
