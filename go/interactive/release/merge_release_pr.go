@@ -22,6 +22,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
+	"vitess.io/vitess-releaser/go/releaser/release"
 	"vitess.io/vitess-releaser/go/releaser/steps"
 )
 
@@ -31,12 +32,18 @@ func MergeReleasePRItem(ctx context.Context) *ui.MenuItem {
 	if state.Issue.MergeReleasePR.Done {
 		act = nil
 	}
+
+	info := "Run this step once the Release Pull Request was created."
+	if state.Issue.CreateReleasePR.URL != "" {
+		info = state.Issue.CreateReleasePR.URL
+	}
+
 	return &ui.MenuItem{
 		State:  state,
 		Name:   steps.MergeReleasePR,
 		Act:    act,
 		Update: mergeReleasePRUpdate,
-		Info:   state.Issue.MergeReleasePR.URL,
+		Info:   info,
 		IsDone: state.Issue.MergeReleasePR.Done,
 	}
 }
@@ -44,9 +51,26 @@ func MergeReleasePRItem(ctx context.Context) *ui.MenuItem {
 type mergeReleasePRUrl string
 
 func mergeReleasePRUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
+	url, ok := msg.(mergeReleasePRUrl)
+	if !ok {
+		return mi, nil
+	}
+
+	if url != "" {
+		mi.Info = string(url)
+	}
+	mi.IsDone = mi.State.Issue.MergeReleasePR.Done
 	return mi, nil
 }
 
 func mergeReleasePRAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
-	return mi, nil
+	// If the Release PR was not found in the Release Issue, do nothing
+	if mi.State.Issue.CreateReleasePR.URL == "" {
+		return mi, nil
+	}
+
+	pl, m := release.MergeReleasePR(mi.State)
+	return mi, tea.Batch(func() tea.Msg {
+		return mergeReleasePRUrl(m())
+	}, ui.PushDialog(ui.NewProgressDialog("Merge Release Pull Request", pl)))
 }
