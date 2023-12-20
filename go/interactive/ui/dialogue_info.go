@@ -14,34 +14,27 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package interactive
+package ui
 
 import (
-	"fmt"
-
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
-	"vitess.io/vitess-releaser/go/interactive/state"
 )
 
-type doneDialogAction string
-
-type doneDialog struct {
+type infoDialog struct {
 	height, width int
 	title         string
 	message       []string
-	isDone        bool
-	stepName      string
 }
 
-var _ tea.Model = &doneDialog{}
+var _ tea.Model = infoDialog{}
 
-func (c *doneDialog) Init() tea.Cmd {
+func (c infoDialog) Init() tea.Cmd {
 	return nil
 }
 
-func (c *doneDialog) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (c infoDialog) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		c.height = msg.Height
@@ -49,43 +42,21 @@ func (c *doneDialog) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return c, nil
 
 	case tea.KeyMsg:
-		switch msg.Type {
-		case tea.KeyEnter:
-			return c, popDialog
-		case tea.KeyRunes:
-			switch string(msg.Runes) {
-			case "q":
-				return c, popDialog
-			case "x":
-				return c, func() tea.Msg {
-					c.isDone = !c.isDone
-					return doneDialogAction(c.stepName)
-				}
-			}
-		}
+		return c, popDialog
 	}
 
 	return c, nil
 }
 
-func (c *doneDialog) View() string {
+func (c infoDialog) View() string {
 	var rows [][]string
 	for _, s := range c.message {
 		rows = append(rows, []string{s})
 	}
 
-	lines := []string{
-		c.title,
-		"",
-		fmt.Sprintf("Task status is: %s", state.Fmt(c.isDone)),
-	}
+	lines := []string{c.title, ""}
 	lines = append(lines, table.New().Data(table.NewStringData(rows...)).Width(c.width).Render())
-	lines = append(
-		lines,
-		"",
-		"Press 'x' to mark the item as Done/To do.",
-		"Press 'q' or 'enter' to quit.",
-	)
+	lines = append(lines, "", "Press any key to continue")
 
 	return lipgloss.JoinVertical(lipgloss.Center, lines...)
 }

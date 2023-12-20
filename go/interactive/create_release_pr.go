@@ -20,43 +20,44 @@ import (
 	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/pre_release"
 	"vitess.io/vitess-releaser/go/releaser/steps"
 )
 
-func createReleasePRMenuItem(ctx context.Context) *menuItem {
+func createReleasePRMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
-	act := createMilestoneAct
+	act := createReleasePRAct
 	if state.Issue.CreateReleasePR.Done {
 		act = nil
 	}
-	return &menuItem{
-		state:  state,
-		name:   steps.CreateReleasePR,
-		act:    act,
-		update: createReleasePRUpdate,
-		info:   state.Issue.CreateReleasePR.URL,
-		isDone: state.Issue.CreateReleasePR.Done,
+	return &ui.MenuItem{
+		State:  state,
+		Name:   steps.CreateReleasePR,
+		Act:    act,
+		Update: createReleasePRUpdate,
+		Info:   state.Issue.CreateReleasePR.URL,
+		IsDone: state.Issue.CreateReleasePR.Done,
 	}
 }
 
 type createReleasePRUrl string
 
-func createReleasePRUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
+func createReleasePRUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
 	_, ok := msg.(createReleasePRUrl)
 	if !ok {
 		return mi, nil
 	}
 
-	mi.info = mi.state.Issue.CreateReleasePR.URL
-	mi.isDone = mi.state.Issue.CreateReleasePR.Done
+	mi.Info = mi.State.Issue.CreateReleasePR.URL
+	mi.IsDone = mi.State.Issue.CreateReleasePR.Done
 	return mi, nil
 }
 
-func createReleasePRAct(mi *menuItem) (*menuItem, tea.Cmd) {
-	pl, fn := pre_release.CreateReleasePR(mi.state)
+func createReleasePRAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
+	pl, fn := pre_release.CreateReleasePR(mi.State)
 	return mi, tea.Batch(func() tea.Msg {
 		return createReleasePRUrl(fn())
-	}, pushDialog(newProgressDialog("Create the Release Pull Request", pl)))
+	}, ui.PushDialog(ui.NewProgressDialog("Create the Release Pull Request", pl)))
 }

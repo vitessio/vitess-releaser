@@ -14,27 +14,34 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package interactive
+package ui
 
 import (
+	"fmt"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
+	"vitess.io/vitess-releaser/go/interactive/state"
 )
 
-type infoDialog struct {
+type DoneDialogAction string
+
+type DoneDialog struct {
 	height, width int
-	title         string
-	message       []string
+	Title         string
+	Message       []string
+	IsDone        bool
+	StepName      string
 }
 
-var _ tea.Model = infoDialog{}
+var _ tea.Model = &DoneDialog{}
 
-func (c infoDialog) Init() tea.Cmd {
+func (c *DoneDialog) Init() tea.Cmd {
 	return nil
 }
 
-func (c infoDialog) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (c *DoneDialog) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		c.height = msg.Height
@@ -42,21 +49,43 @@ func (c infoDialog) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return c, nil
 
 	case tea.KeyMsg:
-		return c, popDialog
+		switch msg.Type {
+		case tea.KeyEnter:
+			return c, popDialog
+		case tea.KeyRunes:
+			switch string(msg.Runes) {
+			case "q":
+				return c, popDialog
+			case "x":
+				return c, func() tea.Msg {
+					c.IsDone = !c.IsDone
+					return DoneDialogAction(c.StepName)
+				}
+			}
+		}
 	}
 
 	return c, nil
 }
 
-func (c infoDialog) View() string {
+func (c *DoneDialog) View() string {
 	var rows [][]string
-	for _, s := range c.message {
+	for _, s := range c.Message {
 		rows = append(rows, []string{s})
 	}
 
-	lines := []string{c.title, ""}
+	lines := []string{
+		c.Title,
+		"",
+		fmt.Sprintf("Task status is: %s", state.Fmt(c.IsDone)),
+	}
 	lines = append(lines, table.New().Data(table.NewStringData(rows...)).Width(c.width).Render())
-	lines = append(lines, "", "Press any key to continue")
+	lines = append(
+		lines,
+		"",
+		"Press 'x' to mark the item as Done/To do.",
+		"Press 'q' or 'enter' to quit.",
+	)
 
 	return lipgloss.JoinVertical(lipgloss.Center, lines...)
 }

@@ -23,22 +23,23 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/state"
+	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
 )
 
-func blankLineMenu() *menuItem {
-	return &menuItem{}
+func blankLineMenu() *ui.MenuItem {
+	return &ui.MenuItem{}
 }
 
 func MainScreen(ctx context.Context) {
-	prereq := newMenu(
+	prereq := ui.NewMenu(
 		ctx,
 		"Prerequisites",
 		slackAnnouncementMenuItem(ctx, slackAnnouncementPreRequisite),
 		checkSummaryMenuItem(ctx),
 	)
 
-	prerelease := newMenu(
+	prerelease := ui.NewMenu(
 		ctx,
 		"Pre Release",
 		codeFreezeMenuItem(ctx),
@@ -46,50 +47,50 @@ func MainScreen(ctx context.Context) {
 		createMilestoneMenuItem(ctx),
 	)
 
-	postRelease := newMenu(
+	postRelease := ui.NewMenu(
 		ctx,
 		"Post Release",
 		slackAnnouncementMenuItem(ctx, slackAnnouncementPostRelease),
 	)
 
-	m := newMenu(ctx, "Main Menu",
+	m := ui.NewMenu(ctx, "Main Menu",
 		createIssueMenuItem(ctx),
 		checkAndAddMenuItem(ctx),
 		blankLineMenu(),
-		&menuItem{
-			isDone:   prereq.done(),
-			subItems: prereq.items,
-			name:     "Prerequisites",
-			act:      subMenu(prereq),
+		&ui.MenuItem{
+			IsDone:   prereq.Done(),
+			SubItems: prereq.Items,
+			Name:     "Prerequisites",
+			Act:      subMenu(prereq),
 		},
-		&menuItem{
-			isDone:   prerelease.done(),
-			subItems: prerelease.items,
-			name:     "Pre Release",
-			act:      subMenu(prerelease),
+		&ui.MenuItem{
+			IsDone:   prerelease.Done(),
+			SubItems: prerelease.Items,
+			Name:     "Pre Release",
+			Act:      subMenu(prerelease),
 		},
-		&menuItem{
-			isDone:   state.ToDo,
-			subItems: nil,
-			name:     "Release",
-			act:      nil,
+		&ui.MenuItem{
+			IsDone:   state.ToDo,
+			SubItems: nil,
+			Name:     "Release",
+			Act:      nil,
 		},
-		&menuItem{
-			isDone:   postRelease.done(),
-			subItems: postRelease.items,
-			name:     "Post Release",
-			act:      subMenu(postRelease),
+		&ui.MenuItem{
+			IsDone:   postRelease.Done(),
+			SubItems: postRelease.Items,
+			Name:     "Post Release",
+			Act:      subMenu(postRelease),
 		},
 	)
 
-	m.moveCursorToNextElem()
+	m.MoveCursorToNextElem()
 
-	if _, err := tea.NewProgram(ui{state: releaser.UnwrapState(ctx), active: m}).Run(); err != nil {
+	if _, err := tea.NewProgram(ui.UI{State: releaser.UnwrapState(ctx), Active: m}).Run(); err != nil {
 		fmt.Println("Error running program:", err)
 		os.Exit(1)
 	}
 }
 
-func subMenu(sub *menu) func(*menuItem) (*menuItem, tea.Cmd) {
-	return func(mi *menuItem) (*menuItem, tea.Cmd) { return mi, pushDialog(sub) }
+func subMenu(sub *ui.Menu) func(*ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
+	return func(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) { return mi, ui.PushDialog(sub) }
 }

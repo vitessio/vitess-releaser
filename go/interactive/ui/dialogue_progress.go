@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package interactive
+package ui
 
 import (
 	"time"
@@ -26,7 +26,7 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/logging"
 )
 
-type progressDialog struct {
+type ProgressDialog struct {
 	height, width int
 	title         string
 	progress      []string
@@ -34,8 +34,8 @@ type progressDialog struct {
 	progressBar   progress.Model
 }
 
-func newProgressDialog(title string, pl *logging.ProgressLogging) *progressDialog {
-	return &progressDialog{
+func NewProgressDialog(title string, pl *logging.ProgressLogging) *ProgressDialog {
+	return &ProgressDialog{
 		title:       title,
 		pl:          pl,
 		progressBar: progress.New(progress.WithDefaultGradient()),
@@ -44,9 +44,9 @@ func newProgressDialog(title string, pl *logging.ProgressLogging) *progressDialo
 
 type tickMsg time.Time
 
-var _ tea.Model = progressDialog{}
+var _ tea.Model = ProgressDialog{}
 
-func (c progressDialog) Init() tea.Cmd {
+func (c ProgressDialog) Init() tea.Cmd {
 	return tickCmd()
 }
 
@@ -56,7 +56,7 @@ func tickCmd() tea.Cmd {
 	})
 }
 
-func (c progressDialog) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (c ProgressDialog) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		c.height = msg.Height
@@ -85,7 +85,7 @@ func (c progressDialog) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return c, nil
 }
 
-func (c progressDialog) View() string {
+func (c ProgressDialog) View() string {
 	var rows [][]string
 	for _, s := range c.progress {
 		rows = append(rows, []string{s})

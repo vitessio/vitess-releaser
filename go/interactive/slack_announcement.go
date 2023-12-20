@@ -20,6 +20,7 @@ import (
 	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/slack"
 	"vitess.io/vitess-releaser/go/releaser/steps"
@@ -35,11 +36,11 @@ const (
 	slackAnnouncementPreRequisite
 )
 
-func slackAnnouncementMenuItem(ctx context.Context, announcementType slackAnnouncementType) *menuItem {
+func slackAnnouncementMenuItem(ctx context.Context, announcementType slackAnnouncementType) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
 
 	var name string
-	var act func(*menuItem) (*menuItem, tea.Cmd)
+	var act func(*ui.MenuItem) (*ui.MenuItem, tea.Cmd)
 	var isDone bool
 	switch announcementType {
 	case slackAnnouncementPreRequisite:
@@ -52,51 +53,51 @@ func slackAnnouncementMenuItem(ctx context.Context, announcementType slackAnnoun
 		isDone = state.Issue.SlackPostRelease
 	}
 
-	return &menuItem{
-		state:  state,
-		name:   name,
-		act:    act,
-		update: slackAnnouncementUpdate,
-		isDone: isDone,
+	return &ui.MenuItem{
+		State:  state,
+		Name:   name,
+		Act:    act,
+		Update: slackAnnouncementUpdate,
+		IsDone: isDone,
 	}
 }
 
-func slackAnnouncementPreRequisiteAct(mi *menuItem) (*menuItem, tea.Cmd) {
+func slackAnnouncementPreRequisiteAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
 	return mi, func() tea.Msg {
-		return slackMessage(slack.AnnouncementMessage(mi.state))
+		return slackMessage(slack.AnnouncementMessage(mi.State))
 	}
 }
 
-func slackAnnouncementPostReleaseAct(mi *menuItem) (*menuItem, tea.Cmd) {
+func slackAnnouncementPostReleaseAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
 	return mi, func() tea.Msg {
-		return slackMessage(slack.PostReleaseMessage(mi.state))
+		return slackMessage(slack.PostReleaseMessage(mi.State))
 	}
 }
 
-func slackAnnouncementUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
+func slackAnnouncementUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
 	switch msg := msg.(type) {
 	case slackMessage:
-		return mi, pushDialog(&doneDialog{
-			stepName: mi.name,
-			title:    "The following message must be posted on the #general and #releases OSS Slack channels",
-			message:  []string{string(msg)},
-			isDone:   mi.isDone,
+		return mi, ui.PushDialog(&ui.DoneDialog{
+			StepName: mi.Name,
+			Title:    "The following message must be posted on the #general and #releases OSS Slack channels",
+			Message:  []string{string(msg)},
+			IsDone:   mi.IsDone,
 		})
-	case doneDialogAction:
-		if string(msg) != mi.name {
+	case ui.DoneDialogAction:
+		if string(msg) != mi.Name {
 			return mi, nil
 		}
-		if mi.name == steps.SlackAnnouncement {
-			mi.state.Issue.SlackPreRequisite = !mi.state.Issue.SlackPreRequisite
-		} else if mi.name == steps.SlackAnnouncementPost {
-			mi.state.Issue.SlackPostRelease = !mi.state.Issue.SlackPostRelease
+		if mi.Name == steps.SlackAnnouncement {
+			mi.State.Issue.SlackPreRequisite = !mi.State.Issue.SlackPreRequisite
+		} else if mi.Name == steps.SlackAnnouncementPost {
+			mi.State.Issue.SlackPostRelease = !mi.State.Issue.SlackPostRelease
 		}
-		mi.isDone = !mi.isDone
-		pl, fn := mi.state.UploadIssue()
+		mi.IsDone = !mi.IsDone
+		pl, fn := mi.State.UploadIssue()
 		return mi, tea.Batch(func() tea.Msg {
 			fn()
 			return tea.Msg("")
-		}, pushDialog(newProgressDialog("Updating the Release Issue", pl)))
+		}, ui.PushDialog(ui.NewProgressDialog("Updating the Release Issue", pl)))
 	}
 	return mi, nil
 }

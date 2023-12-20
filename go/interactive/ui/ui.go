@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package interactive
+package ui
 
 import (
 	"fmt"
@@ -26,14 +26,14 @@ import (
 )
 
 type (
-	// ui is an ui with a current active window,
+	// UI is an UI with a current Active window,
 	// with the idea that new windows can come to the front,
 	// but the old ones are still there behind
-	ui struct {
-		state  *releaser.State
-		active tea.Model
-		stack  []tea.Model
-		size   tea.WindowSizeMsg
+	UI struct {
+		State  *releaser.State
+		Active tea.Model
+		Stack  []tea.Model
+		Size   tea.WindowSizeMsg
 	}
 	_pop  struct{}
 	_push struct {
@@ -43,90 +43,90 @@ type (
 
 var popDialog tea.Cmd = func() tea.Msg { return _pop{} }
 
-func pushDialog(m tea.Model) tea.Cmd {
+func PushDialog(m tea.Model) tea.Cmd {
 	return func() tea.Msg {
 		return _push{m: m}
 	}
 }
 
-func (m ui) Init() tea.Cmd {
+func (m UI) Init() tea.Cmd {
 	var cmds []tea.Cmd
-	for _, m := range m.stack {
+	for _, m := range m.Stack {
 		cmds = append(cmds, m.Init())
 	}
-	cmds = append(cmds, m.active.Init())
+	cmds = append(cmds, m.Active.Init())
 	cmds = append(cmds, tea.EnterAltScreen)
 	return tea.Batch(cmds...)
 }
 
-func (m ui) newActive(d tea.Model) (ui, tea.Cmd) {
-	m.active = d
-	initCmd := d.Init() // we call Init() every time a ui becomes active
+func (m UI) newActive(d tea.Model) (UI, tea.Cmd) {
+	m.Active = d
+	initCmd := d.Init() // we call Init() every time a UI becomes Active
 	var sizeCmd tea.Cmd
-	m.active, sizeCmd = m.active.Update(m.size)
+	m.Active, sizeCmd = m.Active.Update(m.Size)
 
 	return m, tea.Batch(initCmd, sizeCmd)
 }
 
-func (m ui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m UI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// these messages we take care of here
 	switch msg := msg.(type) {
 	case _pop:
-		if len(m.stack) == 0 {
+		if len(m.Stack) == 0 {
 			return m, tea.Quit
 		}
-		lastIndex := len(m.stack) - 1
-		popped := m.stack[lastIndex]
-		m.stack = m.stack[:lastIndex]
+		lastIndex := len(m.Stack) - 1
+		popped := m.Stack[lastIndex]
+		m.Stack = m.Stack[:lastIndex]
 		return m.newActive(popped)
 	case _push:
-		m.stack = append(m.stack, m.active)
+		m.Stack = append(m.Stack, m.Active)
 		return m.newActive(msg.m)
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
 			return m, tea.Quit
 		}
-		newActive, cmd := m.active.Update(msg)
-		m.active = newActive
+		newActive, cmd := m.Active.Update(msg)
+		m.Active = newActive
 		return m, cmd
 
 	case tea.WindowSizeMsg:
-		m.size = msg
+		m.Size = msg
 	}
 
-	// Other messages are passed on to all dialogs of the stack
+	// Other messages are passed on to all dialogs of the Stack
 	var cmds []tea.Cmd
-	newStack := make([]tea.Model, len(m.stack))
-	for i, m := range m.stack {
+	newStack := make([]tea.Model, len(m.Stack))
+	for i, m := range m.Stack {
 		var cmd tea.Cmd
 		newStack[i], cmd = m.Update(msg)
 		cmds = append(cmds, cmd)
 	}
-	newActive, cmd := m.active.Update(msg)
+	newActive, cmd := m.Active.Update(msg)
 	cmds = append(cmds, cmd)
-	m.active = newActive
+	m.Active = newActive
 	return m, tea.Batch(cmds...)
 }
 
-func (m ui) View() string {
-	_, isMenu := m.active.(*menu)
+func (m UI) View() string {
+	_, isMenu := m.Active.(*Menu)
 	if !isMenu {
-		return m.active.View()
+		return m.Active.View()
 	}
 	title := "Vitess Releaser: 'q' = back, 'enter' = action"
-	width := m.size.Width
+	width := m.Size.Width
 	if width == 0 {
 		width = 100
 	}
 	lft := bgStyle.Render(title)
 	width -= len(title)
 	s := bgStyle.Copy().Width(width).Align(lipgloss.Right)
-	rgt := fmt.Sprintf("Repo: %s | Releasing Branch: %s | Release Date: %s", m.state.VitessRepo, m.state.MajorRelease, m.state.Issue.Date.Format(time.DateOnly))
+	rgt := fmt.Sprintf("Repo: %s | Releasing Branch: %s | Release Date: %s", m.State.VitessRepo, m.State.MajorRelease, m.State.Issue.Date.Format(time.DateOnly))
 	statusBar := lft + s.Render(rgt)
 	return lipgloss.JoinVertical(
 		lipgloss.Right,
-		m.active.View(),
+		m.Active.View(),
 		statusBar,
 	)
 }

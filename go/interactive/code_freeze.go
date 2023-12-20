@@ -20,44 +20,45 @@ import (
 	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/steps"
 
 	"vitess.io/vitess-releaser/go/releaser/pre_release"
 )
 
-func codeFreezeMenuItem(ctx context.Context) *menuItem {
+func codeFreezeMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
 	act := codeFreezeAct
 	if state.Issue.CodeFreeze.Done {
 		act = nil
 	}
-	return &menuItem{
-		state:  state,
-		name:   steps.CodeFreeze,
-		act:    act,
-		update: codeFreezeUpdate,
-		info:   state.Issue.CodeFreeze.URL,
-		isDone: state.Issue.CodeFreeze.Done,
+	return &ui.MenuItem{
+		State:  state,
+		Name:   steps.CodeFreeze,
+		Act:    act,
+		Update: codeFreezeUpdate,
+		Info:   state.Issue.CodeFreeze.URL,
+		IsDone: state.Issue.CodeFreeze.Done,
 	}
 }
 
 type codeFreezeUrl string
 
-func codeFreezeUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
+func codeFreezeUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
 	_, ok := msg.(codeFreezeUrl)
 	if !ok {
 		return mi, nil
 	}
 
-	mi.info = mi.state.Issue.CodeFreeze.URL
-	mi.isDone = mi.state.Issue.CodeFreeze.Done
+	mi.Info = mi.State.Issue.CodeFreeze.URL
+	mi.IsDone = mi.State.Issue.CodeFreeze.Done
 	return mi, nil
 }
 
-func codeFreezeAct(mi *menuItem) (*menuItem, tea.Cmd) {
-	pl, freeze := pre_release.CodeFreeze(mi.state)
+func codeFreezeAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
+	pl, freeze := pre_release.CodeFreeze(mi.State)
 	return mi, tea.Batch(func() tea.Msg {
 		return codeFreezeUrl(freeze())
-	}, pushDialog(newProgressDialog("Code freeze", pl)))
+	}, ui.PushDialog(ui.NewProgressDialog("Code freeze", pl)))
 }
