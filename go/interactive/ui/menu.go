@@ -30,12 +30,13 @@ import (
 
 type (
 	Menu struct {
-		state   *releaser.State
-		Items   []*MenuItem
-		title   string
-		idx     int
-		columns []string
-		width   int
+		state      *releaser.State
+		Items      []*MenuItem
+		title      string
+		idx        int
+		columns    []string
+		width      int
+		Sequential bool
 	}
 
 	MenuItem struct {
@@ -140,7 +141,7 @@ func (m *Menu) At(row, cell int) string {
 	switch {
 	case m.idx != row:
 		prefix = "   " // this is not the line we are standing on
-	case item.isActBlocked():
+	case item.isActBlocked(m.Sequential):
 		prefix = "\U0001f512 " // we are standing on this line, but it has no action
 	default:
 		prefix = "\U0001f449 "
@@ -193,7 +194,7 @@ func (m *Menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "enter":
 			selected := m.Items[m.idx]
-			if selected.isActBlocked() {
+			if selected.isActBlocked(m.Sequential) {
 				return m, nil
 			}
 			var cmd tea.Cmd
@@ -217,8 +218,23 @@ func (m *Menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (mi *MenuItem) isActBlocked() bool {
-	return mi.Act == nil
+func (mi *MenuItem) isActBlocked(sequential bool) bool {
+	if mi.Act == nil {
+		return true
+	}
+	if !sequential {
+		return false
+	}
+
+	currMenuItem := mi.previous
+	for currMenuItem != nil && (currMenuItem.Name == "" || currMenuItem.DontCountInProgress) {
+		if currMenuItem.previous != nil {
+			currMenuItem = currMenuItem.previous
+		} else {
+			break
+		}
+	}
+	return currMenuItem != nil && !currMenuItem.IsDone
 }
 
 func (m *Menu) View() string {

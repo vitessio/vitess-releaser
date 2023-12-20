@@ -31,12 +31,16 @@ func MergeReleasePRItem(ctx context.Context) *ui.MenuItem {
 	if state.Issue.MergeReleasePR.Done {
 		act = nil
 	}
+	info := state.Issue.CreateReleasePR.URL
+	if info == "" {
+
+	}
 	return &ui.MenuItem{
 		State:  state,
 		Name:   steps.MergeReleasePR,
 		Act:    act,
 		Update: mergeReleasePRUpdate,
-		Info:   state.Issue.MergeReleasePR.URL,
+		Info:   info,
 		IsDone: state.Issue.MergeReleasePR.Done,
 	}
 }
