@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package interactive
+package pre_release
 
 import (
 	"context"
@@ -22,43 +22,43 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/steps"
-
 	"vitess.io/vitess-releaser/go/releaser/pre_release"
+	"vitess.io/vitess-releaser/go/releaser/steps"
 )
 
-func codeFreezeMenuItem(ctx context.Context) *ui.MenuItem {
+type createMilestone string
+
+func CreateMilestoneMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
-	act := codeFreezeAct
-	if state.Issue.CodeFreeze.Done {
+	act := createMilestoneAct
+	if state.Issue.NewGitHubMilestone.Done {
 		act = nil
 	}
 	return &ui.MenuItem{
 		State:  state,
-		Name:   steps.CodeFreeze,
+		Name:   steps.CreateMilestone,
 		Act:    act,
-		Update: codeFreezeUpdate,
-		Info:   state.Issue.CodeFreeze.URL,
-		IsDone: state.Issue.CodeFreeze.Done,
+		Update: createMilestoneUpdate,
+		Info:   state.Issue.NewGitHubMilestone.URL,
+		IsDone: state.Issue.NewGitHubMilestone.Done,
 	}
 }
 
-type codeFreezeUrl string
-
-func codeFreezeUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
-	_, ok := msg.(codeFreezeUrl)
-	if !ok {
+func createMilestoneUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
+	milestoneLink, ok := msg.(createMilestone)
+	if !ok || len(milestoneLink) == 0 {
 		return mi, nil
 	}
 
-	mi.Info = mi.State.Issue.CodeFreeze.URL
-	mi.IsDone = mi.State.Issue.CodeFreeze.Done
+	mi.Info = mi.State.Issue.NewGitHubMilestone.URL
+	mi.IsDone = mi.State.Issue.NewGitHubMilestone.Done
+	mi.Act = nil // We don't want to accidentally create a second one
 	return mi, nil
 }
 
-func codeFreezeAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
-	pl, freeze := pre_release.CodeFreeze(mi.State)
+func createMilestoneAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
+	pl, create := pre_release.NewMilestone(mi.State)
 	return mi, tea.Batch(func() tea.Msg {
-		return codeFreezeUrl(freeze())
-	}, ui.PushDialog(ui.NewProgressDialog("Code freeze", pl)))
+		return createMilestone(create())
+	}, ui.PushDialog(ui.NewProgressDialog("Creating new GitHub Milestone", pl)))
 }

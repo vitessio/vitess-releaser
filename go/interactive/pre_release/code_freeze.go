@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package interactive
+package pre_release
 
 import (
 	"context"
@@ -22,42 +22,43 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/pre_release"
 	"vitess.io/vitess-releaser/go/releaser/steps"
+
+	"vitess.io/vitess-releaser/go/releaser/pre_release"
 )
 
-func createReleasePRMenuItem(ctx context.Context) *ui.MenuItem {
+func CodeFreezeMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
-	act := createReleasePRAct
-	if state.Issue.CreateReleasePR.Done {
+	act := codeFreezeAct
+	if state.Issue.CodeFreeze.Done {
 		act = nil
 	}
 	return &ui.MenuItem{
 		State:  state,
-		Name:   steps.CreateReleasePR,
+		Name:   steps.CodeFreeze,
 		Act:    act,
-		Update: createReleasePRUpdate,
-		Info:   state.Issue.CreateReleasePR.URL,
-		IsDone: state.Issue.CreateReleasePR.Done,
+		Update: codeFreezeUpdate,
+		Info:   state.Issue.CodeFreeze.URL,
+		IsDone: state.Issue.CodeFreeze.Done,
 	}
 }
 
-type createReleasePRUrl string
+type codeFreezeUrl string
 
-func createReleasePRUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
-	_, ok := msg.(createReleasePRUrl)
+func codeFreezeUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
+	_, ok := msg.(codeFreezeUrl)
 	if !ok {
 		return mi, nil
 	}
 
-	mi.Info = mi.State.Issue.CreateReleasePR.URL
-	mi.IsDone = mi.State.Issue.CreateReleasePR.Done
+	mi.Info = mi.State.Issue.CodeFreeze.URL
+	mi.IsDone = mi.State.Issue.CodeFreeze.Done
 	return mi, nil
 }
 
-func createReleasePRAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
-	pl, fn := pre_release.CreateReleasePR(mi.State)
+func codeFreezeAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
+	pl, freeze := pre_release.CodeFreeze(mi.State)
 	return mi, tea.Batch(func() tea.Msg {
-		return createReleasePRUrl(fn())
-	}, ui.PushDialog(ui.NewProgressDialog("Create the Release Pull Request", pl)))
+		return codeFreezeUrl(freeze())
+	}, ui.PushDialog(ui.NewProgressDialog("Code freeze", pl)))
 }

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package interactive
+package prerequisites
 
 import (
 	"context"
@@ -28,7 +28,7 @@ import (
 
 type checkSummary []string
 
-func checkSummaryMenuItem(ctx context.Context) *ui.MenuItem {
+func CheckSummaryMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
 	return &ui.MenuItem{
 		State:  state,

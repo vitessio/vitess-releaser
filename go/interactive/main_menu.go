@@ -22,6 +22,8 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"vitess.io/vitess-releaser/go/interactive/pre_release"
+	"vitess.io/vitess-releaser/go/interactive/prerequisites"
 	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
@@ -36,15 +38,15 @@ func MainScreen(ctx context.Context) {
 		ctx,
 		"Prerequisites",
 		slackAnnouncementMenuItem(ctx, slackAnnouncementPreRequisite),
-		checkSummaryMenuItem(ctx),
+		prerequisites.CheckSummaryMenuItem(ctx),
 	)
 
 	prerelease := ui.NewMenu(
 		ctx,
 		"Pre Release",
-		codeFreezeMenuItem(ctx),
-		createReleasePRMenuItem(ctx),
-		createMilestoneMenuItem(ctx),
+		pre_release.CodeFreezeMenuItem(ctx),
+		pre_release.CreateReleasePRMenuItem(ctx),
+		pre_release.CreateMilestoneMenuItem(ctx),
 	)
 
 	postRelease := ui.NewMenu(

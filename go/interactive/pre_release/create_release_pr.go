@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package interactive
+package pre_release
 
 import (
 	"context"
@@ -26,39 +26,38 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/steps"
 )
 
-type createMilestone string
-
-func createMilestoneMenuItem(ctx context.Context) *ui.MenuItem {
+func CreateReleasePRMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
-	act := createMilestoneAct
-	if state.Issue.NewGitHubMilestone.Done {
+	act := createReleasePRAct
+	if state.Issue.CreateReleasePR.Done {
 		act = nil
 	}
 	return &ui.MenuItem{
 		State:  state,
-		Name:   steps.CreateMilestone,
+		Name:   steps.CreateReleasePR,
 		Act:    act,
-		Update: createMilestoneUpdate,
-		Info:   state.Issue.NewGitHubMilestone.URL,
-		IsDone: state.Issue.NewGitHubMilestone.Done,
+		Update: createReleasePRUpdate,
+		Info:   state.Issue.CreateReleasePR.URL,
+		IsDone: state.Issue.CreateReleasePR.Done,
 	}
 }
 
-func createMilestoneUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
-	milestoneLink, ok := msg.(createMilestone)
-	if !ok || len(milestoneLink) == 0 {
+type createReleasePRUrl string
+
+func createReleasePRUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
+	_, ok := msg.(createReleasePRUrl)
+	if !ok {
 		return mi, nil
 	}
 
-	mi.Info = mi.State.Issue.NewGitHubMilestone.URL
-	mi.IsDone = mi.State.Issue.NewGitHubMilestone.Done
-	mi.Act = nil // We don't want to accidentally create a second one
+	mi.Info = mi.State.Issue.CreateReleasePR.URL
+	mi.IsDone = mi.State.Issue.CreateReleasePR.Done
 	return mi, nil
 }
 
-func createMilestoneAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
-	pl, create := pre_release.NewMilestone(mi.State)
+func createReleasePRAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
+	pl, fn := pre_release.CreateReleasePR(mi.State)
 	return mi, tea.Batch(func() tea.Msg {
-		return createMilestone(create())
-	}, ui.PushDialog(ui.NewProgressDialog("Creating new GitHub Milestone", pl)))
+		return createReleasePRUrl(fn())
+	}, ui.PushDialog(ui.NewProgressDialog("Create the Release Pull Request", pl)))
 }
