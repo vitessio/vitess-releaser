@@ -25,29 +25,28 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/steps"
 )
 
-func MergeReleasePRItem(ctx context.Context) *ui.MenuItem {
+func WebsiteDocumentationItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
-	act := mergeReleasePRAct
-	if state.Issue.MergeReleasePR.Done {
+	act := websiteDocumentationAct
+	if state.Issue.WebsiteDocumentation.Done {
 		act = nil
 	}
 	return &ui.MenuItem{
 		State:  state,
-		Name:   steps.CodeFreeze,
+		Name:   steps.WebsiteDocumentation,
 		Act:    act,
-		Update: mergeReleasePRUpdate,
-		Info:   state.Issue.CodeFreeze.URL,
-		IsDone: state.Issue.CodeFreeze.Done,
+		Update: websiteDocumentationUpdate,
+		Info:   state.Issue.WebsiteDocumentation.URL,
+		IsDone: state.Issue.WebsiteDocumentation.Done,
 	}
 }
 
-type mergeReleasePRUrl string
+type websiteDocumentationUrl string
 
-func mergeReleasePRUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
-
+func websiteDocumentationUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
 	return mi, nil
 }
 
-func mergeReleasePRAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
+func websiteDocumentationAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
 	return mi, nil
 }

@@ -33,18 +33,17 @@ func MergeReleasePRItem(ctx context.Context) *ui.MenuItem {
 	}
 	return &ui.MenuItem{
 		State:  state,
-		Name:   steps.CodeFreeze,
+		Name:   steps.MergeReleasePR,
 		Act:    act,
 		Update: mergeReleasePRUpdate,
-		Info:   state.Issue.CodeFreeze.URL,
-		IsDone: state.Issue.CodeFreeze.Done,
+		Info:   state.Issue.MergeReleasePR.URL,
+		IsDone: state.Issue.MergeReleasePR.Done,
 	}
 }
 
 type mergeReleasePRUrl string
 
 func mergeReleasePRUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
-
 	return mi, nil
 }
 

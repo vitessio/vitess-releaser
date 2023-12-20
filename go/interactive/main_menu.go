@@ -24,6 +24,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/pre_release"
 	"vitess.io/vitess-releaser/go/interactive/prerequisites"
+	release "vitess.io/vitess-releaser/go/interactive/release"
 	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
 )
@@ -33,14 +34,14 @@ func blankLineMenu() *ui.MenuItem {
 }
 
 func MainScreen(ctx context.Context) {
-	prereq := ui.NewMenu(
+	prereqMenu := ui.NewMenu(
 		ctx,
 		"Prerequisites",
 		slackAnnouncementMenuItem(ctx, slackAnnouncementPreRequisite),
 		prerequisites.CheckSummaryMenuItem(ctx),
 	)
 
-	prerelease := ui.NewMenu(
+	preReleaseMenu := ui.NewMenu(
 		ctx,
 		"Pre Release",
 		pre_release.CodeFreezeMenuItem(ctx),
@@ -48,13 +49,21 @@ func MainScreen(ctx context.Context) {
 		pre_release.CreateMilestoneMenuItem(ctx),
 	)
 
-	release := ui.NewMenu(
+	releaseMenu := ui.NewMenu(
 		ctx,
 		"Release",
-		nil,
+		release.MergeReleasePRItem(ctx),
+		release.TagReleaseItem(ctx),
+		release.JavaReleaseItem(ctx),
+		release.ReleaseNotesOnMainItem(ctx),
+		release.BackToDevModeItem(ctx),
+		release.WebsiteDocumentationItem(ctx),
+		release.BenchmarkedItem(ctx),
+		release.DockerImagesItem(ctx),
+		release.CloseMilestoneItem(ctx),
 	)
 
-	postRelease := ui.NewMenu(
+	postReleaseMenu := ui.NewMenu(
 		ctx,
 		"Post Release",
 		slackAnnouncementMenuItem(ctx, slackAnnouncementPostRelease),
@@ -65,28 +74,28 @@ func MainScreen(ctx context.Context) {
 		checkAndAddMenuItem(ctx),
 		blankLineMenu(),
 		&ui.MenuItem{
-			IsDone:   prereq.Done(),
-			SubItems: prereq.Items,
+			IsDone:   prereqMenu.Done(),
+			SubItems: prereqMenu.Items,
 			Name:     "Prerequisites",
-			Act:      subMenu(prereq),
+			Act:      subMenu(prereqMenu),
 		},
 		&ui.MenuItem{
-			IsDone:   prerelease.Done(),
-			SubItems: prerelease.Items,
+			IsDone:   preReleaseMenu.Done(),
+			SubItems: preReleaseMenu.Items,
 			Name:     "Pre Release",
-			Act:      subMenu(prerelease),
+			Act:      subMenu(preReleaseMenu),
 		},
 		&ui.MenuItem{
-			IsDone:   release.Done(),
-			SubItems: release.Items,
+			IsDone:   releaseMenu.Done(),
+			SubItems: releaseMenu.Items,
 			Name:     "Release",
-			Act:      subMenu(release),
+			Act:      subMenu(releaseMenu),
 		},
 		&ui.MenuItem{
-			IsDone:   postRelease.Done(),
-			SubItems: postRelease.Items,
+			IsDone:   postReleaseMenu.Done(),
+			SubItems: postReleaseMenu.Items,
 			Name:     "Post Release",
-			Act:      subMenu(postRelease),
+			Act:      subMenu(postReleaseMenu),
 		},
 	)
 
