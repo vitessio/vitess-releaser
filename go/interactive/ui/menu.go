@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package interactive
+package ui
 
 import (
 	"context"
@@ -29,55 +29,55 @@ import (
 )
 
 type (
-	menu struct {
+	Menu struct {
 		state   *releaser.State
-		items   []*menuItem
+		Items   []*MenuItem
 		title   string
 		idx     int
 		columns []string
 		width   int
 	}
 
-	menuItem struct {
-		state  *releaser.State
-		name   string
-		isDone bool
-		info   string
-		act    func(*menuItem) (*menuItem, tea.Cmd)
-		init   func(*menuItem) tea.Cmd
-		update func(*menuItem, tea.Msg) (*menuItem, tea.Cmd)
+	MenuItem struct {
+		State  *releaser.State
+		Name   string
+		IsDone bool
+		Info   string
+		Act    func(*MenuItem) (*MenuItem, tea.Cmd)
+		Init   func(*MenuItem) tea.Cmd
+		Update func(*MenuItem, tea.Msg) (*MenuItem, tea.Cmd)
 
-		// subItems is a slice of *menuItem referring to the menuItem embedded by this item
-		subItems []*menuItem
+		// SubItems is a slice of *MenuItem referring to the MenuItem embedded by this item
+		SubItems []*MenuItem
 
-		previous            *menuItem
-		dontCountInProgress bool
+		previous            *MenuItem
+		DontCountInProgress bool
 	}
 )
 
 var columns = []string{"TASK", "STATUS", "INFO"}
 
-func newMenu(ctx context.Context, title string, items ...*menuItem) *menu {
+func NewMenu(ctx context.Context, title string, items ...*MenuItem) *Menu {
 	for i, item := range items {
 		if i == 0 {
 			continue
 		}
 		item.previous = items[i-1]
 	}
-	return &menu{
+	return &Menu{
 		state:   releaser.UnwrapState(ctx),
 		columns: columns,
 		title:   title,
-		items:   items,
+		Items:   items,
 	}
 }
 
-func (m *menu) moveCursorToNextElem() {
-	for i, item := range m.items {
+func (m *Menu) MoveCursorToNextElem() {
+	for i, item := range m.Items {
 		// We do a little special handling if the Check PRs/Issues task is listed.
 		// We skip it only if the next task is marked as done too.
 		// That way, it is not the first task the user has to do.
-		if item.isDone || item.name == "" || item.name == steps.CheckAndAdd && m.isNextTaskDone(i+1) {
+		if item.IsDone || item.Name == "" || item.Name == steps.CheckAndAdd && m.isNextTaskDone(i+1) {
 			m.idx++
 		} else {
 			break
@@ -85,55 +85,55 @@ func (m *menu) moveCursorToNextElem() {
 	}
 }
 
-func (m *menu) isNextTaskDone(i int) bool {
-	// we skip all placeholder menu items
-	for ; i < len(m.items); i++ {
-		if m.items[i].name != "" {
+func (m *Menu) isNextTaskDone(i int) bool {
+	// we skip all placeholder Menu items
+	for ; i < len(m.Items); i++ {
+		if m.Items[i].Name != "" {
 			break
 		}
 	}
-	if i == len(m.items) {
+	if i == len(m.Items) {
 		return true
 	}
-	return m.items[i].isDone
+	return m.Items[i].IsDone
 }
 
-func (m *menu) At(row, cell int) string {
-	item := m.items[row]
-	if item.name == "" {
+func (m *Menu) At(row, cell int) string {
+	item := m.Items[row]
+	if item.Name == "" {
 		return ""
 	}
 	if cell == 1 {
-		if len(item.subItems) > 0 {
+		if len(item.SubItems) > 0 {
 			done := 0
-			for _, subItem := range item.subItems {
-				if subItem.isDone {
+			for _, subItem := range item.SubItems {
+				if subItem.IsDone {
 					done++
 				}
 			}
-			nb := len(item.subItems)
+			nb := len(item.SubItems)
 			if done == nb {
-				item.isDone = state.Done
+				item.IsDone = state.Done
 			}
-			if !item.isDone {
-				return fmt.Sprintf("%s %d/%d", state.Fmt(item.isDone), done, nb)
+			if !item.IsDone {
+				return fmt.Sprintf("%s %d/%d", state.Fmt(item.IsDone), done, nb)
 			}
-			msg := fmt.Sprintf("%s %d/%d", state.Fmt(item.isDone), done, nb)
-			if item.isDone {
+			msg := fmt.Sprintf("%s %d/%d", state.Fmt(item.IsDone), done, nb)
+			if item.IsDone {
 				msg += " \U0001f44d"
 			}
 			return msg
 		}
 
 		// if there are no sub items, let's just return the current status
-		msg := state.Fmt(item.isDone)
-		if item.isDone {
+		msg := state.Fmt(item.IsDone)
+		if item.IsDone {
 			msg += " \U0001f44d"
 		}
 		return msg
 	}
 	if cell == 2 {
-		return item.info
+		return item.Info
 	}
 
 	var prefix string
@@ -146,30 +146,30 @@ func (m *menu) At(row, cell int) string {
 		prefix = "\U0001f449 "
 	}
 
-	return prefix + item.name
+	return prefix + item.Name
 }
 
-func (m *menu) Rows() int {
-	return len(m.items)
+func (m *Menu) Rows() int {
+	return len(m.Items)
 }
 
-func (m *menu) Columns() int {
+func (m *Menu) Columns() int {
 	return 3
 }
 
-func (m *menu) Init() tea.Cmd {
+func (m *Menu) Init() tea.Cmd {
 	var cmds []tea.Cmd
-	for idx, mi := range m.items {
-		if mi.init != nil {
-			cmds = append(cmds, mi.init(mi))
-			m.items[idx].init = nil
+	for idx, mi := range m.Items {
+		if mi.Init != nil {
+			cmds = append(cmds, mi.Init(mi))
+			m.Items[idx].Init = nil
 		}
 	}
 	return tea.Batch(cmds...)
 }
 
-func (m *menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	size := len(m.items)
+func (m *Menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	size := len(m.Items)
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
@@ -180,32 +180,32 @@ func (m *menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "up":
 			for {
 				m.idx = (m.idx - 1 + size) % size
-				if m.items[m.idx].name != "" {
+				if m.Items[m.idx].Name != "" {
 					break
 				}
 			}
 		case "down":
 			for {
 				m.idx = (m.idx + 1) % size
-				if m.items[m.idx].name != "" {
+				if m.Items[m.idx].Name != "" {
 					break
 				}
 			}
 		case "enter":
-			selected := m.items[m.idx]
+			selected := m.Items[m.idx]
 			if selected.isActBlocked() {
 				return m, nil
 			}
 			var cmd tea.Cmd
-			m.items[m.idx], cmd = selected.act(selected)
+			m.Items[m.idx], cmd = selected.Act(selected)
 			return m, cmd
 		}
 	default:
 		var cmds []tea.Cmd
-		for idx, mi := range m.items {
-			if mi.update != nil {
-				newMi, cmd := mi.update(mi, msg)
-				m.items[idx] = newMi
+		for idx, mi := range m.Items {
+			if mi.Update != nil {
+				newMi, cmd := mi.Update(mi, msg)
+				m.Items[idx] = newMi
 				if cmd != nil {
 					cmds = append(cmds, cmd)
 				}
@@ -217,11 +217,11 @@ func (m *menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (mi *menuItem) isActBlocked() bool {
-	return mi.act == nil
+func (mi *MenuItem) isActBlocked() bool {
+	return mi.Act == nil
 }
 
-func (m *menu) View() string {
+func (m *Menu) View() string {
 	list := tbl.
 		New().
 		Width(m.width).
@@ -254,9 +254,9 @@ func (m *menu) View() string {
 	)
 }
 
-func (m *menu) done() bool {
-	for _, item := range m.items {
-		if !item.isDone {
+func (m *Menu) Done() bool {
+	for _, item := range m.Items {
+		if !item.IsDone {
 			return state.ToDo
 		}
 	}

@@ -14,12 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package interactive
+package prerequisites
 
 import (
 	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/prerequisite"
 	"vitess.io/vitess-releaser/go/releaser/steps"
@@ -27,43 +28,43 @@ import (
 
 type checkSummary []string
 
-func checkSummaryMenuItem(ctx context.Context) *menuItem {
+func CheckSummaryMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
-	return &menuItem{
-		state:  state,
-		name:   steps.CheckSummary,
-		isDone: state.Issue.CheckSummary,
-		act:    checkSummaryAct,
-		update: checkSummaryUpdate,
+	return &ui.MenuItem{
+		State:  state,
+		Name:   steps.CheckSummary,
+		IsDone: state.Issue.CheckSummary,
+		Act:    checkSummaryAct,
+		Update: checkSummaryUpdate,
 	}
 }
 
-func checkSummaryUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
+func checkSummaryUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
 	switch msg := msg.(type) {
 	case checkSummary:
-		return mi, pushDialog(&doneDialog{
-			stepName: mi.name,
-			title:    "Check release note summary",
-			message:  msg,
-			isDone:   mi.isDone,
+		return mi, ui.PushDialog(&ui.DoneDialog{
+			StepName: mi.Name,
+			Title:    "Check release note summary",
+			Message:  msg,
+			IsDone:   mi.IsDone,
 		})
-	case doneDialogAction:
-		if string(msg) != mi.name {
+	case ui.DoneDialogAction:
+		if string(msg) != mi.Name {
 			return mi, nil
 		}
-		mi.state.Issue.CheckSummary = !mi.state.Issue.CheckSummary
-		mi.isDone = !mi.isDone
-		pl, fn := mi.state.UploadIssue()
+		mi.State.Issue.CheckSummary = !mi.State.Issue.CheckSummary
+		mi.IsDone = !mi.IsDone
+		pl, fn := mi.State.UploadIssue()
 		return mi, tea.Batch(func() tea.Msg {
 			fn()
 			return tea.Msg("")
-		}, pushDialog(newProgressDialog("Updating the Release Issue", pl)))
+		}, ui.PushDialog(ui.NewProgressDialog("Updating the Release Issue", pl)))
 	}
 	return mi, nil
 }
 
-func checkSummaryAct(mi *menuItem) (*menuItem, tea.Cmd) {
+func checkSummaryAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
 	return mi, func() tea.Msg {
-		return checkSummary(prerequisite.CheckSummary(mi.state))
+		return checkSummary(prerequisite.CheckSummary(mi.State))
 	}
 }

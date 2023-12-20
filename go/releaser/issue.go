@@ -34,8 +34,14 @@ const (
 	stateReadingBackport
 	stateReadingReleaseBlockerIssue
 	stateReadingCodeFreezeItem
-	stateReadindCreateReleasePRItem
+	stateReadingCreateReleasePRItem
 	stateReadingNewMilestoneItem
+	stateReadingMergedReleasePRItem
+	stateReadingTagReleaseItem
+	stateReadingReleaseNotesMainItem
+	stateReadingBackToDevModeItem
+	stateReadingWebsiteDocsItem
+	stateReadingCloseMilestoneItem
 )
 
 const (
@@ -55,6 +61,17 @@ const (
 	codeFreezeItem      = "Code Freeze."
 	createReleasePRItem = "Create Release PR."
 	newMilestoneItem    = "Create new GitHub Milestone."
+
+	// Release
+	mergeReleasePRItem   = "Merge the Release PR."
+	tagReleaseItem       = "Tag the release."
+	javaReleaseItem      = "Java release."
+	releaseNotesMainItem = "Update release notes on main."
+	backToDevItem        = "Go back to dev mode on the release branch."
+	websiteDocItem       = "Update the website documentation."
+	benchmarkedItem      = "Make sure the release is benchmarked by arewefastyet."
+	dockerImagesItem     = "Docker Images available on DockerHub."
+	closeMilestoneItem   = "Close current GitHub Milestone."
 
 	// Post-Release
 	postSlackAnnouncementItem = "Notify the community on Slack for the new release."
@@ -87,6 +104,17 @@ type (
 		CodeFreeze         ItemWithLink
 		CreateReleasePR    ItemWithLink
 		NewGitHubMilestone ItemWithLink
+
+		// Release
+		MergeReleasePR       ItemWithLink
+		TagRelease           ItemWithLink
+		JavaRelease          bool
+		ReleaseNotesOnMain   ItemWithLink
+		BackToDevMode        ItemWithLink
+		WebsiteDocumentation ItemWithLink
+		Benchmarked          bool
+		DockerImages         bool
+		CloseMilestone       ItemWithLink
 
 		// Post-Release
 		SlackPostRelease bool
@@ -124,6 +152,37 @@ const (
 {{- if .NewGitHubMilestone.URL }}
   - {{ .NewGitHubMilestone.URL }}
 {{- end }}
+
+### Release
+
+- [{{fmtStatus .MergeReleasePR.Done}}] Merge the Release PR.
+{{- if .MergeReleasePR.URL }}
+  - {{ .MergeReleasePR.URL }}
+{{- end }}
+- [{{fmtStatus .TagRelease.Done}}] Tag the release.
+{{- if .TagRelease.URL }}
+  - {{ .TagRelease.URL }}
+{{- end }}
+- [{{fmtStatus .JavaRelease}}] Java release.
+- [{{fmtStatus .ReleaseNotesOnMain.Done}}] Update release notes on main.
+{{- if .ReleaseNotesOnMain.URL }}
+  - {{ .ReleaseNotesOnMain.URL }}
+{{- end }}
+- [{{fmtStatus .BackToDevMode.Done}}] Go back to dev mode on the release branch.
+{{- if .BackToDevMode.URL }}
+  - {{ .BackToDevMode.URL }}
+{{- end }}
+- [{{fmtStatus .WebsiteDocumentation.Done}}] Update the website documentation.
+{{- if .WebsiteDocumentation.URL }}
+  - {{ .WebsiteDocumentation.URL }}
+{{- end }}
+- [{{fmtStatus .Benchmarked}}] Make sure the release is benchmarked by arewefastyet.
+- [{{fmtStatus .DockerImages}}] Docker Images available on DockerHub.
+- [{{fmtStatus .CloseMilestone.Done}}] Close current GitHub Milestone.
+{{- if .CloseMilestone.URL }}
+  - {{ .CloseMilestone.URL }}
+{{- end }}
+
 
 ### Post-Release
 - [{{fmtStatus .SlackPostRelease}}] Notify the community on Slack for the new release.
@@ -167,6 +226,7 @@ func (ctx *State) LoadIssue() {
 	for i, line := range lines {
 		switch s {
 		case stateReadingItem:
+			// divers
 			if strings.HasPrefix(line, dateItem) {
 				nline := strings.TrimSpace(line[len(dateItem):])
 				parsedDate, err := time.Parse("Mon _2 Jan 2006", nline)
@@ -175,6 +235,8 @@ func (ctx *State) LoadIssue() {
 				}
 				newIssue.Date = parsedDate
 			}
+
+			// pre-release
 			if strings.Contains(line, preSlackAnnouncementItem) {
 				newIssue.SlackPreRequisite = strings.HasPrefix(line, markdownItemDone)
 			}
@@ -196,7 +258,7 @@ func (ctx *State) LoadIssue() {
 			if strings.Contains(line, createReleasePRItem) {
 				newIssue.CreateReleasePR.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
-					s = stateReadindCreateReleasePRItem
+					s = stateReadingCreateReleasePRItem
 				}
 			}
 			if strings.Contains(line, newMilestoneItem) {
@@ -205,6 +267,55 @@ func (ctx *State) LoadIssue() {
 					s = stateReadingNewMilestoneItem
 				}
 			}
+
+			// release
+			if strings.Contains(line, mergeReleasePRItem) {
+				newIssue.MergeReleasePR.Done = strings.HasPrefix(line, markdownItemDone)
+				if isNextLineAList(lines, i) {
+					s = stateReadingMergedReleasePRItem
+				}
+			}
+			if strings.Contains(line, tagReleaseItem) {
+				newIssue.TagRelease.Done = strings.HasPrefix(line, markdownItemDone)
+				if isNextLineAList(lines, i) {
+					s = stateReadingTagReleaseItem
+				}
+			}
+			if strings.Contains(line, javaReleaseItem) {
+				newIssue.JavaRelease = strings.HasPrefix(line, markdownItemDone)
+			}
+			if strings.Contains(line, releaseNotesMainItem) {
+				newIssue.ReleaseNotesOnMain.Done = strings.HasPrefix(line, markdownItemDone)
+				if isNextLineAList(lines, i) {
+					s = stateReadingReleaseNotesMainItem
+				}
+			}
+			if strings.Contains(line, backToDevItem) {
+				newIssue.BackToDevMode.Done = strings.HasPrefix(line, markdownItemDone)
+				if isNextLineAList(lines, i) {
+					s = stateReadingBackToDevModeItem
+				}
+			}
+			if strings.Contains(line, websiteDocItem) {
+				newIssue.WebsiteDocumentation.Done = strings.HasPrefix(line, markdownItemDone)
+				if isNextLineAList(lines, i) {
+					s = stateReadingWebsiteDocsItem
+				}
+			}
+			if strings.Contains(line, benchmarkedItem) {
+				newIssue.Benchmarked = strings.HasPrefix(line, markdownItemDone)
+			}
+			if strings.Contains(line, dockerImagesItem) {
+				newIssue.DockerImages = strings.HasPrefix(line, markdownItemDone)
+			}
+			if strings.Contains(line, closeMilestoneItem) {
+				newIssue.CloseMilestone.Done = strings.HasPrefix(line, markdownItemDone)
+				if isNextLineAList(lines, i) {
+					s = stateReadingCloseMilestoneItem
+				}
+			}
+
+			// post-release
 			if strings.Contains(line, postSlackAnnouncementItem) {
 				newIssue.SlackPostRelease = strings.HasPrefix(line, markdownItemDone)
 			}
@@ -214,10 +325,20 @@ func (ctx *State) LoadIssue() {
 			newIssue.ReleaseBlocker.Items = append(newIssue.ReleaseBlocker.Items, handleNewListItem(lines, i, &s))
 		case stateReadingCodeFreezeItem:
 			newIssue.CodeFreeze.URL = handleSingleTextItem(line, &s)
-		case stateReadindCreateReleasePRItem:
+		case stateReadingCreateReleasePRItem:
 			newIssue.CreateReleasePR.URL = handleSingleTextItem(line, &s)
 		case stateReadingNewMilestoneItem:
 			newIssue.NewGitHubMilestone.URL = handleSingleTextItem(line, &s)
+		case stateReadingMergedReleasePRItem:
+			newIssue.MergeReleasePR.URL = handleSingleTextItem(line, &s)
+		case stateReadingReleaseNotesMainItem:
+			newIssue.ReleaseNotesOnMain.URL = handleSingleTextItem(line, &s)
+		case stateReadingBackToDevModeItem:
+			newIssue.BackToDevMode.URL = handleSingleTextItem(line, &s)
+		case stateReadingWebsiteDocsItem:
+			newIssue.WebsiteDocumentation.URL = handleSingleTextItem(line, &s)
+		case stateReadingCloseMilestoneItem:
+			newIssue.CloseMilestone.URL = handleSingleTextItem(line, &s)
 		}
 	}
 	ctx.Issue = newIssue

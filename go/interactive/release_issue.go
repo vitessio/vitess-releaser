@@ -21,18 +21,19 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/state"
+	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/steps"
 )
 
-func createIssueMenuItem(ctx context.Context) *menuItem {
+func createIssueMenuItem(ctx context.Context) *ui.MenuItem {
 	s := releaser.UnwrapState(ctx)
-	i := &menuItem{
-		state:  s,
-		name:   steps.CreateReleaseIssue,
-		isDone: state.ToDo,
-		init:   createIssue,
-		update: issueUpdate,
+	i := &ui.MenuItem{
+		State:  s,
+		Name:   steps.CreateReleaseIssue,
+		IsDone: state.ToDo,
+		Init:   createIssue,
+		Update: issueUpdate,
 	}
 	if s.IssueLink != "" {
 		gotIssueURL(i)
@@ -45,8 +46,8 @@ type releaseIssue struct {
 	nb  int
 }
 
-func createIssue(mi *menuItem) tea.Cmd {
-	_, createIssueFn := releaser.CreateReleaseIssue(mi.state)
+func createIssue(mi *ui.MenuItem) tea.Cmd {
+	_, createIssueFn := releaser.CreateReleaseIssue(mi.State)
 	nb, url := createIssueFn()
 	return func() tea.Msg {
 		return releaseIssue{
@@ -56,7 +57,7 @@ func createIssue(mi *menuItem) tea.Cmd {
 	}
 }
 
-func issueUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
+func issueUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
 	ri, ok := msg.(releaseIssue)
 	if !ok {
 		return mi, nil
@@ -67,11 +68,11 @@ func issueUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
 	return mi, nil
 }
 
-func gotIssueURL(item *menuItem) *menuItem {
-	item.name = steps.ReleaseIssue
-	item.info = item.state.IssueLink
-	item.isDone = state.Done
-	item.act = nil  // We don't want to accidentally create a second one
-	item.init = nil // So we cancel the init function if we already have the issue
+func gotIssueURL(item *ui.MenuItem) *ui.MenuItem {
+	item.Name = steps.ReleaseIssue
+	item.Info = item.State.IssueLink
+	item.IsDone = state.Done
+	item.Act = nil  // We don't want to accidentally create a second one
+	item.Init = nil // So we cancel the init function if we already have the issue
 	return item
 }

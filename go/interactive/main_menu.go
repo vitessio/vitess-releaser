@@ -22,74 +22,91 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"vitess.io/vitess-releaser/go/interactive/state"
+	"vitess.io/vitess-releaser/go/interactive/pre_release"
+	"vitess.io/vitess-releaser/go/interactive/prerequisites"
+	release "vitess.io/vitess-releaser/go/interactive/release"
+	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
 )
 
-func blankLineMenu() *menuItem {
-	return &menuItem{}
+func blankLineMenu() *ui.MenuItem {
+	return &ui.MenuItem{}
 }
 
 func MainScreen(ctx context.Context) {
-	prereq := newMenu(
+	prereqMenu := ui.NewMenu(
 		ctx,
 		"Prerequisites",
 		slackAnnouncementMenuItem(ctx, slackAnnouncementPreRequisite),
-		checkSummaryMenuItem(ctx),
+		prerequisites.CheckSummaryMenuItem(ctx),
 	)
 
-	prerelease := newMenu(
+	preReleaseMenu := ui.NewMenu(
 		ctx,
 		"Pre Release",
-		codeFreezeMenuItem(ctx),
-		createReleasePRMenuItem(ctx),
-		createMilestoneMenuItem(ctx),
+		pre_release.CodeFreezeMenuItem(ctx),
+		pre_release.CreateReleasePRMenuItem(ctx),
+		pre_release.CreateMilestoneMenuItem(ctx),
 	)
 
-	postRelease := newMenu(
+	releaseMenu := ui.NewMenu(
+		ctx,
+		"Release",
+		release.MergeReleasePRItem(ctx),
+		release.TagReleaseItem(ctx),
+		release.JavaReleaseItem(ctx),
+		release.ReleaseNotesOnMainItem(ctx),
+		release.BackToDevModeItem(ctx),
+		release.WebsiteDocumentationItem(ctx),
+		release.BenchmarkedItem(ctx),
+		release.DockerImagesItem(ctx),
+		release.CloseMilestoneItem(ctx),
+	)
+
+	postReleaseMenu := ui.NewMenu(
 		ctx,
 		"Post Release",
 		slackAnnouncementMenuItem(ctx, slackAnnouncementPostRelease),
 	)
 
-	m := newMenu(ctx, "Main Menu",
+	m := ui.NewMenu(ctx, "Main Menu",
 		createIssueMenuItem(ctx),
 		checkAndAddMenuItem(ctx),
 		blankLineMenu(),
-		&menuItem{
-			isDone:   prereq.done(),
-			subItems: prereq.items,
-			name:     "Prerequisites",
-			act:      subMenu(prereq),
+		&ui.MenuItem{
+			IsDone:   prereqMenu.Done(),
+			SubItems: prereqMenu.Items,
+			Name:     "Prerequisites",
+			Act:      subMenu(prereqMenu),
 		},
-		&menuItem{
-			isDone:   prerelease.done(),
-			subItems: prerelease.items,
-			name:     "Pre Release",
-			act:      subMenu(prerelease),
+		&ui.MenuItem{
+			IsDone:   preReleaseMenu.Done(),
+			SubItems: preReleaseMenu.Items,
+			Name:     "Pre Release",
+			Act:      subMenu(preReleaseMenu),
 		},
-		&menuItem{
-			isDone:   state.ToDo,
-			subItems: nil,
-			name:     "Release",
-			act:      nil,
+		&ui.MenuItem{
+			IsDone:   releaseMenu.Done(),
+			SubItems: releaseMenu.Items,
+			Name:     "Release",
+			Act:      subMenu(releaseMenu),
 		},
-		&menuItem{
-			isDone:   postRelease.done(),
-			subItems: postRelease.items,
-			name:     "Post Release",
-			act:      subMenu(postRelease),
+		&ui.MenuItem{
+			IsDone:   postReleaseMenu.Done(),
+			SubItems: postReleaseMenu.Items,
+			Name:     "Post Release",
+			Act:      subMenu(postReleaseMenu),
 		},
 	)
 
-	m.moveCursorToNextElem()
+	m.MoveCursorToNextElem()
 
-	if _, err := tea.NewProgram(ui{state: releaser.UnwrapState(ctx), active: m}).Run(); err != nil {
+	if _, err := tea.NewProgram(ui.UI{State: releaser.UnwrapState(ctx), Active: m}).Run(); err != nil {
 		fmt.Println("Error running program:", err)
 		os.Exit(1)
 	}
 }
 
-func subMenu(sub *menu) func(*menuItem) (*menuItem, tea.Cmd) {
-	return func(mi *menuItem) (*menuItem, tea.Cmd) { return mi, pushDialog(sub) }
+func subMenu(sub *ui.Menu) func(*ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
+	return func(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) { return mi, ui.PushDialog(sub) }
 }

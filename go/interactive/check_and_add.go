@@ -20,6 +20,7 @@ import (
 	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/prerequisite"
 	"vitess.io/vitess-releaser/go/releaser/steps"
@@ -27,48 +28,48 @@ import (
 
 type checkAndAdd string
 
-func checkAndAddMenuItem(ctx context.Context) *menuItem {
+func checkAndAddMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
-	return &menuItem{
-		state:               state,
-		name:                steps.CheckAndAdd,
-		update:              checkAndAddUpdate,
-		isDone:              state.IssueNbGH != 0 && state.Issue.CheckBackport.Done() && state.Issue.ReleaseBlocker.Done(),
-		info:                "Loading ...",
-		init:                initCheckAndAdd,
-		act:                 actCheckAndAdd,
-		dontCountInProgress: true,
+	return &ui.MenuItem{
+		State:               state,
+		Name:                steps.CheckAndAdd,
+		Update:              checkAndAddUpdate,
+		IsDone:              state.IssueNbGH != 0 && state.Issue.CheckBackport.Done() && state.Issue.ReleaseBlocker.Done(),
+		Info:                "Loading ...",
+		Init:                initCheckAndAdd,
+		Act:                 actCheckAndAdd,
+		DontCountInProgress: true,
 	}
 }
 
-func initCheckAndAdd(mi *menuItem) tea.Cmd {
-	if mi.state.IssueLink == "" {
+func initCheckAndAdd(mi *ui.MenuItem) tea.Cmd {
+	if mi.State.IssueLink == "" {
 		return nil
 	}
-	_, add := prerequisite.CheckAndAddPRsIssues(mi.state)
+	_, add := prerequisite.CheckAndAddPRsIssues(mi.State)
 	return func() tea.Msg {
 		return checkAndAdd(add())
 	}
 }
 
-func actCheckAndAdd(mi *menuItem) (*menuItem, tea.Cmd) {
-	if mi.state.IssueLink == "" {
+func actCheckAndAdd(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
+	if mi.State.IssueLink == "" {
 		return mi, nil
 	}
-	pl, add := prerequisite.CheckAndAddPRsIssues(mi.state)
+	pl, add := prerequisite.CheckAndAddPRsIssues(mi.State)
 	return mi, tea.Batch(func() tea.Msg {
 		return checkAndAdd(add())
-	}, pushDialog(newProgressDialog("", pl)))
+	}, ui.PushDialog(ui.NewProgressDialog("", pl)))
 }
 
-func checkAndAddUpdate(mi *menuItem, msg tea.Msg) (*menuItem, tea.Cmd) {
+func checkAndAddUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
 	out, ok := msg.(checkAndAdd)
 	if !ok {
 		return mi, nil
 	}
 
 	outStr := string(out)
-	mi.info = outStr
-	mi.isDone = mi.state.Issue.CheckBackport.Done() && mi.state.Issue.ReleaseBlocker.Done()
+	mi.Info = outStr
+	mi.IsDone = mi.State.Issue.CheckBackport.Done() && mi.State.Issue.ReleaseBlocker.Done()
 	return mi, nil
 }
