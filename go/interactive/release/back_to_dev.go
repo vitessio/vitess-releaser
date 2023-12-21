@@ -22,6 +22,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
+	"vitess.io/vitess-releaser/go/releaser/release"
 	"vitess.io/vitess-releaser/go/releaser/steps"
 )
 
@@ -44,9 +45,19 @@ func BackToDevModeItem(ctx context.Context) *ui.MenuItem {
 type backToDevModeUrl string
 
 func backToDevModeUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
+	_, ok := msg.(backToDevModeUrl)
+	if !ok {
+		return mi, nil
+	}
+
+	mi.Info = mi.State.Issue.BackToDevMode.URL
+	mi.IsDone = mi.State.Issue.BackToDevMode.Done
 	return mi, nil
 }
 
 func backToDevModeAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
-	return mi, nil
+	pl, back := release.BackToDevMode(mi.State)
+	return mi, tea.Batch(func() tea.Msg {
+		return backToDevModeUrl(back())
+	}, ui.PushDialog(ui.NewProgressDialog("Back To Dev Mode", pl)))
 }
