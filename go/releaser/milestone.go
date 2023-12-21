@@ -23,15 +23,12 @@ import (
 	"strings"
 )
 
-func FindVersionAfterNextRelease(ctx *State) string {
-	CorrectCleanRepo(ctx.VitessRepo)
-	nextRelease, _, _ := FindNextRelease(ctx.MajorRelease)
-
-	if strings.Contains(nextRelease, "rc") {
+func FindVersionAfterNextRelease(state *State) string {
+	if strings.Contains(state.Release, "rc") {
 		panic("RC releases not supported for now")
 	}
 
-	segments := strings.Split(nextRelease, ".")
+	segments := strings.Split(state.Release, ".")
 	if len(segments) != 3 {
 		return ""
 	}

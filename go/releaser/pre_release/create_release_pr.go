@@ -83,16 +83,13 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 		}()
 
 		// setup
-		git.CorrectCleanRepo(state.VitessRepo)
-		nextRelease, branchName, _ := releaser.FindNextRelease(state.MajorRelease)
-
 		pl.NewStepf("Fetch from git remote")
-		remote := git.FindRemoteName(state.VitessRepo)
-		git.ResetHard(remote, branchName)
+		git.CorrectCleanRepo(state.VitessRepo)
+		git.ResetHard(state.Remote, state.ReleaseBranch)
 
-		releasePRName := fmt.Sprintf("[%s] Release of `v%s`", branchName, nextRelease)
+		releasePRName := fmt.Sprintf("[%s] Release of `v%s`", state.ReleaseBranch, state.Release)
 
-		// look for existing code freeze PRs
+		// look for existing PRs
 		pl.NewStepf("Look for an existing Release Pull Request named '%s'", releasePRName)
 		if _, url = github.FindPR(state.VitessRepo, releasePRName); url != "" {
 			pl.TotalSteps = 5 // only 5 total steps in this situation
@@ -102,41 +99,41 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 		}
 
 		// find new branch to create the release
-		pl.NewStepf("Create temporary branch from %s", branchName)
-		newBranchName := git.FindNewGeneratedBranch(remote, branchName, "create-release")
+		pl.NewStepf("Create temporary branch from %s", state.ReleaseBranch)
+		newBranchName := git.FindNewGeneratedBranch(state.Remote, state.ReleaseBranch, "create-release")
 
 		// deactivate code freeze
-		pl.NewStepf("Deactivate code freeze on %s", branchName)
+		pl.NewStepf("Deactivate code freeze on %s", state.ReleaseBranch)
 		deactivateCodeFreeze()
 
-		pl.NewStepf("Commit unfreezing the branch %s", branchName)
-		if !git.CommitAll(fmt.Sprintf("Unfreeze branch %s", branchName)) {
+		pl.NewStepf("Commit unfreezing the branch %s", state.ReleaseBranch)
+		if !git.CommitAll(fmt.Sprintf("Unfreeze branch %s", state.ReleaseBranch)) {
 			commitCount++
-			git.Push(remote, newBranchName)
+			git.Push(state.Remote, newBranchName)
 		}
 
 		pl.NewStepf("Generate the release notes")
-		generateReleaseNotes(state, nextRelease)
+		generateReleaseNotes(state, state.Release)
 
 		pl.NewStepf("Commit the release notes")
 		if !git.CommitAll("Addition of release notes") {
 			commitCount++
-			git.Push(remote, newBranchName)
+			git.Push(state.Remote, newBranchName)
 		}
 
 		pl.NewStepf("Update the code examples")
-		updateExamples(nextRelease, "") // TODO: vitess-operator version not implemented
+		updateExamples(state.Release, "") // TODO: vitess-operator version not implemented
 
 		pl.NewStepf("Update version.go")
-		updateVersionGoFile(nextRelease)
+		UpdateVersionGoFile(state.Release)
 
 		pl.NewStepf("Update the Java directory")
-		updateJavaDir(nextRelease)
+		UpdateJavaDir(state.Release)
 
-		pl.NewStepf("Commit the update to the codebase for the v%s release", nextRelease)
-		if !git.CommitAll(fmt.Sprintf("Update codebase for the v%s release", nextRelease)) {
+		pl.NewStepf("Commit the update to the codebase for the v%s release", state.Release)
+		if !git.CommitAll(fmt.Sprintf("Update codebase for the v%s release", state.Release)) {
 			commitCount++
-			git.Push(remote, newBranchName)
+			git.Push(state.Remote, newBranchName)
 		}
 
 		if commitCount == 0 {
@@ -149,9 +146,9 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 		pl.NewStepf("Create Pull Request")
 		pr := github.PR{
 			Title:  releasePRName,
-			Body:   fmt.Sprintf("Includes the release notes and release commit for the `v%s` release. Once this PR is merged, we will be able to tag `v%s` on the merge commit.", nextRelease, nextRelease),
+			Body:   fmt.Sprintf("Includes the release notes and release commit for the `v%s` release. Once this PR is merged, we will be able to tag `v%s` on the merge commit.", state.Release, state.Release),
 			Branch: newBranchName,
-			Base:   branchName,
+			Base:   state.ReleaseBranch,
 			Labels: []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}, {Name: "Do Not Merge"}},
 		}
 		_, url = pr.Create(state.VitessRepo)
@@ -231,14 +228,14 @@ func updateExamples(newVersion, vtopNewVersion string) {
 	}
 }
 
-func updateVersionGoFile(newVersion string) {
+func UpdateVersionGoFile(newVersion string) {
 	err := os.WriteFile(versionGoFile, []byte(fmt.Sprintf(versionGo, time.Now().Year(), newVersion)), os.ModePerm)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func updateJavaDir(newVersion string) {
+func UpdateJavaDir(newVersion string) {
 	//  cd $ROOT/java || exit 1
 	//  mvn versions:set -DnewVersion=$1
 	cmd := exec.Command("mvn", "versions:set", fmt.Sprintf("-DnewVersion=%s", newVersion))

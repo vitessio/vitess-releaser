@@ -386,12 +386,9 @@ func CreateReleaseIssue(state *State) (*logging.ProgressLogging, func() (int, st
 	}
 
 	return pl, func() (int, string) {
-		CorrectCleanRepo(state.VitessRepo)
-		newRelease, _, _ := FindNextRelease(state.MajorRelease)
-
 		pl.NewStepf("Create Release Issue on GitHub")
 		newIssue := github.Issue{
-			Title:    fmt.Sprintf("Release of v%s", newRelease),
+			Title:    fmt.Sprintf("Release of v%s", state.Release),
 			Body:     state.Issue.toString(),
 			Labels:   []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}},
 			Assignee: "@me",
