@@ -23,7 +23,7 @@ import (
 )
 
 func CheckSummary(state *releaser.State) []string {
-	r, _ := releaser.FindNextRelease(state.MajorRelease)
+	r, _, _ := releaser.FindNextRelease(state.MajorRelease)
 	return []string{
 		"If the release does not contain significant changes (i.e. a small patch release) then this step can be skipped",
 		fmt.Sprintf("The summary file is located in: ./changelog/%s.0/%s/summary.md.", state.MajorRelease, r),

@@ -24,7 +24,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/pre_release"
 	"vitess.io/vitess-releaser/go/interactive/prerequisites"
-	release "vitess.io/vitess-releaser/go/interactive/release"
+	"vitess.io/vitess-releaser/go/interactive/release"
 	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
 )
@@ -109,5 +109,8 @@ func MainScreen(ctx context.Context) {
 }
 
 func subMenu(sub *ui.Menu) func(*ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
-	return func(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) { return mi, ui.PushDialog(sub) }
+	return func(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
+		sub.MoveCursorToNextElem()
+		return mi, ui.PushDialog(sub)
+	}
 }

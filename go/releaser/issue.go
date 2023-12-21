@@ -391,7 +391,7 @@ func CreateReleaseIssue(state *State) (*logging.ProgressLogging, func() (int, st
 
 	return pl, func() (int, string) {
 		CorrectCleanRepo(state.VitessRepo)
-		newRelease, _ := FindNextRelease(state.MajorRelease)
+		newRelease, _, _ := FindNextRelease(state.MajorRelease)
 
 		pl.NewStepf("Create Release Issue on GitHub")
 		newIssue := github.Issue{

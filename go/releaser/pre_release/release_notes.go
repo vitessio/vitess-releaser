@@ -47,20 +47,20 @@ type (
 	}
 
 	releaseNote struct {
-		ctx                        *releaser.State
-		Version, VersionUnderscore string
-		Announcement               string
-		KnownIssues                string
-		AddDetails                 string
-		PathToChangeLogFileOnGH    string
-		ChangeLog                  string
-		ChangeMetrics              string
-		SubDirPath                 string
+		ctx                     *releaser.State
+		Version                 string
+		Announcement            string
+		KnownIssues             string
+		AddDetails              string
+		PathToChangeLogFileOnGH string
+		ChangeLog               string
+		ChangeMetrics           string
+		SubDirPath              string
 	}
 )
 
 var (
-	releaseNotesPath = `changelog/`
+	releaseNotesPathPrefix = `changelog/`
 )
 
 const (
@@ -115,7 +115,7 @@ The entire changelog for this release can be found [here]({{ .PathToChangeLogFil
 	prefixComponent = "Component: "
 )
 
-func generateReleaseNotes(state *releaser.State, version string) {
+func GetReleaseNotesDirPath(version string) string {
 	// There should be 4 sub-matches, input: "14.0.0", output: ["14.0.0", "14", "0", "0"].
 	rx := regexp.MustCompile(`([0-9]+)\.([0-9]+)\.([0-9]+)`)
 	versionMatch := rx.FindStringSubmatch(version)
@@ -125,8 +125,12 @@ func generateReleaseNotes(state *releaser.State, version string) {
 
 	majorVersion := versionMatch[1] + "." + versionMatch[2]
 	patchVersion := versionMatch[1] + "." + versionMatch[2] + "." + versionMatch[3]
-	releaseNotesPath = path.Join(releaseNotesPath, majorVersion, patchVersion)
-	summaryFile := path.Join(releaseNotesPath, "summary.md")
+	return path.Join(releaseNotesPathPrefix, majorVersion, patchVersion)
+}
+
+func generateReleaseNotes(state *releaser.State, version string) {
+	releaseNotesPath := GetReleaseNotesDirPath(version)
+	summaryFile := path.Join(releaseNotesPathPrefix, "summary.md")
 
 	version = "v" + version
 
@@ -136,10 +140,9 @@ func generateReleaseNotes(state *releaser.State, version string) {
 	}
 
 	releaseNotes := releaseNote{
-		ctx:               state,
-		Version:           version,
-		VersionUnderscore: fmt.Sprintf("%s_%s_%s", versionMatch[1], versionMatch[2], versionMatch[3]), // v14.0.0 -> 14_0_0, this is used to format filenames.
-		SubDirPath:        releaseNotesPath,
+		ctx:        state,
+		Version:    version,
+		SubDirPath: releaseNotesPath,
 	}
 
 	// summary of the release
