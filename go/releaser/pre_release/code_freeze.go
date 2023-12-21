@@ -77,8 +77,7 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 
 		pl.NewStepf("Fetch from git remote")
 		git.CorrectCleanRepo(state.VitessRepo)
-		remote := git.FindRemoteName(state.VitessRepo)
-		git.ResetHard(remote, state.ReleaseBranch)
+		git.ResetHard(state.Remote, state.ReleaseBranch)
 
 		codeFreezePRName := fmt.Sprintf("[%s] Code Freeze for `v%s`", state.ReleaseBranch, state.Release)
 
@@ -101,8 +100,8 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 			return ""
 		}
 
-		pl.NewStepf("Create new branch based on %s/%s", remote, state.ReleaseBranch)
-		newBranchName := git.FindNewGeneratedBranch(remote, state.ReleaseBranch, "code-freeze")
+		pl.NewStepf("Create new branch based on %s/%s", state.Remote, state.ReleaseBranch)
+		newBranchName := git.FindNewGeneratedBranch(state.Remote, state.ReleaseBranch, "code-freeze")
 
 		pl.NewStepf("Turn on code freeze on branch %s", newBranchName)
 		activateCodeFreeze()
@@ -114,7 +113,7 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 			done = true
 			return ""
 		}
-		git.Push(remote, newBranchName)
+		git.Push(state.Remote, newBranchName)
 
 		pl.NewStepf("Create Pull Request")
 		pr := github.PR{

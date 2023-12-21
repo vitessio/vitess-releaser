@@ -85,8 +85,7 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 		// setup
 		pl.NewStepf("Fetch from git remote")
 		git.CorrectCleanRepo(state.VitessRepo)
-		remote := git.FindRemoteName(state.VitessRepo)
-		git.ResetHard(remote, state.ReleaseBranch)
+		git.ResetHard(state.Remote, state.ReleaseBranch)
 
 		releasePRName := fmt.Sprintf("[%s] Release of `v%s`", state.ReleaseBranch, state.Release)
 
@@ -101,7 +100,7 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 
 		// find new branch to create the release
 		pl.NewStepf("Create temporary branch from %s", state.ReleaseBranch)
-		newBranchName := git.FindNewGeneratedBranch(remote, state.ReleaseBranch, "create-release")
+		newBranchName := git.FindNewGeneratedBranch(state.Remote, state.ReleaseBranch, "create-release")
 
 		// deactivate code freeze
 		pl.NewStepf("Deactivate code freeze on %s", state.ReleaseBranch)
@@ -110,7 +109,7 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 		pl.NewStepf("Commit unfreezing the branch %s", state.ReleaseBranch)
 		if !git.CommitAll(fmt.Sprintf("Unfreeze branch %s", state.ReleaseBranch)) {
 			commitCount++
-			git.Push(remote, newBranchName)
+			git.Push(state.Remote, newBranchName)
 		}
 
 		pl.NewStepf("Generate the release notes")
@@ -119,7 +118,7 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 		pl.NewStepf("Commit the release notes")
 		if !git.CommitAll("Addition of release notes") {
 			commitCount++
-			git.Push(remote, newBranchName)
+			git.Push(state.Remote, newBranchName)
 		}
 
 		pl.NewStepf("Update the code examples")
@@ -134,7 +133,7 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 		pl.NewStepf("Commit the update to the codebase for the v%s release", state.Release)
 		if !git.CommitAll(fmt.Sprintf("Update codebase for the v%s release", state.Release)) {
 			commitCount++
-			git.Push(remote, newBranchName)
+			git.Push(state.Remote, newBranchName)
 		}
 
 		if commitCount == 0 {

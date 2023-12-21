@@ -89,6 +89,7 @@ func Execute() {
 	release, releaseBranch, isLatestRelease := releaser.FindNextRelease(remote, s.MajorRelease)
 	issueNb, issueLink, releaseFromIssue := github.GetReleaseIssueInfo(s.VitessRepo, s.MajorRelease)
 
+	s.Remote = remote
 	s.ReleaseBranch = releaseBranch
 	s.IsLatestRelease = isLatestRelease
 	s.IssueNbGH = issueNb

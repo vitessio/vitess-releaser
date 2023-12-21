@@ -46,8 +46,7 @@ func BackToDevMode(state *releaser.State) (*logging.ProgressLogging, func() stri
 
 		pl.NewStepf("Fetch from git remote")
 		git.CorrectCleanRepo(state.VitessRepo)
-		remote := git.FindRemoteName(state.VitessRepo)
-		git.ResetHard(remote, state.ReleaseBranch)
+		git.ResetHard(state.Remote, state.ReleaseBranch)
 
 		nextNextRelease := releaser.FindVersionAfterNextRelease(state)
 		devModeRelease := fmt.Sprintf("%s-SNAPSHOT", nextNextRelease)
@@ -63,8 +62,8 @@ func BackToDevMode(state *releaser.State) (*logging.ProgressLogging, func() stri
 			return url
 		}
 
-		pl.NewStepf("Create new branch based on %s/%s", remote, state.ReleaseBranch)
-		newBranchName := git.FindNewGeneratedBranch(remote, state.ReleaseBranch, "back-to-dev-mode")
+		pl.NewStepf("Create new branch based on %s/%s", state.Remote, state.ReleaseBranch)
+		newBranchName := git.FindNewGeneratedBranch(state.Remote, state.ReleaseBranch, "back-to-dev-mode")
 
 		pl.NewStepf("Update version.go")
 		pre_release.UpdateVersionGoFile(devModeRelease)
@@ -79,7 +78,7 @@ func BackToDevMode(state *releaser.State) (*logging.ProgressLogging, func() stri
 			done = true
 			return ""
 		}
-		git.Push(remote, newBranchName)
+		git.Push(state.Remote, newBranchName)
 
 		pl.NewStepf("Create Pull Request")
 		pr := github.PR{

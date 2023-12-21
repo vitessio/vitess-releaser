@@ -37,19 +37,18 @@ func TagRelease(state *releaser.State) (*logging.ProgressLogging, func() string)
 	return pl, func() string {
 		pl.NewStepf("Fetch from git remote")
 		git.CorrectCleanRepo(state.VitessRepo)
-		remote := git.FindRemoteName(state.VitessRepo)
-		git.ResetHard(remote, state.ReleaseBranch)
+		git.ResetHard(state.Remote, state.ReleaseBranch)
 
 		pl.NewStepf("Create and push the tags")
 		gitTag := fmt.Sprintf("v%s", state.Release)
-		git.TagAndPush(remote, gitTag)
+		git.TagAndPush(state.Remote, gitTag)
 		// we also need to tag and push the Go doc tag
 		// i.e. if we release v17.0.1, we also want to tag: v0.17.1
 		nextReleaseSplit := strings.Split(state.Release, ".")
 		if len(nextReleaseSplit) != 3 {
 			log.Fatalf("%s was not formated x.x.x", state.Release)
 		}
-		git.TagAndPush(remote, fmt.Sprintf("v0.%s.%s", nextReleaseSplit[0], nextReleaseSplit[2]))
+		git.TagAndPush(state.Remote, fmt.Sprintf("v0.%s.%s", nextReleaseSplit[0], nextReleaseSplit[2]))
 
 		pl.NewStepf("Create the release on the GitHub UI")
 		releaseNotesPath := path.Join(pre_release.GetReleaseNotesDirPath(state.Release), "release_notes.md")
