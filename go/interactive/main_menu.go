@@ -54,7 +54,6 @@ func MainScreen(ctx context.Context) {
 		"Release",
 		release.MergeReleasePRItem(ctx),
 		release.TagReleaseItem(ctx),
-		release.JavaReleaseItem(ctx),
 		release.ReleaseNotesOnMainItem(ctx),
 		release.BackToDevModeItem(ctx),
 		release.WebsiteDocumentationItem(ctx),
