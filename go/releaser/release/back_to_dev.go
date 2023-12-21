@@ -44,17 +44,15 @@ func BackToDevMode(state *releaser.State) (*logging.ProgressLogging, func() stri
 			pl.NewStepf("Issue updated, see: %s", issueLink)
 		}()
 
-		git.CorrectCleanRepo(state.VitessRepo)
-		nextRelease, branchName, _ := releaser.FindNextRelease(state.MajorRelease)
-
 		pl.NewStepf("Fetch from git remote")
+		git.CorrectCleanRepo(state.VitessRepo)
 		remote := git.FindRemoteName(state.VitessRepo)
-		git.ResetHard(remote, branchName)
+		git.ResetHard(remote, state.ReleaseBranch)
 
 		nextNextRelease := releaser.FindVersionAfterNextRelease(state)
 		devModeRelease := fmt.Sprintf("%s-SNAPSHOT", nextNextRelease)
 
-		backToDevModePRName := fmt.Sprintf("[%s] Bump to `v%s` after the `v%s` release", branchName, devModeRelease, nextRelease)
+		backToDevModePRName := fmt.Sprintf("[%s] Bump to `v%s` after the `v%s` release", state.ReleaseBranch, devModeRelease, state.Release)
 
 		// look for existing PRs
 		pl.NewStepf("Look for an existing Pull Request named '%s'", backToDevModePRName)
@@ -65,8 +63,8 @@ func BackToDevMode(state *releaser.State) (*logging.ProgressLogging, func() stri
 			return url
 		}
 
-		pl.NewStepf("Create new branch based on %s/%s", remote, branchName)
-		newBranchName := git.FindNewGeneratedBranch(remote, branchName, "back-to-dev-mode")
+		pl.NewStepf("Create new branch based on %s/%s", remote, state.ReleaseBranch)
+		newBranchName := git.FindNewGeneratedBranch(remote, state.ReleaseBranch, "back-to-dev-mode")
 
 		pl.NewStepf("Update version.go")
 		pre_release.UpdateVersionGoFile(devModeRelease)
@@ -86,9 +84,9 @@ func BackToDevMode(state *releaser.State) (*logging.ProgressLogging, func() stri
 		pl.NewStepf("Create Pull Request")
 		pr := github.PR{
 			Title:  backToDevModePRName,
-			Body:   fmt.Sprintf("Includes the changes required to go back into dev mode (v%s) after the release of v%s.", devModeRelease, nextRelease),
+			Body:   fmt.Sprintf("Includes the changes required to go back into dev mode (v%s) after the release of v%s.", devModeRelease, state.Release),
 			Branch: newBranchName,
-			Base:   branchName,
+			Base:   state.ReleaseBranch,
 			Labels: []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}},
 		}
 		_, url = pr.Create(state.VitessRepo)

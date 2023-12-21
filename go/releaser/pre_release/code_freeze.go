@@ -75,14 +75,12 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 			pl.NewStepf("Issue updated, see: %s", issueLink)
 		}()
 
-		git.CorrectCleanRepo(state.VitessRepo)
-		nextRelease, branchName, _ := releaser.FindNextRelease(state.MajorRelease)
-
 		pl.NewStepf("Fetch from git remote")
+		git.CorrectCleanRepo(state.VitessRepo)
 		remote := git.FindRemoteName(state.VitessRepo)
-		git.ResetHard(remote, branchName)
+		git.ResetHard(remote, state.ReleaseBranch)
 
-		codeFreezePRName := fmt.Sprintf("[%s] Code Freeze for `v%s`", branchName, nextRelease)
+		codeFreezePRName := fmt.Sprintf("[%s] Code Freeze for `v%s`", state.ReleaseBranch, state.Release)
 
 		// look for existing code freeze PRs
 		pl.NewStepf("Look for an existing Code Freeze Pull Request named '%s'", codeFreezePRName)
@@ -95,22 +93,22 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 		}
 
 		// check if the branch is already frozen or not
-		pl.NewStepf("Check if branch %s is already frozen", branchName)
+		pl.NewStepf("Check if branch %s is already frozen", state.ReleaseBranch)
 		if isCurrentBranchFrozen() {
 			pl.TotalSteps = 6 // only 6 total steps in this situation
-			pl.NewStepf("Branch %s is already frozen, no action needed.", branchName)
+			pl.NewStepf("Branch %s is already frozen, no action needed.", state.ReleaseBranch)
 			done = true
 			return ""
 		}
 
-		pl.NewStepf("Create new branch based on %s/%s", remote, branchName)
-		newBranchName := git.FindNewGeneratedBranch(remote, branchName, "code-freeze")
+		pl.NewStepf("Create new branch based on %s/%s", remote, state.ReleaseBranch)
+		newBranchName := git.FindNewGeneratedBranch(remote, state.ReleaseBranch, "code-freeze")
 
 		pl.NewStepf("Turn on code freeze on branch %s", newBranchName)
 		activateCodeFreeze()
 
 		pl.NewStepf("Commit and push to branch %s", newBranchName)
-		if git.CommitAll(fmt.Sprintf("Code Freeze of %s", branchName)) {
+		if git.CommitAll(fmt.Sprintf("Code Freeze of %s", state.ReleaseBranch)) {
 			pl.TotalSteps = 9 // only 9 total steps in this situation
 			pl.NewStepf("Nothing to commit, seems like code freeze is already done.")
 			done = true
@@ -121,9 +119,9 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 		pl.NewStepf("Create Pull Request")
 		pr := github.PR{
 			Title:  codeFreezePRName,
-			Body:   fmt.Sprintf("This Pull Request freezes the branch `%s` for `v%s`", branchName, nextRelease),
+			Body:   fmt.Sprintf("This Pull Request freezes the branch `%s` for `v%s`", state.ReleaseBranch, state.Release),
 			Branch: newBranchName,
-			Base:   branchName,
+			Base:   state.ReleaseBranch,
 			Labels: []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}},
 		}
 		nb, url = pr.Create(state.VitessRepo)

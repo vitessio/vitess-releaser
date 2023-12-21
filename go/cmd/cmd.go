@@ -84,9 +84,19 @@ func Execute() {
 	s.MajorRelease = releaseVersion
 
 	git.CorrectCleanRepo(s.VitessRepo)
-	nextRelease, _, _ := releaser.FindNextRelease(s.MajorRelease)
 
-	s.IssueNbGH, s.IssueLink = github.GetReleaseIssueInfo(s.VitessRepo, nextRelease)
+	remote := git.FindRemoteName(s.VitessRepo)
+	release, releaseBranch, isLatestRelease := releaser.FindNextRelease(remote, s.MajorRelease)
+	issueNb, issueLink, releaseFromIssue := github.GetReleaseIssueInfo(s.VitessRepo, s.MajorRelease)
+
+	s.ReleaseBranch = releaseBranch
+	s.IsLatestRelease = isLatestRelease
+	s.IssueNbGH = issueNb
+	s.IssueLink = issueLink
+	s.Release = releaseFromIssue
+	if releaseFromIssue == "" {
+		s.Release = release
+	}
 
 	// We only require the release date if the release issue does not exist on GH
 	// If the issue already exist we ignore the flag, the value will be loaded from the Issue

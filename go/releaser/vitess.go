@@ -36,8 +36,9 @@ import (
 // Secondly, if the release we want to use is not on the main branch, it checks out
 // to a release branch matching the given major release number. The SNAPSHOT version
 // on that release branch is then returned.
-func FindNextRelease(majorRelease string) (string, string, bool) {
+func FindNextRelease(remote, majorRelease string) (string, string, bool) {
 	git.Checkout("main")
+	git.ResetHard(remote, "main")
 
 	currentRelease := getCurrentRelease()
 	mainMajor := releaseToMajor(currentRelease)
@@ -49,6 +50,7 @@ func FindNextRelease(majorRelease string) (string, string, bool) {
 	// main branch does not match, let's try release branches
 	branchName := fmt.Sprintf("release-%s.0", majorRelease)
 	git.Checkout(branchName)
+	git.ResetHard(remote, branchName)
 
 	currentRelease = getCurrentRelease()
 	major := releaseToMajor(currentRelease)

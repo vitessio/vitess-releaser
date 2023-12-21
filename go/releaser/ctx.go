@@ -33,9 +33,12 @@ func WrapState(ctx context.Context, s *State) context.Context {
 }
 
 type State struct {
-	VitessRepo   string
-	MajorRelease string
-	IssueNbGH    int
-	IssueLink    string
-	Issue        Issue
+	VitessRepo      string
+	MajorRelease    string
+	IssueNbGH       int
+	IssueLink       string
+	Issue           Issue
+	ReleaseBranch   string
+	IsLatestRelease bool
+	Release         string
 }

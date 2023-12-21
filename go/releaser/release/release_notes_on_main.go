@@ -44,17 +44,15 @@ func ReleaseNotesOnMain(state *releaser.State) (*logging.ProgressLogging, func()
 			pl.NewStepf("Issue updated, see: %s", issueLink)
 		}()
 
-		git.CorrectCleanRepo(state.VitessRepo)
-		nextRelease, branchName, _ := releaser.FindNextRelease(state.MajorRelease)
-
 		pl.NewStepf("Fetch from git remote")
+		git.CorrectCleanRepo(state.VitessRepo)
 		remote := git.FindRemoteName(state.VitessRepo)
-		git.ResetHard(remote, branchName)
+		git.ResetHard(remote, state.ReleaseBranch)
 
 		git.Checkout("main")
 		git.ResetHard(remote, "main")
 
-		prName := fmt.Sprintf("Copy `v%s` release notes on `main`", nextRelease)
+		prName := fmt.Sprintf("Copy `v%s` release notes on `main`", state.Release)
 
 		pl.NewStepf("Look for an existing Pull Request named '%s'", prName)
 		if _, url = github.FindPR(state.VitessRepo, prName); url != "" {
@@ -67,12 +65,12 @@ func ReleaseNotesOnMain(state *releaser.State) (*logging.ProgressLogging, func()
 		pl.NewStepf("Create new branch based on %s/main", remote)
 		newBranchName := git.FindNewGeneratedBranch(remote, "main", "release-notes-main")
 
-		pl.NewStepf("Copy release notes from %s/%s", remote, branchName)
-		releaseNotesPath := pre_release.GetReleaseNotesDirPathForMajor(nextRelease)
-		git.CheckoutPath(remote, branchName, releaseNotesPath)
+		pl.NewStepf("Copy release notes from %s/%s", remote, state.ReleaseBranch)
+		releaseNotesPath := pre_release.GetReleaseNotesDirPathForMajor(state.Release)
+		git.CheckoutPath(remote, state.ReleaseBranch, releaseNotesPath)
 
 		pl.NewStepf("Commit and push to branch %s", newBranchName)
-		if git.CommitAll(fmt.Sprintf("Copy release notes from %s into main", branchName)) {
+		if git.CommitAll(fmt.Sprintf("Copy release notes from %s into main", state.ReleaseBranch)) {
 			pl.TotalSteps = 8 // only 8 total steps in this situation
 			pl.NewStepf("Nothing to commit, seems like the release notes have already been copied")
 			done = true
@@ -83,7 +81,7 @@ func ReleaseNotesOnMain(state *releaser.State) (*logging.ProgressLogging, func()
 		pl.NewStepf("Create Pull Request")
 		pr := github.PR{
 			Title:  prName,
-			Body:   fmt.Sprintf("This Pull Request copies the release notes found on `%s` to keep release notes up-to-date after the `v%s` release.", branchName, nextRelease),
+			Body:   fmt.Sprintf("This Pull Request copies the release notes found on `%s` to keep release notes up-to-date after the `v%s` release.", state.ReleaseBranch, state.Release),
 			Branch: newBranchName,
 			Base:   "main",
 			Labels: []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}},
