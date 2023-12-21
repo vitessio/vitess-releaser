@@ -28,11 +28,11 @@ const (
 )
 
 func AnnouncementMessage(state *releaser.State) string {
-	newRelease, _ := releaser.FindNextRelease(state.MajorRelease)
+	newRelease, _, _ := releaser.FindNextRelease(state.MajorRelease)
 	return fmt.Sprintf(preRequisiteSlackMessage, newRelease, state.Issue.Date.Format("Mon _2 Jan"))
 }
 
 func PostReleaseMessage(state *releaser.State) string {
-	newRelease, _ := releaser.FindNextRelease(state.MajorRelease)
+	newRelease, _, _ := releaser.FindNextRelease(state.MajorRelease)
 	return fmt.Sprintf(postReleaseSlackMessage, newRelease, state.VitessRepo, newRelease)
 }

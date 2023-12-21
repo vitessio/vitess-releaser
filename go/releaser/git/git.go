@@ -166,3 +166,11 @@ func TagAndPush(remote, tag string) {
 		log.Fatalf("%s: %s", err, out)
 	}
 }
+
+func GetSHAForGitRef(ref string) string {
+	out, err := exec.Command("git", "rev-parse", ref).CombinedOutput()
+	if err != nil {
+		log.Fatalf("%s: %s", err, out)
+	}
+	return strings.ReplaceAll(string(out), "\n", "")
+}

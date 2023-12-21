@@ -14,19 +14,36 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package prerequisite
+package github
 
 import (
 	"fmt"
+	"log"
 
-	"vitess.io/vitess-releaser/go/releaser"
+	"github.com/cli/go-gh"
+	"vitess.io/vitess-releaser/go/releaser/git"
 )
 
-func CheckSummary(state *releaser.State) []string {
-	r, _, _ := releaser.FindNextRelease(state.MajorRelease)
-	return []string{
-		"If the release does not contain significant changes (i.e. a small patch release) then this step can be skipped",
-		fmt.Sprintf("The summary file is located in: ./changelog/%s.0/%s/summary.md.", state.MajorRelease, r),
-		"The summary file for a release candidate is the same as the one for the GA release.",
+func CreateRelease(repo, tag, notesFilePath string, latest bool) (url string) {
+	target := git.GetSHAForGitRef(tag)
+
+	args := []string{
+		"release", "create",
+		"--repo", repo,
+		"--title", fmt.Sprintf("Vitess %s", tag),
+		"-F", notesFilePath,
+		"--target", target,
+		"--verify-tag",
 	}
+
+	if latest {
+		args = append(args, "--latest")
+	}
+
+	args = append(args, tag)
+	stdOut, _, err := gh.Exec(args...)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return stdOut.String()
 }

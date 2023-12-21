@@ -20,13 +20,15 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
+	"strconv"
 	"strings"
 
 	"vitess.io/vitess-releaser/go/releaser/git"
 )
 
 // FindNextRelease finds the next release that needs to be released for the given
-// major release increment.
+// major release increment. And also tell whether this release is going to be the
+// latest release of Vitess or not.
 //
 // First, it tries to figure out if the major release we want to use is on main, if
 // it is, it returns the SNAPSHOT version of the main branch.
@@ -34,14 +36,14 @@ import (
 // Secondly, if the release we want to use is not on the main branch, it checks out
 // to a release branch matching the given major release number. The SNAPSHOT version
 // on that release branch is then returned.
-func FindNextRelease(majorRelease string) (string, string) {
+func FindNextRelease(majorRelease string) (string, string, bool) {
 	git.Checkout("main")
 
 	currentRelease := getCurrentRelease()
-	major := releaseToMajor(currentRelease)
+	mainMajor := releaseToMajor(currentRelease)
 
-	if major == majorRelease {
-		return currentRelease, "main"
+	if mainMajor == majorRelease {
+		return currentRelease, "main", true
 	}
 
 	// main branch does not match, let's try release branches
@@ -49,14 +51,23 @@ func FindNextRelease(majorRelease string) (string, string) {
 	git.Checkout(branchName)
 
 	currentRelease = getCurrentRelease()
-	major = releaseToMajor(currentRelease)
+	major := releaseToMajor(currentRelease)
 
 	// if the current release and the wanted release are different, it means there is an
 	// error, we were not able to find the proper branch / corresponding release
 	if major != majorRelease {
 		log.Fatalf("on branch '%s', could not find the corresponding major release '%s'", branchName, majorRelease)
 	}
-	return currentRelease, branchName
+
+	mainMajorNb, err := strconv.Atoi(mainMajor)
+	if err != nil {
+		log.Fatal(err)
+	}
+	majorNb, err := strconv.Atoi(major)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return currentRelease, branchName, mainMajorNb-1 == majorNb
 }
 
 func getCurrentRelease() string {

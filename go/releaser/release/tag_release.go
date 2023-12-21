@@ -18,39 +18,44 @@ package release
 
 import (
 	"fmt"
-	"log"
-	"strings"
+	"path"
 
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/git"
+	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/logging"
+	"vitess.io/vitess-releaser/go/releaser/pre_release"
 )
 
 func TagRelease(state *releaser.State) (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
-		TotalSteps: 12,
+		TotalSteps: 4,
 	}
 
 	return pl, func() string {
 		git.CorrectCleanRepo(state.VitessRepo)
-		nextRelease, branchName := releaser.FindNextRelease(state.MajorRelease)
+		nextRelease, branchName, latest := releaser.FindNextRelease(state.MajorRelease)
 
 		pl.NewStepf("Fetch from git remote")
 		remote := git.FindRemoteName(state.VitessRepo)
 		git.ResetHard(remote, branchName)
 
 		pl.NewStepf("Create and push the tags")
-		git.TagAndPush(remote, fmt.Sprintf("v%s", nextRelease))
-		// we also need to tag and push the Go doc tag
-		// i.e. if we release v17.0.1, we also want to tag: v0.17.1
-		nextReleaseSplit := strings.Split(nextRelease, ".")
-		if len(nextReleaseSplit) != 3 {
-			log.Fatalf("%s was not formated x.x.x", nextRelease)
-		}
-		git.TagAndPush(remote, fmt.Sprintf("v0.%s.%s", nextReleaseSplit[0], nextReleaseSplit[2]))
+		gitTag := fmt.Sprintf("v%s", nextRelease)
+		// git.TagAndPush(remote, gitTag)
+		// // we also need to tag and push the Go doc tag
+		// // i.e. if we release v17.0.1, we also want to tag: v0.17.1
+		// nextReleaseSplit := strings.Split(nextRelease, ".")
+		// if len(nextReleaseSplit) != 3 {
+		// 	log.Fatalf("%s was not formated x.x.x", nextRelease)
+		// }
+		// git.TagAndPush(remote, fmt.Sprintf("v0.%s.%s", nextReleaseSplit[0], nextReleaseSplit[2]))
 
-		// TODO: create the release on the UI
+		pl.NewStepf("Create the release on the GitHub UI")
+		releaseNotesPath := path.Join(pre_release.GetReleaseNotesDirPath(nextRelease), "release_notes.md")
+		url := github.CreateRelease(state.VitessRepo, gitTag, releaseNotesPath, latest)
 
-		return ""
+		pl.NewStepf("Done %s", url)
+		return url
 	}
 }

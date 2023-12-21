@@ -84,7 +84,7 @@ func Execute() {
 	s.MajorRelease = releaseVersion
 
 	git.CorrectCleanRepo(s.VitessRepo)
-	nextRelease, _ := releaser.FindNextRelease(s.MajorRelease)
+	nextRelease, _, _ := releaser.FindNextRelease(s.MajorRelease)
 
 	s.IssueNbGH, s.IssueLink = github.GetReleaseIssueInfo(s.VitessRepo, nextRelease)
 

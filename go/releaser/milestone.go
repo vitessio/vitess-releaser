@@ -25,7 +25,7 @@ import (
 
 func FindVersionAfterNextRelease(ctx *State) string {
 	CorrectCleanRepo(ctx.VitessRepo)
-	nextRelease, _ := FindNextRelease(ctx.MajorRelease)
+	nextRelease, _, _ := FindNextRelease(ctx.MajorRelease)
 
 	if strings.Contains(nextRelease, "rc") {
 		panic("RC releases not supported for now")

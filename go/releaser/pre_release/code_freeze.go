@@ -76,7 +76,7 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 		}()
 
 		git.CorrectCleanRepo(state.VitessRepo)
-		nextRelease, branchName := releaser.FindNextRelease(state.MajorRelease)
+		nextRelease, branchName, _ := releaser.FindNextRelease(state.MajorRelease)
 
 		pl.NewStepf("Fetch from git remote")
 		remote := git.FindRemoteName(state.VitessRepo)
