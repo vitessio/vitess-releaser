@@ -65,7 +65,6 @@ const (
 	// Release
 	mergeReleasePRItem   = "Merge the Release PR."
 	tagReleaseItem       = "Tag the release."
-	javaReleaseItem      = "Java release."
 	releaseNotesMainItem = "Update release notes on main."
 	backToDevItem        = "Go back to dev mode on the release branch."
 	websiteDocItem       = "Update the website documentation."
@@ -108,7 +107,6 @@ type (
 		// Release
 		MergeReleasePR       ItemWithLink
 		TagRelease           ItemWithLink
-		JavaRelease          bool
 		ReleaseNotesOnMain   ItemWithLink
 		BackToDevMode        ItemWithLink
 		WebsiteDocumentation ItemWithLink
@@ -163,7 +161,6 @@ const (
 {{- if .TagRelease.URL }}
   - {{ .TagRelease.URL }}
 {{- end }}
-- [{{fmtStatus .JavaRelease}}] Java release.
 - [{{fmtStatus .ReleaseNotesOnMain.Done}}] Update release notes on main.
 {{- if .ReleaseNotesOnMain.URL }}
   - {{ .ReleaseNotesOnMain.URL }}
@@ -280,9 +277,6 @@ func (ctx *State) LoadIssue() {
 				if isNextLineAList(lines, i) {
 					s = stateReadingTagReleaseItem
 				}
-			}
-			if strings.Contains(line, javaReleaseItem) {
-				newIssue.JavaRelease = strings.HasPrefix(line, markdownItemDone)
 			}
 			if strings.Contains(line, releaseNotesMainItem) {
 				newIssue.ReleaseNotesOnMain.Done = strings.HasPrefix(line, markdownItemDone)
