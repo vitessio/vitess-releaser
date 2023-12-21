@@ -325,6 +325,8 @@ func (ctx *State) LoadIssue() {
 			newIssue.NewGitHubMilestone.URL = handleSingleTextItem(line, &s)
 		case stateReadingMergedReleasePRItem:
 			newIssue.MergeReleasePR.URL = handleSingleTextItem(line, &s)
+		case stateReadingTagReleaseItem:
+			newIssue.TagRelease.URL = handleSingleTextItem(line, &s)
 		case stateReadingReleaseNotesMainItem:
 			newIssue.ReleaseNotesOnMain.URL = handleSingleTextItem(line, &s)
 		case stateReadingBackToDevModeItem:
