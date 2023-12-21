@@ -87,12 +87,3 @@ func getCurrentRelease() string {
 func releaseToMajor(release string) string {
 	return release[:strings.Index(release, ".")]
 }
-
-func CorrectCleanRepo(repo string) {
-	if !git.CheckCurrentRepo(repo + ".git") {
-		log.Fatalf("the tool should be run from the %s repository directory", repo)
-	}
-	if !git.CleanLocalState() {
-		log.Fatal("the vitess repository should have a clean state")
-	}
-}
