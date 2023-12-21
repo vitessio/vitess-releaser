@@ -116,6 +116,16 @@ The entire changelog for this release can be found [here]({{ .PathToChangeLogFil
 )
 
 func GetReleaseNotesDirPath(version string) string {
+	prefix, major, patch := getSegmentOfReleaseNotesDir(version)
+	return path.Join(prefix, major, patch)
+}
+
+func GetReleaseNotesDirPathForMajor(version string) string {
+	prefix, major, _ := getSegmentOfReleaseNotesDir(version)
+	return path.Join(prefix, major)
+}
+
+func getSegmentOfReleaseNotesDir(version string) (prefix string, major string, patch string) {
 	// There should be 4 sub-matches, input: "14.0.0", output: ["14.0.0", "14", "0", "0"].
 	rx := regexp.MustCompile(`([0-9]+)\.([0-9]+)\.([0-9]+)`)
 	versionMatch := rx.FindStringSubmatch(version)
@@ -125,7 +135,7 @@ func GetReleaseNotesDirPath(version string) string {
 
 	majorVersion := versionMatch[1] + "." + versionMatch[2]
 	patchVersion := versionMatch[1] + "." + versionMatch[2] + "." + versionMatch[3]
-	return path.Join(releaseNotesPathPrefix, majorVersion, patchVersion)
+	return releaseNotesPathPrefix, majorVersion, patchVersion
 }
 
 func generateReleaseNotes(state *releaser.State, version string) {

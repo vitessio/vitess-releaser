@@ -22,6 +22,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
+	"vitess.io/vitess-releaser/go/releaser/release"
 	"vitess.io/vitess-releaser/go/releaser/steps"
 )
 
@@ -44,9 +45,19 @@ func ReleaseNotesOnMainItem(ctx context.Context) *ui.MenuItem {
 type releaseNotesOnMainUrl string
 
 func releaseNotesOnMainUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
+	_, ok := msg.(releaseNotesOnMainUrl)
+	if !ok {
+		return mi, nil
+	}
+
+	mi.Info = mi.State.Issue.CodeFreeze.URL
+	mi.IsDone = mi.State.Issue.CodeFreeze.Done
 	return mi, nil
 }
 
 func releaseNotesOnMainAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
-	return mi, nil
+	pl, fn := release.ReleaseNotesOnMain(mi.State)
+	return mi, tea.Batch(func() tea.Msg {
+		return releaseNotesOnMainUrl(fn())
+	}, ui.PushDialog(ui.NewProgressDialog("Release Notes on Main", pl)))
 }

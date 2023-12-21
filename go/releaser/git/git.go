@@ -178,3 +178,10 @@ func GetSHAForGitRef(ref string) string {
 	}
 	return strings.ReplaceAll(string(out), "\n", "")
 }
+
+func CheckoutPath(remote, branch, path string) {
+	out, err := exec.Command("git", "checkout", fmt.Sprintf("%s/%s", remote, branch), path).CombinedOutput()
+	if err != nil {
+		log.Fatalf("%s: %s", err, out)
+	}
+}
