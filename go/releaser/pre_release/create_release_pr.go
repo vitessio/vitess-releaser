@@ -92,7 +92,7 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 
 		releasePRName := fmt.Sprintf("[%s] Release of `v%s`", branchName, nextRelease)
 
-		// look for existing code freeze PRs
+		// look for existing PRs
 		pl.NewStepf("Look for an existing Release Pull Request named '%s'", releasePRName)
 		if _, url = github.FindPR(state.VitessRepo, releasePRName); url != "" {
 			pl.TotalSteps = 5 // only 5 total steps in this situation
@@ -128,10 +128,10 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 		updateExamples(nextRelease, "") // TODO: vitess-operator version not implemented
 
 		pl.NewStepf("Update version.go")
-		updateVersionGoFile(nextRelease)
+		UpdateVersionGoFile(nextRelease)
 
 		pl.NewStepf("Update the Java directory")
-		updateJavaDir(nextRelease)
+		UpdateJavaDir(nextRelease)
 
 		pl.NewStepf("Commit the update to the codebase for the v%s release", nextRelease)
 		if !git.CommitAll(fmt.Sprintf("Update codebase for the v%s release", nextRelease)) {
@@ -231,14 +231,14 @@ func updateExamples(newVersion, vtopNewVersion string) {
 	}
 }
 
-func updateVersionGoFile(newVersion string) {
+func UpdateVersionGoFile(newVersion string) {
 	err := os.WriteFile(versionGoFile, []byte(fmt.Sprintf(versionGo, time.Now().Year(), newVersion)), os.ModePerm)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func updateJavaDir(newVersion string) {
+func UpdateJavaDir(newVersion string) {
 	//  cd $ROOT/java || exit 1
 	//  mvn versions:set -DnewVersion=$1
 	cmd := exec.Command("mvn", "versions:set", fmt.Sprintf("-DnewVersion=%s", newVersion))
