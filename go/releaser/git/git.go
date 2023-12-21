@@ -155,9 +155,12 @@ func FindNewGeneratedBranch(remote, baseBranch, branchName string) string {
 	return newBranch
 }
 
-func TagAndPush(remote, tag string) {
+func TagAndPush(remote, tag string) (exists bool) {
 	out, err := exec.Command("git", "tag", tag).CombinedOutput()
 	if err != nil {
+		if strings.Contains(string(out), "already exists") {
+			return true
+		}
 		log.Fatalf("%s: %s", err, out)
 	}
 
@@ -165,6 +168,7 @@ func TagAndPush(remote, tag string) {
 	if err != nil {
 		log.Fatalf("%s: %s", err, out)
 	}
+	return false
 }
 
 func GetSHAForGitRef(ref string) string {
