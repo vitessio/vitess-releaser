@@ -435,3 +435,22 @@ func (i *Issue) toString() string {
 	}
 	return b.String()
 }
+
+func CloseReleaseIssue(state *State) (*logging.ProgressLogging, func() string) {
+	pl := &logging.ProgressLogging{
+		TotalSteps: 4,
+	}
+
+	return pl, func() string {
+		pl.NewStepf("Closing Release Issue")
+		github.CloseReleaseIssue(state.VitessRepo, state.IssueNbGH)
+		state.Issue.CloseIssue = true
+		pl.NewStepf("Issue closed: %s", state.IssueLink)
+
+		pl.NewStepf("Update Issue %s on GitHub", state.IssueLink)
+		_, fn := state.UploadIssue()
+		issueLink := fn()
+		pl.NewStepf("Issue updated, see: %s", issueLink)
+		return state.IssueLink
+	}
+}

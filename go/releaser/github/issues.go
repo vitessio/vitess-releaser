@@ -36,6 +36,19 @@ type Issue struct {
 	Number   int     `json:"number"`
 }
 
+func CloseReleaseIssue(repo string, nb int) {
+	_, _, err := gh.Exec(
+		"issue", "close",
+		"--repo", repo,
+		strconv.Itoa(nb),
+		"--reason", "completed",
+		"--comment", fmt.Sprintf("Release completed."),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 // Create will open the issue on GitHub and return the link of the newly created issue
 func (i *Issue) Create(repo string) string {
 	var labels []string

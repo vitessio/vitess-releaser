@@ -22,7 +22,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/post_release"
 	"vitess.io/vitess-releaser/go/releaser/steps"
 )
 
@@ -51,7 +50,7 @@ func closeIssueUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
 }
 
 func closeIssueAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
-	pl, fn := post_release.CloseIssue(mi.State)
+	pl, fn := releaser.CloseReleaseIssue(mi.State)
 	return mi, tea.Batch(func() tea.Msg {
 		return closeIssueUrl(fn())
 	}, ui.PushDialog(ui.NewProgressDialog("Close Issue", pl)))
