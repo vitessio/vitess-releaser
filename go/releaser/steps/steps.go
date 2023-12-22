@@ -43,4 +43,6 @@ const (
 
 	// Post-Release
 	SlackAnnouncementPost = "Slack Announcement Post-Release"
+	Twitter               = "Twitter"
+	CloseIssue            = "Close Issue"
 )

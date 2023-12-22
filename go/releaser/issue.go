@@ -74,6 +74,8 @@ const (
 
 	// Post-Release
 	postSlackAnnouncementItem = "Notify the community on Slack for the new release."
+	twitterItem               = "Twitter announcement."
+	closeReleaseItem          = "Close this Issue."
 )
 
 type (
@@ -116,6 +118,8 @@ type (
 
 		// Post-Release
 		SlackPostRelease bool
+		Twitter          bool
+		CloseIssue       bool
 	}
 )
 
@@ -183,6 +187,8 @@ const (
 
 ### Post-Release
 - [{{fmtStatus .SlackPostRelease}}] Notify the community on Slack for the new release.
+- [{{fmtStatus .Twitter}}] Twitter announcement.
+- [{{fmtStatus .CloseIssue}}] Close this Issue.
 `
 )
 
@@ -313,6 +319,12 @@ func (ctx *State) LoadIssue() {
 			if strings.Contains(line, postSlackAnnouncementItem) {
 				newIssue.SlackPostRelease = strings.HasPrefix(line, markdownItemDone)
 			}
+			if strings.Contains(line, twitterItem) {
+				newIssue.Twitter = strings.HasPrefix(line, markdownItemDone)
+			}
+			if strings.Contains(line, closeReleaseItem) {
+				newIssue.CloseIssue = strings.HasPrefix(line, markdownItemDone)
+			}
 		case stateReadingBackport:
 			newIssue.CheckBackport.Items = append(newIssue.CheckBackport.Items, handleNewListItem(lines, i, &s))
 		case stateReadingReleaseBlockerIssue:
@@ -422,4 +434,23 @@ func (i *Issue) toString() string {
 		log.Fatal(err)
 	}
 	return b.String()
+}
+
+func CloseReleaseIssue(state *State) (*logging.ProgressLogging, func() string) {
+	pl := &logging.ProgressLogging{
+		TotalSteps: 4,
+	}
+
+	return pl, func() string {
+		pl.NewStepf("Closing Release Issue")
+		github.CloseReleaseIssue(state.VitessRepo, state.IssueNbGH)
+		state.Issue.CloseIssue = true
+		pl.NewStepf("Issue closed: %s", state.IssueLink)
+
+		pl.NewStepf("Update Issue %s on GitHub", state.IssueLink)
+		_, fn := state.UploadIssue()
+		issueLink := fn()
+		pl.NewStepf("Issue updated, see: %s", issueLink)
+		return state.IssueLink
+	}
 }
