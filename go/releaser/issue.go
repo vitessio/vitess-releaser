@@ -74,6 +74,8 @@ const (
 
 	// Post-Release
 	postSlackAnnouncementItem = "Notify the community on Slack for the new release."
+	twitterItem               = "Twitter announcement."
+	closeReleaseItem          = "Close this Issue."
 )
 
 type (
@@ -316,6 +318,12 @@ func (ctx *State) LoadIssue() {
 			// post-release
 			if strings.Contains(line, postSlackAnnouncementItem) {
 				newIssue.SlackPostRelease = strings.HasPrefix(line, markdownItemDone)
+			}
+			if strings.Contains(line, twitterItem) {
+				newIssue.Twitter = strings.HasPrefix(line, markdownItemDone)
+			}
+			if strings.Contains(line, closeReleaseItem) {
+				newIssue.CloseIssue = strings.HasPrefix(line, markdownItemDone)
 			}
 		case stateReadingBackport:
 			newIssue.CheckBackport.Items = append(newIssue.CheckBackport.Items, handleNewListItem(lines, i, &s))
