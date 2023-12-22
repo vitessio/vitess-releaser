@@ -116,6 +116,8 @@ type (
 
 		// Post-Release
 		SlackPostRelease bool
+		Twitter          bool
+		CloseIssue       bool
 	}
 )
 
@@ -183,6 +185,8 @@ const (
 
 ### Post-Release
 - [{{fmtStatus .SlackPostRelease}}] Notify the community on Slack for the new release.
+- [{{fmtStatus .Twitter}}] Twitter announcement.
+- [{{fmtStatus .CloseIssue}}] Close this Issue.
 `
 )
 
