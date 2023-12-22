@@ -95,7 +95,7 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 		pl.NewStepf("Check if branch %s is already frozen", state.ReleaseBranch)
 		if isCurrentBranchFrozen() {
 			pl.TotalSteps = 6 // only 6 total steps in this situation
-			pl.NewStepf("Branch %s is already frozen, no action needed.", state.ReleaseBranch)
+			pl.NewStepf("Branch %s is already frozen, no action needed", state.ReleaseBranch)
 			done = true
 			return ""
 		}
@@ -109,7 +109,7 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 		pl.NewStepf("Commit and push to branch %s", newBranchName)
 		if git.CommitAll(fmt.Sprintf("Code Freeze of %s", state.ReleaseBranch)) {
 			pl.TotalSteps = 9 // only 9 total steps in this situation
-			pl.NewStepf("Nothing to commit, seems like code freeze is already done.")
+			pl.NewStepf("Nothing to commit, seems like code freeze is already done")
 			done = true
 			return ""
 		}

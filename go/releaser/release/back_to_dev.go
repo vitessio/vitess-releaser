@@ -74,7 +74,7 @@ func BackToDevMode(state *releaser.State) (*logging.ProgressLogging, func() stri
 		pl.NewStepf("Commit and push to branch %s", newBranchName)
 		if git.CommitAll(fmt.Sprintf("Back to dev mode: %s", backToDevModePRName)) {
 			pl.TotalSteps = 9 // only 9 total steps in this situation
-			pl.NewStepf("Nothing to commit, seems like back to dev mode is already done.")
+			pl.NewStepf("Nothing to commit, seems like back to dev mode is already done")
 			done = true
 			return ""
 		}
