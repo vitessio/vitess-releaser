@@ -22,30 +22,49 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
+	"vitess.io/vitess-releaser/go/releaser/release"
 	"vitess.io/vitess-releaser/go/releaser/steps"
 )
 
 func DockerImagesItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
-	act := dockerImagesAct
-	if state.Issue.DockerImages {
-		act = nil
-	}
 	return &ui.MenuItem{
 		State:  state,
 		Name:   steps.DockerImages,
-		Act:    act,
+		Act:    dockerImagesAct,
 		Update: dockerImagesUpdate,
 		IsDone: state.Issue.DockerImages,
 	}
 }
 
-type dockerImagesUrl string
+type dockerImagesMsg []string
 
 func dockerImagesUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
+	switch msg := msg.(type) {
+	case dockerImagesMsg:
+		return mi, ui.PushDialog(&ui.DoneDialog{
+			StepName: mi.Name,
+			Title:    "Check Docker Images",
+			Message:  msg,
+			IsDone:   mi.IsDone,
+		})
+	case ui.DoneDialogAction:
+		if string(msg) != mi.Name {
+			return mi, nil
+		}
+		mi.State.Issue.DockerImages = !mi.State.Issue.DockerImages
+		mi.IsDone = !mi.IsDone
+		pl, fn := mi.State.UploadIssue()
+		return mi, tea.Batch(func() tea.Msg {
+			fn()
+			return tea.Msg("")
+		}, ui.PushDialog(ui.NewProgressDialog("Updating the Release Issue", pl)))
+	}
 	return mi, nil
 }
 
 func dockerImagesAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
-	return mi, nil
+	return mi, func() tea.Msg {
+		return dockerImagesMsg(release.CheckDockerMessage(mi.State.VitessRepo))
+	}
 }
