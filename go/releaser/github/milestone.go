@@ -36,7 +36,7 @@ func GetMilestonesByName(repo, name string) []Milestone {
 		"milestone", "list",
 		"--query", name,
 		"--repo", repo,
-		"--json", "url",
+		"--json", "url,number",
 		"--state", "all",
 	)
 	if err != nil {
@@ -81,5 +81,7 @@ func CloseMilestone(repo, name string) string {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	return strings.ReplaceAll(stdOut.String(), "\n", "")
+	out := strings.ReplaceAll(stdOut.String(), "\n", "")
+	idx := strings.LastIndex(out, fmt.Sprintf("https://github.com/%s/milestone/", repo))
+	return out[idx:]
 }
