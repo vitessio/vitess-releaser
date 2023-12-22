@@ -22,6 +22,7 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"vitess.io/vitess-releaser/go/interactive/post_release"
 	"vitess.io/vitess-releaser/go/interactive/pre_release"
 	"vitess.io/vitess-releaser/go/interactive/prerequisites"
 	"vitess.io/vitess-releaser/go/interactive/release"
@@ -67,6 +68,7 @@ func MainScreen(ctx context.Context) {
 		ctx,
 		"Post Release",
 		slackAnnouncementMenuItem(ctx, slackAnnouncementPostRelease),
+		post_release.TwitterMenuItem(ctx),
 	)
 
 	m := ui.NewMenu(ctx, "Main Menu",
