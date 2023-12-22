@@ -27,25 +27,43 @@ import (
 
 func BenchmarkedItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
-	act := benchmarkedAct
-	if state.Issue.Benchmarked {
-		act = nil
-	}
 	return &ui.MenuItem{
 		State:  state,
 		Name:   steps.Benchmarked,
-		Act:    act,
+		Act:    benchmarkedAct,
 		Update: benchmarkedUpdate,
 		IsDone: state.Issue.Benchmarked,
 	}
 }
 
-type benchmarkedUrl string
+type benchmarkedMsg []string
 
 func benchmarkedUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
+	switch msg := msg.(type) {
+	case benchmarkedMsg:
+		return mi, ui.PushDialog(&ui.DoneDialog{
+			StepName: mi.Name,
+			Title:    "Check benchmark status",
+			Message:  msg,
+			IsDone:   mi.IsDone,
+		})
+	case ui.DoneDialogAction:
+		if string(msg) != mi.Name {
+			return mi, nil
+		}
+		mi.State.Issue.Benchmarked = !mi.State.Issue.Benchmarked
+		mi.IsDone = !mi.IsDone
+		pl, fn := mi.State.UploadIssue()
+		return mi, tea.Batch(func() tea.Msg {
+			fn()
+			return tea.Msg("")
+		}, ui.PushDialog(ui.NewProgressDialog("Updating the Release Issue", pl)))
+	}
 	return mi, nil
 }
 
 func benchmarkedAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
-	return mi, nil
+	return mi, func() tea.Msg {
+		return benchmarkedMsg([]string{"1", "2"})
+	}
 }
