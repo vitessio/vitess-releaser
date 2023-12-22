@@ -179,3 +179,38 @@ func GetMergedPRsAndAuthorsByMilestone(repo, milestone string) (prs []PR, author
 	sort.Strings(authors)
 	return prs, authors
 }
+
+func GetOpenedPRsByMilestone(repo, milestone string) []PR {
+	byteRes, _, err := gh.Exec(
+		"pr", "list",
+		"-s", "open",
+		"-S", fmt.Sprintf("milestone:%s", milestone),
+		"--json", "number,title,labels,author",
+		"--limit", "5000",
+		"--repo", repo,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var prs []PR
+	err = json.Unmarshal(byteRes.Bytes(), &prs)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return prs
+}
+
+func AssignMilestoneToPRs(repo, milestone string, prs []PR) {
+	for _, pr := range prs {
+		_, _, err := gh.Exec(
+			"pr", "edit",
+			strconv.Itoa(pr.Number),
+			"--milestone", milestone,
+			"--repo", repo,
+		)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+}

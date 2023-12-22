@@ -20,13 +20,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/cli/go-gh"
 )
 
 type Milestone struct {
-	URL string `json:"url"`
+	URL    string `json:"url"`
+	Number int    `json:"number"`
 }
 
 func GetMilestonesByName(repo, name string) []Milestone {
@@ -34,7 +36,7 @@ func GetMilestonesByName(repo, name string) []Milestone {
 		"milestone", "list",
 		"--query", name,
 		"--repo", repo,
-		"--json", "url",
+		"--json", "url,number",
 		"--state", "all",
 	)
 	if err != nil {
@@ -55,6 +57,26 @@ func CreateNewMilestone(repo, name string) string {
 		"milestone", "create",
 		"--repo", repo,
 		"--title", name,
+	)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	out := strings.ReplaceAll(stdOut.String(), "\n", "")
+	idx := strings.LastIndex(out, fmt.Sprintf("https://github.com/%s/milestone/", repo))
+	return out[idx:]
+}
+
+func CloseMilestone(repo, name string) string {
+	ms := GetMilestonesByName(repo, name)
+	if len(ms) != 1 {
+		log.Fatalf("expected to find one milestone found %d", len(ms))
+	}
+
+	stdOut, _, err := gh.Exec(
+		"milestone", "edit",
+		strconv.Itoa(ms[0].Number),
+		"--repo", repo,
+		"--state", "closed",
 	)
 	if err != nil {
 		log.Fatal(err.Error())
