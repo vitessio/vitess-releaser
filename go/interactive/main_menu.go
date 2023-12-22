@@ -69,6 +69,7 @@ func MainScreen(ctx context.Context) {
 		"Post Release",
 		slackAnnouncementMenuItem(ctx, slackAnnouncementPostRelease),
 		post_release.TwitterMenuItem(ctx),
+		post_release.CloseIssueItem(ctx),
 	)
 
 	m := ui.NewMenu(ctx, "Main Menu",
