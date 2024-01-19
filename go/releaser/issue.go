@@ -132,7 +132,11 @@ const (
 
 - [{{fmtStatus .SlackPreRequisite}}] Notify the community on Slack.
 - [{{fmtStatus .CheckSummary}}] Make sure the release notes summary is prepared and clean.
+{{- if eq .RC 0 }}
 - Make sure backport Pull Requests are merged, list below.
+{{- else }}
+- Make sure important Pull Requests are merged, list below.
+{{- end }}
 {{- range $item := .CheckBackport.Items }}
   - [{{fmtStatus $item.Done}}] {{$item.URL}}
 {{- end }}
