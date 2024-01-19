@@ -181,9 +181,11 @@ const (
 {{- end }}
 - [{{fmtStatus .Benchmarked}}] Make sure the release is benchmarked by arewefastyet.
 - [{{fmtStatus .DockerImages}}] Docker Images available on DockerHub.
+{{- if eq .RC 0 }}
 - [{{fmtStatus .CloseMilestone.Done}}] Close current GitHub Milestone.
 {{- if .CloseMilestone.URL }}
   - {{ .CloseMilestone.URL }}
+{{- end }}
 {{- end }}
 
 
