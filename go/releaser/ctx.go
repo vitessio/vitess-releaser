@@ -44,4 +44,5 @@ type State struct {
 	Issue     Issue
 	IssueLink string
 	IssueNbGH int
+	RC        int
 }

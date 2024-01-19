@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"text/template"
 	"time"
@@ -94,6 +95,7 @@ type (
 
 	Issue struct {
 		Date time.Time
+		RC   int
 
 		// Prerequisites
 		SlackPreRequisite bool
@@ -219,11 +221,20 @@ func (ctx *State) LoadIssue() {
 		return
 	}
 
-	body := github.GetIssueBody(ctx.VitessRepo, ctx.IssueNbGH)
+	title, body := github.GetIssueTitleAndBody(ctx.VitessRepo, ctx.IssueNbGH)
 
 	lines := strings.Split(body, "\n")
 
 	var newIssue Issue
+
+	// Parse the title of the Issue to determine the RC increment if any
+	if idx := strings.Index(title, "-RC"); idx != -1 {
+		rc, err := strconv.Atoi(title[idx+len("-RC"):])
+		if err != nil {
+			log.Fatal(err)
+		}
+		newIssue.RC = rc
+	}
 
 	s := stateReadingItem
 	for i, line := range lines {
@@ -399,8 +410,12 @@ func CreateReleaseIssue(state *State) (*logging.ProgressLogging, func() (int, st
 
 	return pl, func() (int, string) {
 		pl.NewStepf("Create Release Issue on GitHub")
+		issueTitle := fmt.Sprintf("Release of v%s", state.Release)
+		if state.RC > 0 {
+			issueTitle = fmt.Sprintf("%s-RC%d", issueTitle, state.RC)
+		}
 		newIssue := github.Issue{
-			Title:    fmt.Sprintf("Release of v%s", state.Release),
+			Title:    issueTitle,
 			Body:     state.Issue.toString(),
 			Labels:   []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}},
 			Assignee: "@me",

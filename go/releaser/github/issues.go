@@ -81,14 +81,14 @@ func (i *Issue) UpdateBody(repo string) string {
 	return strings.ReplaceAll(stdOut.String(), "\n", "")
 }
 
-func GetIssueBody(repo string, nb int) string {
+func GetIssueTitleAndBody(repo string, nb int) (string, string) {
 	var i Issue
 	stdOut, _, err := gh.Exec(
 		"issue", "view",
 		strconv.Itoa(nb),
 		"--repo", repo,
 		"--json",
-		"body",
+		"title,body",
 	)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -98,7 +98,7 @@ func GetIssueBody(repo string, nb int) string {
 		log.Fatal(err.Error())
 	}
 
-	return i.Body
+	return i.Title, i.Body
 }
 
 func GetReleaseIssue(repo, release string) (string, string) {
