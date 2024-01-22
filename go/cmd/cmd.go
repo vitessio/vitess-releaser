@@ -90,7 +90,7 @@ func Execute() {
 
 	remote := git.FindRemoteName(s.VitessRepo)
 	release, releaseBranch, isLatestRelease := releaser.FindNextRelease(remote, s.MajorRelease)
-	issueNb, issueLink, releaseFromIssue := github.GetReleaseIssueInfo(s.VitessRepo, s.MajorRelease)
+	issueNb, issueLink, releaseFromIssue := github.GetReleaseIssueInfo(s.VitessRepo, s.MajorRelease, rcIncrement)
 
 	// if we want to do an RC-1 release and the branch is different from `main`, something is wrong
 	// and if we want to do an >= RC-2 release, the release as to be the latest AKA on the latest release branch
