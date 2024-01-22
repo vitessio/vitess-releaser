@@ -18,13 +18,14 @@ package slack
 
 import (
 	"fmt"
+	"strings"
 
 	"vitess.io/vitess-releaser/go/releaser"
 )
 
 const (
 	preRequisiteSlackMessage = `📣 The Vitess maintainers are planning on releasing v%s on %s.`
-	postReleaseSlackMessage  = `📣 We have just released v%s. Check out the release notes on https://github.com/%s/release/tag/v%s`
+	postReleaseSlackMessage  = `📣 We have just released v%s. Check out the release notes on https://github.com/%s/releases/tag/v%s`
 )
 
 func AnnouncementMessage(state *releaser.State) string {
@@ -32,5 +33,5 @@ func AnnouncementMessage(state *releaser.State) string {
 }
 
 func PostReleaseMessage(state *releaser.State) string {
-	return fmt.Sprintf(postReleaseSlackMessage, state.Release, state.VitessRepo, state.Release)
+	return fmt.Sprintf(postReleaseSlackMessage, state.Release, state.VitessRepo, strings.ToLower(state.Release))
 }
