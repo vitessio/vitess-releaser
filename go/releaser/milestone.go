@@ -24,7 +24,7 @@ import (
 )
 
 func FindVersionAfterNextRelease(state *State) string {
-	segments := strings.Split(RemoveRCFromReleaseTitle(state.Release), ".")
+	segments := strings.Split(RemoveRCFromReleaseTitle(state.VitessRelease.Release), ".")
 	if len(segments) != 3 {
 		return ""
 	}

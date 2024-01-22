@@ -39,13 +39,13 @@ var (
 	releaseDate    string
 	rcIncrement    int
 	live           = true
-)
 
-var rootCmd = &cobra.Command{
-	Use:   "vitess-releaser",
-	Short: "vitess-releaser - a tool for releasing vitess",
-	Long:  "vitess-releaser - a tool for releasing vitess",
-}
+	rootCmd = &cobra.Command{
+		Use:   "vitess-releaser",
+		Short: "vitess-releaser - a tool for releasing vitess",
+		Long:  "vitess-releaser - a tool for releasing vitess",
+	}
+)
 
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&releaseVersion, flags.MajorRelease, "r", "", "Number of the major release on which we want to create a new release.")
@@ -80,17 +80,17 @@ func Execute() {
 	var s releaser.State
 
 	if live {
-		s.VitessRepo = "vitessio/vitess"
+		s.VitessRelease.Repo = "vitessio/vitess"
 	} else {
-		s.VitessRepo = github.CurrentUser() + "/vitess"
+		s.VitessRelease.Repo = github.CurrentUser() + "/vitess"
 	}
-	s.MajorRelease = releaseVersion
+	s.VitessRelease.MajorRelease = releaseVersion
 
-	git.CorrectCleanRepo(s.VitessRepo)
+	git.CorrectCleanRepo(s.VitessRelease.Repo)
 
-	remote := git.FindRemoteName(s.VitessRepo)
-	release, releaseBranch, isLatestRelease, isFromMain := releaser.FindNextRelease(remote, s.MajorRelease)
-	issueNb, issueLink, releaseFromIssue := github.GetReleaseIssueInfo(s.VitessRepo, s.MajorRelease, rcIncrement)
+	remote := git.FindRemoteName(s.VitessRelease.Repo)
+	release, releaseBranch, isLatestRelease, isFromMain := releaser.FindNextRelease(remote, s.VitessRelease.MajorRelease)
+	issueNb, issueLink, releaseFromIssue := github.GetReleaseIssueInfo(s.VitessRelease.Repo, s.VitessRelease.MajorRelease, rcIncrement)
 
 	// if we want to do an RC-1 release and the branch is different from `main`, something is wrong
 	// and if we want to do an >= RC-2 release, the release as to be the latest AKA on the latest release branch
@@ -98,14 +98,14 @@ func Execute() {
 		log.Fatalf("wanted: RC %d but release branch was %s, latest release was %v and is from main is %v", rcIncrement, releaseBranch, isLatestRelease, isFromMain)
 	}
 
-	s.Remote = remote
-	s.ReleaseBranch = releaseBranch
-	s.IsLatestRelease = isLatestRelease
+	s.VitessRelease.Remote = remote
+	s.VitessRelease.ReleaseBranch = releaseBranch
+	s.VitessRelease.IsLatestRelease = isLatestRelease
 	s.IssueNbGH = issueNb
 	s.IssueLink = issueLink
-	s.Release = releaseFromIssue
+	s.VitessRelease.Release = releaseFromIssue
 	if releaseFromIssue == "" {
-		s.Release = release
+		s.VitessRelease.Release = release
 	}
 	s.Issue.RC = rcIncrement
 

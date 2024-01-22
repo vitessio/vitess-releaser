@@ -44,26 +44,26 @@ func UpdateSnapshotOnMain(state *releaser.State) (*logging.ProgressLogging, func
 		}()
 
 		pl.NewStepf("Fetch from git remote")
-		git.CorrectCleanRepo(state.VitessRepo)
+		git.CorrectCleanRepo(state.VitessRelease.Repo)
 		git.Checkout("main")
-		git.ResetHard(state.Remote, "main")
+		git.ResetHard(state.VitessRelease.Remote, "main")
 
 		nextNextRelease := releaser.FindVersionAfterNextRelease(state)
 		snapshotRelease := fmt.Sprintf("%s-SNAPSHOT", nextNextRelease)
 
-		snapshotUpdatePRName := fmt.Sprintf("Bump to `v%s` after the `v%s` release", snapshotRelease, state.Release)
+		snapshotUpdatePRName := fmt.Sprintf("Bump to `v%s` after the `v%s` release", snapshotRelease, state.VitessRelease.Release)
 
 		// look for existing PRs
 		pl.NewStepf("Look for an existing Pull Request named '%s'", snapshotUpdatePRName)
-		if _, url = github.FindPR(state.VitessRepo, snapshotUpdatePRName); url != "" {
+		if _, url = github.FindPR(state.VitessRelease.Repo, snapshotUpdatePRName); url != "" {
 			pl.TotalSteps = 5 // only 5 total steps in this situation
 			pl.NewStepf("An opened Pull Request was found: %s", url)
 			done = true
 			return url
 		}
 
-		pl.NewStepf("Create new branch based on %s/%s", state.Remote, "main")
-		newBranchName := git.FindNewGeneratedBranch(state.Remote, "main", "snapshot-update")
+		pl.NewStepf("Create new branch based on %s/%s", state.VitessRelease.Remote, "main")
+		newBranchName := git.FindNewGeneratedBranch(state.VitessRelease.Remote, "main", "snapshot-update")
 
 		pl.NewStepf("Update version.go")
 		UpdateVersionGoFile(snapshotRelease)
@@ -78,17 +78,17 @@ func UpdateSnapshotOnMain(state *releaser.State) (*logging.ProgressLogging, func
 			done = true
 			return ""
 		}
-		git.Push(state.Remote, newBranchName)
+		git.Push(state.VitessRelease.Remote, newBranchName)
 
 		pl.NewStepf("Create Pull Request")
 		pr := github.PR{
 			Title:  snapshotUpdatePRName,
-			Body:   fmt.Sprintf("Includes the changes required to update the SNAPSHOT version (v%s) after the release of v%s.", snapshotRelease, state.Release),
+			Body:   fmt.Sprintf("Includes the changes required to update the SNAPSHOT version (v%s) after the release of v%s.", snapshotRelease, state.VitessRelease.Release),
 			Branch: newBranchName,
 			Base:   "main",
 			Labels: []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}},
 		}
-		_, url = pr.Create(state.VitessRepo)
+		_, url = pr.Create(state.VitessRelease.Repo)
 		pl.NewStepf("Pull Request created %s", url)
 		done = true
 		return ""

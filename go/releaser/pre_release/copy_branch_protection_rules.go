@@ -24,7 +24,7 @@ import (
 
 func CopyBranchProtectionRules(state *releaser.State) []string {
 	return []string{
-		fmt.Sprintf("Since we have created the new branch %s, we need to copy the branch protection rules from main into %s", state.ReleaseBranch, state.ReleaseBranch),
-		fmt.Sprintf("To do this, head over to https://github.com/%s/settings/branches and create a new rule for branch %s", state.VitessRepo, state.ReleaseBranch),
+		fmt.Sprintf("Since we have created the new branch %s, we need to copy the branch protection rules from main into %s", state.VitessRelease.ReleaseBranch, state.VitessRelease.ReleaseBranch),
+		fmt.Sprintf("To do this, head over to https://github.com/%s/settings/branches and create a new rule for branch %s", state.VitessRelease.Repo, state.VitessRelease.ReleaseBranch),
 	}
 }

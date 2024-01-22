@@ -165,13 +165,13 @@ func generateReleaseNotes(state *releaser.State, version string) {
 	}
 
 	// known issues
-	knownIssues := github.LoadKnownIssues(state.VitessRepo, state.MajorRelease)
+	knownIssues := github.LoadKnownIssues(state.VitessRelease.Repo, state.VitessRelease.MajorRelease)
 	releaseNotes.KnownIssues = getStringForKnownIssues(knownIssues)
 
 	// changelog with pull requests
-	prs, authors := github.GetMergedPRsAndAuthorsByMilestone(state.VitessRepo, version)
+	prs, authors := github.GetMergedPRsAndAuthorsByMilestone(state.VitessRelease.Repo, version)
 
-	releaseNotes.ChangeLog = groupAndStringifyPullRequest(state.VitessRepo, prs)
+	releaseNotes.ChangeLog = groupAndStringifyPullRequest(state.VitessRelease.Repo, prs)
 
 	// changelog metrics
 	if len(prs) > 0 && len(authors) > 0 {
@@ -194,7 +194,7 @@ Thanks to all our contributors: @%s
 
 func (rn *releaseNote) generate() {
 	// Generate the release notes
-	rn.PathToChangeLogFileOnGH = fmt.Sprintf(releaseNotesPathGitHub, rn.ctx.VitessRepo) + path.Join(rn.SubDirPath, "changelog.md")
+	rn.PathToChangeLogFileOnGH = fmt.Sprintf(releaseNotesPathGitHub, rn.ctx.VitessRelease.Repo) + path.Join(rn.SubDirPath, "changelog.md")
 	rnFile, err := os.OpenFile(path.Join(rn.SubDirPath, "release_notes.md"), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		log.Fatal(err)

@@ -122,7 +122,7 @@ func (m UI) View() string {
 	lft := bgStyle.Render(title)
 	width -= len(title)
 	s := bgStyle.Copy().Width(width).Align(lipgloss.Right)
-	rgt := fmt.Sprintf("Repo: %s | Releasing Branch: %s | Release Date: %s", m.State.VitessRepo, m.State.MajorRelease, m.State.Issue.Date.Format(time.DateOnly))
+	rgt := fmt.Sprintf("Repo: %s | Releasing Branch: %s | Release Date: %s", m.State.VitessRelease.Repo, m.State.VitessRelease.MajorRelease, m.State.Issue.Date.Format(time.DateOnly))
 	statusBar := lft + s.Render(rgt)
 	return lipgloss.JoinVertical(
 		lipgloss.Right,

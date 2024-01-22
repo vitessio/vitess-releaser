@@ -31,7 +31,7 @@ func Command() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := cmd.Context()
 			state := releaser.UnwrapState(ctx)
-			git.CorrectCleanRepo(state.VitessRepo)
+			git.CorrectCleanRepo(state.VitessRelease.Repo)
 
 			// TODO: The assumption that the Release Manager won't be
 			// modifying the release issue while using vitess-releaser

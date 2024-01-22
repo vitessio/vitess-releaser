@@ -241,7 +241,7 @@ func (ctx *State) LoadIssue() {
 		return
 	}
 
-	title, body := github.GetIssueTitleAndBody(ctx.VitessRepo, ctx.IssueNbGH)
+	title, body := github.GetIssueTitleAndBody(ctx.VitessRelease.Repo, ctx.IssueNbGH)
 
 	lines := strings.Split(body, "\n")
 
@@ -428,7 +428,7 @@ func (ctx *State) UploadIssue() (*logging.ProgressLogging, func() string) {
 		pl.NewStepf("Update Issue #%d on GitHub", ctx.IssueNbGH)
 		body := ctx.Issue.toString()
 		issue := github.Issue{Body: body, Number: ctx.IssueNbGH}
-		link := issue.UpdateBody(ctx.VitessRepo)
+		link := issue.UpdateBody(ctx.VitessRelease.Repo)
 		pl.NewStepf("Issue updated: %s", link)
 		return link
 	}
@@ -441,7 +441,7 @@ func CreateReleaseIssue(state *State) (*logging.ProgressLogging, func() (int, st
 
 	return pl, func() (int, string) {
 		pl.NewStepf("Create Release Issue on GitHub")
-		issueTitle := fmt.Sprintf("Release of v%s", state.Release)
+		issueTitle := fmt.Sprintf("Release of v%s", state.VitessRelease.Release)
 		if state.Issue.RC > 0 {
 			issueTitle = fmt.Sprintf("%s-RC%d", issueTitle, state.Issue.RC)
 		}
@@ -452,7 +452,7 @@ func CreateReleaseIssue(state *State) (*logging.ProgressLogging, func() (int, st
 			Assignee: "@me",
 		}
 
-		link := newIssue.Create(state.VitessRepo)
+		link := newIssue.Create(state.VitessRelease.Repo)
 		nb := github.URLToNb(link)
 		state.IssueLink = link
 		state.IssueNbGH = nb
@@ -489,7 +489,7 @@ func CloseReleaseIssue(state *State) (*logging.ProgressLogging, func() string) {
 
 	return pl, func() string {
 		pl.NewStepf("Closing Release Issue")
-		github.CloseReleaseIssue(state.VitessRepo, state.IssueNbGH)
+		github.CloseReleaseIssue(state.VitessRelease.Repo, state.IssueNbGH)
 		state.Issue.CloseIssue = true
 		pl.NewStepf("Issue closed: %s", state.IssueLink)
 

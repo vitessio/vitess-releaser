@@ -65,6 +65,6 @@ func dockerImagesUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
 
 func dockerImagesAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
 	return mi, func() tea.Msg {
-		return dockerImagesMsg(release.CheckDockerMessage(mi.State.VitessRepo))
+		return dockerImagesMsg(release.CheckDockerMessage(mi.State.VitessRelease.Repo))
 	}
 }

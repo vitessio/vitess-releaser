@@ -29,9 +29,9 @@ const (
 )
 
 func AnnouncementMessage(state *releaser.State) string {
-	return fmt.Sprintf(preRequisiteSlackMessage, state.Release, state.Issue.Date.Format("Mon _2 Jan"))
+	return fmt.Sprintf(preRequisiteSlackMessage, state.VitessRelease.Release, state.Issue.Date.Format("Mon _2 Jan"))
 }
 
 func PostReleaseMessage(state *releaser.State) string {
-	return fmt.Sprintf(postReleaseSlackMessage, state.Release, state.VitessRepo, strings.ToLower(state.Release))
+	return fmt.Sprintf(postReleaseSlackMessage, state.VitessRelease.Release, state.VitessRelease.Repo, strings.ToLower(state.VitessRelease.Release))
 }
