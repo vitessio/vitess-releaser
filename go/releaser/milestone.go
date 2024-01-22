@@ -24,13 +24,14 @@ import (
 )
 
 func FindVersionAfterNextRelease(state *State) string {
-	if strings.Contains(state.Release, "rc") {
-		panic("RC releases not supported for now")
-	}
-
 	segments := strings.Split(state.Release, ".")
 	if len(segments) != 3 {
 		return ""
+	}
+
+	// Remove the -RCX token from the last segment of the release name
+	if strings.Contains(segments[2], "-RC") {
+		segments[2] = segments[2][:strings.Index(segments[2], "-RC")]
 	}
 
 	segmentInts := make([]int, 0, len(segments))
@@ -42,7 +43,7 @@ func FindVersionAfterNextRelease(state *State) string {
 		segmentInts = append(segmentInts, v)
 	}
 
-	// if it is a major release
+	// if it is an RC/GA release
 	if segmentInts[1] == 0 && segmentInts[2] == 0 {
 		return fmt.Sprintf("%d.0.0", segmentInts[0]+1)
 	}

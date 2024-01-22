@@ -156,9 +156,11 @@ const (
 {{- if .CreateReleasePR.URL }}
   - {{ .CreateReleasePR.URL }}
 {{- end }}
+{{- if lt .RC 2 }}
 - [{{fmtStatus .NewGitHubMilestone.Done}}] Create new GitHub Milestone.
 {{- if .NewGitHubMilestone.URL }}
   - {{ .NewGitHubMilestone.URL }}
+{{- end }}
 {{- end }}
 
 ### Release
