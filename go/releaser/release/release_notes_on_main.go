@@ -51,7 +51,7 @@ func ReleaseNotesOnMain(state *releaser.State) (*logging.ProgressLogging, func()
 		git.Checkout("main")
 		git.ResetHard(state.VitessRelease.Remote, "main")
 
-		prName := fmt.Sprintf("Copy `v%s` release notes on `main`", state.Release)
+		prName := fmt.Sprintf("Copy `v%s` release notes on `main`", state.VitessRelease.Release)
 
 		pl.NewStepf("Look for an existing Pull Request named '%s'", prName)
 		if _, url = github.FindPR(state.VitessRelease.Repo, prName); url != "" {
@@ -65,7 +65,7 @@ func ReleaseNotesOnMain(state *releaser.State) (*logging.ProgressLogging, func()
 		newBranchName := git.FindNewGeneratedBranch(state.VitessRelease.Remote, "main", "release-notes-main")
 
 		pl.NewStepf("Copy release notes from %s/%s", state.VitessRelease.Remote, state.VitessRelease.ReleaseBranch)
-		releaseNotesPath := pre_release.GetReleaseNotesDirPathForMajor(releaser.RemoveRCFromReleaseTitle(state.Release))
+		releaseNotesPath := pre_release.GetReleaseNotesDirPathForMajor(releaser.RemoveRCFromReleaseTitle(state.VitessRelease.Release))
 		git.CheckoutPath(state.VitessRelease.Remote, state.VitessRelease.ReleaseBranch, releaseNotesPath)
 
 		pl.NewStepf("Commit and push to branch %s", newBranchName)
@@ -80,7 +80,7 @@ func ReleaseNotesOnMain(state *releaser.State) (*logging.ProgressLogging, func()
 		pl.NewStepf("Create Pull Request")
 		pr := github.PR{
 			Title:  prName,
-			Body:   fmt.Sprintf("This Pull Request copies the release notes found on `%s` to keep release notes up-to-date after the `v%s` release.", state.VitessRelease.ReleaseBranch, state.Release),
+			Body:   fmt.Sprintf("This Pull Request copies the release notes found on `%s` to keep release notes up-to-date after the `v%s` release.", state.VitessRelease.ReleaseBranch, state.VitessRelease.Release),
 			Branch: newBranchName,
 			Base:   "main",
 			Labels: []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}},

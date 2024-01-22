@@ -51,7 +51,7 @@ func UpdateSnapshotOnMain(state *releaser.State) (*logging.ProgressLogging, func
 		nextNextRelease := releaser.FindVersionAfterNextRelease(state)
 		snapshotRelease := fmt.Sprintf("%s-SNAPSHOT", nextNextRelease)
 
-		snapshotUpdatePRName := fmt.Sprintf("Bump to `v%s` after the `v%s` release", snapshotRelease, state.Release)
+		snapshotUpdatePRName := fmt.Sprintf("Bump to `v%s` after the `v%s` release", snapshotRelease, state.VitessRelease.Release)
 
 		// look for existing PRs
 		pl.NewStepf("Look for an existing Pull Request named '%s'", snapshotUpdatePRName)
@@ -83,7 +83,7 @@ func UpdateSnapshotOnMain(state *releaser.State) (*logging.ProgressLogging, func
 		pl.NewStepf("Create Pull Request")
 		pr := github.PR{
 			Title:  snapshotUpdatePRName,
-			Body:   fmt.Sprintf("Includes the changes required to update the SNAPSHOT version (v%s) after the release of v%s.", snapshotRelease, state.Release),
+			Body:   fmt.Sprintf("Includes the changes required to update the SNAPSHOT version (v%s) after the release of v%s.", snapshotRelease, state.VitessRelease.Release),
 			Branch: newBranchName,
 			Base:   "main",
 			Labels: []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}},

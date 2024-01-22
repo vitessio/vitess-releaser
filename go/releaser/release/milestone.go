@@ -30,7 +30,7 @@ func CloseMilestone(state *releaser.State) (*logging.ProgressLogging, func() str
 	}
 
 	return pl, func() string {
-		milestone := fmt.Sprintf("v%s", state.Release)
+		milestone := fmt.Sprintf("v%s", state.VitessRelease.Release)
 		nextRelease := releaser.FindVersionAfterNextRelease(state)
 		nextMilestone := fmt.Sprintf("v%s", nextRelease)
 

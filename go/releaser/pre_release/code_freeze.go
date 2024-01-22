@@ -94,7 +94,7 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 			git.ResetHard(state.VitessRelease.Remote, state.VitessRelease.ReleaseBranch)
 		}
 
-		codeFreezePRName := fmt.Sprintf("[%s] Code Freeze for `v%s`", state.VitessRelease.ReleaseBranch, state.Release)
+		codeFreezePRName := fmt.Sprintf("[%s] Code Freeze for `v%s`", state.VitessRelease.ReleaseBranch, state.VitessRelease.Release)
 
 		// look for existing code freeze PRs
 		pl.NewStepf("Look for an existing Code Freeze Pull Request named '%s'", codeFreezePRName)
@@ -133,7 +133,7 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 		pl.NewStepf("Create Pull Request")
 		pr := github.PR{
 			Title:  codeFreezePRName,
-			Body:   fmt.Sprintf("This Pull Request freezes the branch `%s` for `v%s`", state.VitessRelease.ReleaseBranch, state.Release),
+			Body:   fmt.Sprintf("This Pull Request freezes the branch `%s` for `v%s`", state.VitessRelease.ReleaseBranch, state.VitessRelease.Release),
 			Branch: newBranchName,
 			Base:   state.VitessRelease.ReleaseBranch,
 			Labels: []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}},

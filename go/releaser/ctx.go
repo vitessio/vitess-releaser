@@ -45,10 +45,6 @@ type ReleaseInformation struct {
 type State struct {
 	VitessRelease ReleaseInformation
 
-	MajorRelease    string
-	Release         string
-	IsLatestRelease bool
-
 	Issue     Issue
 	IssueLink string
 	IssueNbGH int

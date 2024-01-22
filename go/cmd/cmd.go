@@ -84,13 +84,13 @@ func Execute() {
 	} else {
 		s.VitessRelease.Repo = github.CurrentUser() + "/vitess"
 	}
-	s.MajorRelease = releaseVersion
+	s.VitessRelease.MajorRelease = releaseVersion
 
 	git.CorrectCleanRepo(s.VitessRelease.Repo)
 
 	remote := git.FindRemoteName(s.VitessRelease.Repo)
-	release, releaseBranch, isLatestRelease, isFromMain := releaser.FindNextRelease(remote, s.MajorRelease)
-	issueNb, issueLink, releaseFromIssue := github.GetReleaseIssueInfo(s.VitessRelease.Repo, s.MajorRelease, rcIncrement)
+	release, releaseBranch, isLatestRelease, isFromMain := releaser.FindNextRelease(remote, s.VitessRelease.MajorRelease)
+	issueNb, issueLink, releaseFromIssue := github.GetReleaseIssueInfo(s.VitessRelease.Repo, s.VitessRelease.MajorRelease, rcIncrement)
 
 	// if we want to do an RC-1 release and the branch is different from `main`, something is wrong
 	// and if we want to do an >= RC-2 release, the release as to be the latest AKA on the latest release branch
@@ -100,12 +100,12 @@ func Execute() {
 
 	s.VitessRelease.Remote = remote
 	s.VitessRelease.ReleaseBranch = releaseBranch
-	s.IsLatestRelease = isLatestRelease
+	s.VitessRelease.IsLatestRelease = isLatestRelease
 	s.IssueNbGH = issueNb
 	s.IssueLink = issueLink
-	s.Release = releaseFromIssue
+	s.VitessRelease.Release = releaseFromIssue
 	if releaseFromIssue == "" {
-		s.Release = release
+		s.VitessRelease.Release = release
 	}
 	s.Issue.RC = rcIncrement
 

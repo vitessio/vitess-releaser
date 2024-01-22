@@ -165,7 +165,7 @@ func generateReleaseNotes(state *releaser.State, version string) {
 	}
 
 	// known issues
-	knownIssues := github.LoadKnownIssues(state.VitessRelease.Repo, state.MajorRelease)
+	knownIssues := github.LoadKnownIssues(state.VitessRelease.Repo, state.VitessRelease.MajorRelease)
 	releaseNotes.KnownIssues = getStringForKnownIssues(knownIssues)
 
 	// changelog with pull requests

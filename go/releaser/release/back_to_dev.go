@@ -52,14 +52,14 @@ func BackToDevMode(state *releaser.State) (*logging.ProgressLogging, func() stri
 		// will be the same release as the RC but without the RC tag.
 		var nextNextRelease string
 		if state.Issue.RC > 0 {
-			nextNextRelease = releaser.RemoveRCFromReleaseTitle(state.Release)
+			nextNextRelease = releaser.RemoveRCFromReleaseTitle(state.VitessRelease.Release)
 		} else {
 			nextNextRelease = releaser.FindVersionAfterNextRelease(state)
 		}
 
 		devModeRelease := fmt.Sprintf("%s-SNAPSHOT", nextNextRelease)
 
-		backToDevModePRName := fmt.Sprintf("[%s] Bump to `v%s` after the `v%s` release", state.VitessRelease.ReleaseBranch, devModeRelease, state.Release)
+		backToDevModePRName := fmt.Sprintf("[%s] Bump to `v%s` after the `v%s` release", state.VitessRelease.ReleaseBranch, devModeRelease, state.VitessRelease.Release)
 
 		// look for existing PRs
 		pl.NewStepf("Look for an existing Pull Request named '%s'", backToDevModePRName)
@@ -91,7 +91,7 @@ func BackToDevMode(state *releaser.State) (*logging.ProgressLogging, func() stri
 		pl.NewStepf("Create Pull Request")
 		pr := github.PR{
 			Title:  backToDevModePRName,
-			Body:   fmt.Sprintf("Includes the changes required to go back into dev mode (v%s) after the release of v%s.", devModeRelease, state.Release),
+			Body:   fmt.Sprintf("Includes the changes required to go back into dev mode (v%s) after the release of v%s.", devModeRelease, state.VitessRelease.Release),
 			Branch: newBranchName,
 			Base:   state.VitessRelease.ReleaseBranch,
 			Labels: []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}},

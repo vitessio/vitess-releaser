@@ -441,7 +441,7 @@ func CreateReleaseIssue(state *State) (*logging.ProgressLogging, func() (int, st
 
 	return pl, func() (int, string) {
 		pl.NewStepf("Create Release Issue on GitHub")
-		issueTitle := fmt.Sprintf("Release of v%s", state.Release)
+		issueTitle := fmt.Sprintf("Release of v%s", state.VitessRelease.Release)
 		if state.Issue.RC > 0 {
 			issueTitle = fmt.Sprintf("%s-RC%d", issueTitle, state.Issue.RC)
 		}

@@ -87,7 +87,7 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 		git.CorrectCleanRepo(state.VitessRelease.Repo)
 		git.ResetHard(state.VitessRelease.Remote, state.VitessRelease.ReleaseBranch)
 
-		releasePRName := fmt.Sprintf("[%s] Release of `v%s`", state.VitessRelease.ReleaseBranch, state.Release)
+		releasePRName := fmt.Sprintf("[%s] Release of `v%s`", state.VitessRelease.ReleaseBranch, state.VitessRelease.Release)
 
 		// look for existing PRs
 		pl.NewStepf("Look for an existing Release Pull Request named '%s'", releasePRName)
@@ -113,7 +113,7 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 		}
 
 		pl.NewStepf("Generate the release notes")
-		generateReleaseNotes(state, releaser.RemoveRCFromReleaseTitle(state.Release))
+		generateReleaseNotes(state, releaser.RemoveRCFromReleaseTitle(state.VitessRelease.Release))
 
 		pl.NewStepf("Commit the release notes")
 		if !git.CommitAll("Addition of release notes") {
@@ -121,7 +121,7 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 			git.Push(state.VitessRelease.Remote, newBranchName)
 		}
 
-		lowerRelease := strings.ToLower(state.Release)
+		lowerRelease := strings.ToLower(state.VitessRelease.Release)
 		pl.NewStepf("Update the code examples")
 		updateExamples(lowerRelease, "") // TODO: vitess-operator version not implemented
 
@@ -131,8 +131,8 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 		pl.NewStepf("Update the Java directory")
 		UpdateJavaDir(lowerRelease)
 
-		pl.NewStepf("Commit the update to the codebase for the v%s release", state.Release)
-		if !git.CommitAll(fmt.Sprintf("Update codebase for the v%s release", state.Release)) {
+		pl.NewStepf("Commit the update to the codebase for the v%s release", state.VitessRelease.Release)
+		if !git.CommitAll(fmt.Sprintf("Update codebase for the v%s release", state.VitessRelease.Release)) {
 			commitCount++
 			git.Push(state.VitessRelease.Remote, newBranchName)
 		}
@@ -147,7 +147,7 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 		pl.NewStepf("Create Pull Request")
 		pr := github.PR{
 			Title:  releasePRName,
-			Body:   fmt.Sprintf("Includes the release notes and release commit for the `v%s` release. Once this PR is merged, we will be able to tag `v%s` on the merge commit.", state.Release, state.Release),
+			Body:   fmt.Sprintf("Includes the release notes and release commit for the `v%s` release. Once this PR is merged, we will be able to tag `v%s` on the merge commit.", state.VitessRelease.Release, state.VitessRelease.Release),
 			Branch: newBranchName,
 			Base:   state.VitessRelease.ReleaseBranch,
 			Labels: []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}, {Name: "Do Not Merge"}},
