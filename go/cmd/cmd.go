@@ -89,13 +89,13 @@ func Execute() {
 	git.CorrectCleanRepo(s.VitessRepo)
 
 	remote := git.FindRemoteName(s.VitessRepo)
-	release, releaseBranch, isLatestRelease := releaser.FindNextRelease(remote, s.MajorRelease)
+	release, releaseBranch, isLatestRelease, isFromMain := releaser.FindNextRelease(remote, s.MajorRelease)
 	issueNb, issueLink, releaseFromIssue := github.GetReleaseIssueInfo(s.VitessRepo, s.MajorRelease, rcIncrement)
 
 	// if we want to do an RC-1 release and the branch is different from `main`, something is wrong
 	// and if we want to do an >= RC-2 release, the release as to be the latest AKA on the latest release branch
-	if rcIncrement == 1 && releaseBranch != "main" || rcIncrement >= 2 && !isLatestRelease {
-		log.Fatalf("wanted: RC %d but release branch was %s and latest release was %v", rcIncrement, releaseBranch, isLatestRelease)
+	if rcIncrement == 1 && !isFromMain || rcIncrement >= 2 && !isLatestRelease {
+		log.Fatalf("wanted: RC %d but release branch was %s, latest release was %v and is from main is %v", rcIncrement, releaseBranch, isLatestRelease, isFromMain)
 	}
 
 	s.Remote = remote

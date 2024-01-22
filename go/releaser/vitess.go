@@ -36,21 +36,26 @@ import (
 // Secondly, if the release we want to use is not on the main branch, it checks out
 // to a release branch matching the given major release number. The SNAPSHOT version
 // on that release branch is then returned.
-func FindNextRelease(remote, majorRelease string) (string, string, bool) {
+func FindNextRelease(remote, majorRelease string) (
+	currentRelease,
+	releaseBranchName string,
+	isLatestRelease,
+	isFromMain bool,
+) {
 	git.Checkout("main")
 	git.ResetHard(remote, "main")
 
-	currentRelease := getCurrentRelease()
+	currentRelease = getCurrentRelease()
 	mainMajor := releaseToMajor(currentRelease)
+	releaseBranchName = fmt.Sprintf("release-%s.0", majorRelease)
 
 	if mainMajor == majorRelease {
-		return currentRelease, "main", true
+		return currentRelease, releaseBranchName, true, true
 	}
 
 	// main branch does not match, let's try release branches
-	branchName := fmt.Sprintf("release-%s.0", majorRelease)
-	git.Checkout(branchName)
-	git.ResetHard(remote, branchName)
+	git.Checkout(releaseBranchName)
+	git.ResetHard(remote, releaseBranchName)
 
 	currentRelease = getCurrentRelease()
 	major := releaseToMajor(currentRelease)
@@ -58,7 +63,7 @@ func FindNextRelease(remote, majorRelease string) (string, string, bool) {
 	// if the current release and the wanted release are different, it means there is an
 	// error, we were not able to find the proper branch / corresponding release
 	if major != majorRelease {
-		log.Fatalf("on branch '%s', could not find the corresponding major release '%s'", branchName, majorRelease)
+		log.Fatalf("on branch '%s', could not find the corresponding major release '%s'", releaseBranchName, majorRelease)
 	}
 
 	mainMajorNb, err := strconv.Atoi(mainMajor)
@@ -69,7 +74,7 @@ func FindNextRelease(remote, majorRelease string) (string, string, bool) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return currentRelease, branchName, mainMajorNb-1 == majorNb
+	return currentRelease, releaseBranchName, mainMajorNb-1 == majorNb, false
 }
 
 func getCurrentRelease() string {
