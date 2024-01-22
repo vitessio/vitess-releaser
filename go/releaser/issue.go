@@ -35,6 +35,7 @@ const (
 	stateReadingBackport
 	stateReadingReleaseBlockerIssue
 	stateReadingCodeFreezeItem
+	stateReadingUpdateSnapshotOnMainItem
 	stateReadingCreateReleasePRItem
 	stateReadingNewMilestoneItem
 	stateReadingMergedReleasePRItem
@@ -59,9 +60,10 @@ const (
 	releaseBlockerItem       = "Make sure release blocker Issues are closed, list below."
 
 	// Pre-Release
-	codeFreezeItem      = "Code Freeze."
-	createReleasePRItem = "Create Release PR."
-	newMilestoneItem    = "Create new GitHub Milestone."
+	codeFreezeItem           = "Code Freeze."
+	updateSnapshotOnMainItem = "Update the SNAPSHOT version on main."
+	createReleasePRItem      = "Create Release PR."
+	newMilestoneItem         = "Create new GitHub Milestone."
 
 	// Release
 	mergeReleasePRItem   = "Merge the Release PR."
@@ -104,9 +106,10 @@ type (
 		ReleaseBlocker    ParentOfItems
 
 		// Pre-Release
-		CodeFreeze         ItemWithLink
-		CreateReleasePR    ItemWithLink
-		NewGitHubMilestone ItemWithLink
+		CodeFreeze           ItemWithLink
+		UpdateSnapshotOnMain ItemWithLink
+		CreateReleasePR      ItemWithLink
+		NewGitHubMilestone   ItemWithLink
 
 		// Release
 		MergeReleasePR       ItemWithLink
@@ -151,6 +154,12 @@ const (
 - [{{fmtStatus .CodeFreeze.Done}}] Code Freeze.
 {{- if .CodeFreeze.URL }}
   - {{ .CodeFreeze.URL }}
+{{- end }}
+{{- if gt .RC 0 }}
+- [{{fmtStatus .UpdateSnapshotOnMain.Done}}] Update the SNAPSHOT version on main.
+{{- if .UpdateSnapshotOnMain.URL }}
+  - {{ .UpdateSnapshotOnMain.URL }}
+{{- end }}
 {{- end }}
 - [{{fmtStatus .CreateReleasePR.Done}}] Create Release PR.
 {{- if .CreateReleasePR.URL }}
@@ -277,6 +286,12 @@ func (ctx *State) LoadIssue() {
 					s = stateReadingCodeFreezeItem
 				}
 			}
+			if strings.Contains(line, updateSnapshotOnMainItem) {
+				newIssue.UpdateSnapshotOnMain.Done = strings.HasPrefix(line, markdownItemDone)
+				if isNextLineAList(lines, i) {
+					s = stateReadingUpdateSnapshotOnMainItem
+				}
+			}
 			if strings.Contains(line, createReleasePRItem) {
 				newIssue.CreateReleasePR.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
@@ -350,6 +365,8 @@ func (ctx *State) LoadIssue() {
 			newIssue.ReleaseBlocker.Items = append(newIssue.ReleaseBlocker.Items, handleNewListItem(lines, i, &s))
 		case stateReadingCodeFreezeItem:
 			newIssue.CodeFreeze.URL = handleSingleTextItem(line, &s)
+		case stateReadingUpdateSnapshotOnMainItem:
+			newIssue.UpdateSnapshotOnMain.URL = handleSingleTextItem(line, &s)
 		case stateReadingCreateReleasePRItem:
 			newIssue.CreateReleasePR.URL = handleSingleTextItem(line, &s)
 		case stateReadingNewMilestoneItem:
