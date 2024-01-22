@@ -79,50 +79,16 @@ func Execute() {
 
 	var s releaser.State
 
-	if live {
-		s.VitessRelease.Repo = "vitessio/vitess"
-	} else {
-		s.VitessRelease.Repo = github.CurrentUser() + "/vitess"
-	}
-	s.VitessRelease.MajorRelease = releaseVersion
+	vitessRepo, _ := getGitRepos()
 
-	git.CorrectCleanRepo(s.VitessRelease.Repo)
+	vitessRelease, issueNb, issueLink := setUpVitessReleaseInformation(s, vitessRepo)
 
-	remote := git.FindRemoteName(s.VitessRelease.Repo)
-	release, releaseBranch, isLatestRelease, isFromMain := releaser.FindNextRelease(remote, s.VitessRelease.MajorRelease)
-	issueNb, issueLink, releaseFromIssue := github.GetReleaseIssueInfo(s.VitessRelease.Repo, s.VitessRelease.MajorRelease, rcIncrement)
-
-	// if we want to do an RC-1 release and the branch is different from `main`, something is wrong
-	// and if we want to do an >= RC-2 release, the release as to be the latest AKA on the latest release branch
-	if rcIncrement == 1 && !isFromMain || rcIncrement >= 2 && !isLatestRelease {
-		log.Fatalf("wanted: RC %d but release branch was %s, latest release was %v and is from main is %v", rcIncrement, releaseBranch, isLatestRelease, isFromMain)
-	}
-
-	s.VitessRelease.Remote = remote
-	s.VitessRelease.ReleaseBranch = releaseBranch
-	s.VitessRelease.IsLatestRelease = isLatestRelease
+	s.VitessRelease = vitessRelease
 	s.IssueNbGH = issueNb
 	s.IssueLink = issueLink
-	s.VitessRelease.Release = releaseFromIssue
-	if releaseFromIssue == "" {
-		s.VitessRelease.Release = release
-	}
 	s.Issue.RC = rcIncrement
 
-	// We only require the release date if the release issue does not exist on GH
-	// If the issue already exist we ignore the flag, the value will be loaded from the Issue
-	if s.IssueLink == "" {
-		if releaseDate == "" {
-			fmt.Println("--date flag missing")
-			_ = rootCmd.Help()
-			os.Exit(1)
-		}
-		parsedReleaseDate, err := time.Parse(time.DateOnly, releaseDate)
-		if err != nil {
-			panic(err)
-		}
-		s.Issue.Date = parsedReleaseDate
-	}
+	setUpIssueDate(&s)
 
 	ctx := releaser.WrapState(context.Background(), &s)
 
@@ -130,4 +96,63 @@ func Execute() {
 		fmt.Fprintf(os.Stderr, "Whoops. There was an error while executing your CLI '%s'", err)
 		os.Exit(1)
 	}
+}
+
+func setUpVitessReleaseInformation(s releaser.State, repo string) (releaser.ReleaseInformation, int, string) {
+	s.GoToVitess()
+
+	git.CorrectCleanRepo(s.VitessRelease.Repo)
+
+	remote := git.FindRemoteName(s.VitessRelease.Repo)
+	release, releaseBranch, isLatestRelease, isFromMain := releaser.FindNextRelease(remote, releaseVersion)
+	issueNb, issueLink, releaseFromIssue := github.GetReleaseIssueInfo(s.VitessRelease.Repo, releaseVersion, rcIncrement)
+
+	// if we want to do an RC-1 release and the branch is different from `main`, something is wrong
+	// and if we want to do an >= RC-2 release, the release as to be the latest AKA on the latest release branch
+	if rcIncrement == 1 && !isFromMain || rcIncrement >= 2 && !isLatestRelease {
+		log.Fatalf("wanted: RC %d but release branch was %s, latest release was %v and is from main is %v", rcIncrement, releaseBranch, isLatestRelease, isFromMain)
+	}
+
+	vitessRelease := releaser.ReleaseInformation{
+		Repo:            repo,
+		Remote:          remote,
+		ReleaseBranch:   releaseBranch,
+		MajorRelease:    releaseVersion,
+		IsLatestRelease: isLatestRelease,
+		Release:         releaseFromIssue,
+	}
+	if vitessRelease.Release == "" {
+		vitessRelease.Release = release
+	}
+	return vitessRelease, issueNb, issueLink
+}
+
+func setUpIssueDate(s *releaser.State) {
+	// We only require the release date if the release issue does not exist on GH
+	// If the issue already exist we ignore the flag, the value will be loaded from the Issue
+	if s.IssueLink != "" {
+		return
+	}
+	if releaseDate == "" {
+		fmt.Println("--date flag missing")
+		_ = rootCmd.Help()
+		os.Exit(1)
+	}
+	parsedReleaseDate, err := time.Parse(time.DateOnly, releaseDate)
+	if err != nil {
+		panic(err)
+	}
+	s.Issue.Date = parsedReleaseDate
+}
+
+func getGitRepos() (vitessRepo, vtopRepo string) {
+	if live {
+		vitessRepo = "vitessio/vitess"
+		vtopRepo = "planetscale/vitess-operator"
+	} else {
+		currentGitHubUser := github.CurrentUser()
+		vitessRepo = currentGitHubUser + "/vitess"
+		vtopRepo = currentGitHubUser + "/vitess-operator"
+	}
+	return
 }

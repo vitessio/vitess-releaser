@@ -18,6 +18,14 @@ package releaser
 
 import (
 	"context"
+	"log"
+	"path"
+	"syscall"
+)
+
+const (
+	pathVitess         = "vitess"
+	pathVitessOperator = "vitess-operator"
 )
 
 var (
@@ -44,8 +52,28 @@ type ReleaseInformation struct {
 
 type State struct {
 	VitessRelease ReleaseInformation
+	VtOpRelease   ReleaseInformation
 
 	Issue     Issue
 	IssueLink string
 	IssueNbGH int
+
+	currentPath string
+}
+
+func (s *State) GoToVitess() {
+	p := pathVitess
+	if s.currentPath != "" {
+		p = "../" + p
+		s.currentPath = pathVitess
+	}
+	cwd, err := syscall.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	p = path.Join(cwd, p)
+	err = syscall.Chdir(p)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
