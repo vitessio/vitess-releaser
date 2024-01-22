@@ -60,10 +60,11 @@ const (
 	releaseBlockerItem       = "Make sure release blocker Issues are closed, list below."
 
 	// Pre-Release
-	codeFreezeItem           = "Code Freeze."
-	updateSnapshotOnMainItem = "Update the SNAPSHOT version on main."
-	createReleasePRItem      = "Create Release PR."
-	newMilestoneItem         = "Create new GitHub Milestone."
+	codeFreezeItem                = "Code Freeze."
+	copyBranchProtectionRulesItem = "Copy branch protection rules."
+	updateSnapshotOnMainItem      = "Update the SNAPSHOT version on main."
+	createReleasePRItem           = "Create Release PR."
+	newMilestoneItem              = "Create new GitHub Milestone."
 
 	// Release
 	mergeReleasePRItem   = "Merge the Release PR."
@@ -106,10 +107,11 @@ type (
 		ReleaseBlocker    ParentOfItems
 
 		// Pre-Release
-		CodeFreeze           ItemWithLink
-		UpdateSnapshotOnMain ItemWithLink
-		CreateReleasePR      ItemWithLink
-		NewGitHubMilestone   ItemWithLink
+		CodeFreeze                ItemWithLink
+		CopyBranchProtectionRules bool
+		UpdateSnapshotOnMain      ItemWithLink
+		CreateReleasePR           ItemWithLink
+		NewGitHubMilestone        ItemWithLink
 
 		// Release
 		MergeReleasePR       ItemWithLink
@@ -155,7 +157,8 @@ const (
 {{- if .CodeFreeze.URL }}
   - {{ .CodeFreeze.URL }}
 {{- end }}
-{{- if gt .RC 0 }}
+{{- if eq .RC 1 }}
+- [{{fmtStatus .CopyBranchProtectionRules}}] Copy branch protection rules.
 - [{{fmtStatus .UpdateSnapshotOnMain.Done}}] Update the SNAPSHOT version on main.
 {{- if .UpdateSnapshotOnMain.URL }}
   - {{ .UpdateSnapshotOnMain.URL }}
@@ -285,6 +288,9 @@ func (ctx *State) LoadIssue() {
 				if isNextLineAList(lines, i) {
 					s = stateReadingCodeFreezeItem
 				}
+			}
+			if strings.Contains(line, copyBranchProtectionRulesItem) {
+				newIssue.CopyBranchProtectionRules = strings.HasPrefix(line, markdownItemDone)
 			}
 			if strings.Contains(line, updateSnapshotOnMainItem) {
 				newIssue.UpdateSnapshotOnMain.Done = strings.HasPrefix(line, markdownItemDone)

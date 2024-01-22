@@ -48,7 +48,7 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 	}
 
 	waitForPRToBeMerged := func(nb int) {
-		pl.NewStepf("Waiting for the PR to be merged. You must enable bypassing the branch protection rules in: https://github.com/vitessio/vitess/settings/branches")
+		pl.NewStepf("Waiting for the PR to be merged. You must enable bypassing the branch protection rules in: https://github.com/%s/settings/branches", state.VitessRepo)
 	outer:
 		for {
 			select {
