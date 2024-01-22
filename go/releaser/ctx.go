@@ -45,9 +45,6 @@ type ReleaseInformation struct {
 type State struct {
 	VitessRelease ReleaseInformation
 
-	Remote        string
-	ReleaseBranch string
-
 	MajorRelease    string
 	Release         string
 	IsLatestRelease bool

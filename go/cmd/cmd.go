@@ -98,8 +98,8 @@ func Execute() {
 		log.Fatalf("wanted: RC %d but release branch was %s, latest release was %v and is from main is %v", rcIncrement, releaseBranch, isLatestRelease, isFromMain)
 	}
 
-	s.Remote = remote
-	s.ReleaseBranch = releaseBranch
+	s.VitessRelease.Remote = remote
+	s.VitessRelease.ReleaseBranch = releaseBranch
 	s.IsLatestRelease = isLatestRelease
 	s.IssueNbGH = issueNb
 	s.IssueLink = issueLink

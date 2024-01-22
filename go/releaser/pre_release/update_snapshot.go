@@ -46,7 +46,7 @@ func UpdateSnapshotOnMain(state *releaser.State) (*logging.ProgressLogging, func
 		pl.NewStepf("Fetch from git remote")
 		git.CorrectCleanRepo(state.VitessRelease.Repo)
 		git.Checkout("main")
-		git.ResetHard(state.Remote, "main")
+		git.ResetHard(state.VitessRelease.Remote, "main")
 
 		nextNextRelease := releaser.FindVersionAfterNextRelease(state)
 		snapshotRelease := fmt.Sprintf("%s-SNAPSHOT", nextNextRelease)
@@ -62,8 +62,8 @@ func UpdateSnapshotOnMain(state *releaser.State) (*logging.ProgressLogging, func
 			return url
 		}
 
-		pl.NewStepf("Create new branch based on %s/%s", state.Remote, "main")
-		newBranchName := git.FindNewGeneratedBranch(state.Remote, "main", "snapshot-update")
+		pl.NewStepf("Create new branch based on %s/%s", state.VitessRelease.Remote, "main")
+		newBranchName := git.FindNewGeneratedBranch(state.VitessRelease.Remote, "main", "snapshot-update")
 
 		pl.NewStepf("Update version.go")
 		UpdateVersionGoFile(snapshotRelease)
@@ -78,7 +78,7 @@ func UpdateSnapshotOnMain(state *releaser.State) (*logging.ProgressLogging, func
 			done = true
 			return ""
 		}
-		git.Push(state.Remote, newBranchName)
+		git.Push(state.VitessRelease.Remote, newBranchName)
 
 		pl.NewStepf("Create Pull Request")
 		pr := github.PR{
