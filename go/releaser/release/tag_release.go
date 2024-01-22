@@ -39,19 +39,25 @@ func TagRelease(state *releaser.State) (*logging.ProgressLogging, func() string)
 		git.CorrectCleanRepo(state.VitessRepo)
 		git.ResetHard(state.Remote, state.ReleaseBranch)
 
+		// We want to transform the release name into lower case in case the release is an RC
+		// Example: we will go from v19.0.0-RC1 to v19.0.0-rc1 which is a better format for our tags
+		lowerCaseRelease := strings.ToLower(state.Release)
+
 		pl.NewStepf("Create and push the tags")
-		gitTag := fmt.Sprintf("v%s", state.Release)
+		gitTag := fmt.Sprintf("v%s", lowerCaseRelease)
 		git.TagAndPush(state.Remote, gitTag)
+
 		// we also need to tag and push the Go doc tag
 		// i.e. if we release v17.0.1, we also want to tag: v0.17.1
-		nextReleaseSplit := strings.Split(state.Release, ".")
+		nextReleaseSplit := strings.Split(lowerCaseRelease, ".")
 		if len(nextReleaseSplit) != 3 {
 			log.Fatalf("%s was not formated x.x.x", state.Release)
 		}
-		git.TagAndPush(state.Remote, fmt.Sprintf("v0.%s.%s", nextReleaseSplit[0], nextReleaseSplit[2]))
+		gdocGitTag := fmt.Sprintf("v0.%s.%s", nextReleaseSplit[0], nextReleaseSplit[2])
+		git.TagAndPush(state.Remote, gdocGitTag)
 
 		pl.NewStepf("Create the release on the GitHub UI")
-		releaseNotesPath := path.Join(pre_release.GetReleaseNotesDirPath(state.Release), "release_notes.md")
+		releaseNotesPath := path.Join(pre_release.GetReleaseNotesDirPath(releaser.RemoveRCFromReleaseTitle(state.Release)), "release_notes.md")
 		url := github.CreateRelease(state.VitessRepo, gitTag, releaseNotesPath, state.IsLatestRelease)
 
 		pl.NewStepf("Done %s", url)

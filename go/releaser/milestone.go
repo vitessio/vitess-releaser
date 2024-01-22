@@ -24,14 +24,9 @@ import (
 )
 
 func FindVersionAfterNextRelease(state *State) string {
-	segments := strings.Split(state.Release, ".")
+	segments := strings.Split(RemoveRCFromReleaseTitle(state.Release), ".")
 	if len(segments) != 3 {
 		return ""
-	}
-
-	// Remove the -RCX token from the last segment of the release name
-	if strings.Contains(segments[2], "-RC") {
-		segments[2] = segments[2][:strings.Index(segments[2], "-RC")]
 	}
 
 	segmentInts := make([]int, 0, len(segments))

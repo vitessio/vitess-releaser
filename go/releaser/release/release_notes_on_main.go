@@ -65,7 +65,7 @@ func ReleaseNotesOnMain(state *releaser.State) (*logging.ProgressLogging, func()
 		newBranchName := git.FindNewGeneratedBranch(state.Remote, "main", "release-notes-main")
 
 		pl.NewStepf("Copy release notes from %s/%s", state.Remote, state.ReleaseBranch)
-		releaseNotesPath := pre_release.GetReleaseNotesDirPathForMajor(state.Release)
+		releaseNotesPath := pre_release.GetReleaseNotesDirPathForMajor(releaser.RemoveRCFromReleaseTitle(state.Release))
 		git.CheckoutPath(state.Remote, state.ReleaseBranch, releaseNotesPath)
 
 		pl.NewStepf("Commit and push to branch %s", newBranchName)

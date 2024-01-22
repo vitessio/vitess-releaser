@@ -419,8 +419,8 @@ func CreateReleaseIssue(state *State) (*logging.ProgressLogging, func() (int, st
 	return pl, func() (int, string) {
 		pl.NewStepf("Create Release Issue on GitHub")
 		issueTitle := fmt.Sprintf("Release of v%s", state.Release)
-		if state.RC > 0 {
-			issueTitle = fmt.Sprintf("%s-RC%d", issueTitle, state.RC)
+		if state.Issue.RC > 0 {
+			issueTitle = fmt.Sprintf("%s-RC%d", issueTitle, state.Issue.RC)
 		}
 		newIssue := github.Issue{
 			Title:    issueTitle,
@@ -476,4 +476,8 @@ func CloseReleaseIssue(state *State) (*logging.ProgressLogging, func() string) {
 		pl.NewStepf("Issue updated, see: %s", issueLink)
 		return state.IssueLink
 	}
+}
+
+func RemoveRCFromReleaseTitle(release string) string {
+	return release[:strings.Index(release, "-RC")]
 }

@@ -100,7 +100,6 @@ func Execute() {
 
 	s.Remote = remote
 	s.ReleaseBranch = releaseBranch
-	s.RC = rcIncrement
 	s.IsLatestRelease = isLatestRelease
 	s.IssueNbGH = issueNb
 	s.IssueLink = issueLink
@@ -108,6 +107,7 @@ func Execute() {
 	if releaseFromIssue == "" {
 		s.Release = release
 	}
+	s.Issue.RC = rcIncrement
 
 	// We only require the release date if the release issue does not exist on GH
 	// If the issue already exist we ignore the flag, the value will be loaded from the Issue

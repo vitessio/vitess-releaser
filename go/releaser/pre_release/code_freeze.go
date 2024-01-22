@@ -75,7 +75,7 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 			pl.NewStepf("Issue updated, see: %s", issueLink)
 		}()
 
-		if state.RC == 1 {
+		if state.Issue.RC == 1 {
 			pl.NewStepf("Fetch from git remote and create branch %s", state.ReleaseBranch)
 		} else {
 			pl.NewStepf("Fetch from git remote")
@@ -83,7 +83,7 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 
 		git.CorrectCleanRepo(state.VitessRepo)
 
-		if state.RC == 1 {
+		if state.Issue.RC == 1 {
 			git.ResetHard(state.Remote, "main")
 			if err := git.CreateBranchAndCheckout(state.ReleaseBranch, fmt.Sprintf("%s/main", state.Remote)); err != nil {
 				git.Checkout(state.ReleaseBranch)
