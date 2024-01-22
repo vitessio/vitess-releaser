@@ -32,8 +32,19 @@ func WrapState(ctx context.Context, s *State) context.Context {
 	return context.WithValue(ctx, skey, s)
 }
 
+type ReleaseInformation struct {
+	Repo          string
+	Remote        string
+	ReleaseBranch string
+
+	MajorRelease    string
+	Release         string
+	IsLatestRelease bool
+}
+
 type State struct {
-	VitessRepo    string
+	VitessRelease ReleaseInformation
+
 	Remote        string
 	ReleaseBranch string
 

@@ -45,7 +45,7 @@ func MergeReleasePR(state *releaser.State) (*logging.ProgressLogging, func() str
 		for {
 			select {
 			case <-time.After(5 * time.Second):
-				if github.IsPRMerged(state.VitessRepo, nb) {
+				if github.IsPRMerged(state.VitessRelease.Repo, nb) {
 					break outer
 				}
 			}

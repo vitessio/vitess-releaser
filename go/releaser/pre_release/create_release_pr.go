@@ -84,14 +84,14 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 
 		// setup
 		pl.NewStepf("Fetch from git remote")
-		git.CorrectCleanRepo(state.VitessRepo)
+		git.CorrectCleanRepo(state.VitessRelease.Repo)
 		git.ResetHard(state.Remote, state.ReleaseBranch)
 
 		releasePRName := fmt.Sprintf("[%s] Release of `v%s`", state.ReleaseBranch, state.Release)
 
 		// look for existing PRs
 		pl.NewStepf("Look for an existing Release Pull Request named '%s'", releasePRName)
-		if _, url = github.FindPR(state.VitessRepo, releasePRName); url != "" {
+		if _, url = github.FindPR(state.VitessRelease.Repo, releasePRName); url != "" {
 			pl.TotalSteps = 5 // only 5 total steps in this situation
 			pl.NewStepf("An opened Release Pull Request was found: %s", url)
 			done = true
@@ -152,7 +152,7 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 			Base:   state.ReleaseBranch,
 			Labels: []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}, {Name: "Do Not Merge"}},
 		}
-		_, url = pr.Create(state.VitessRepo)
+		_, url = pr.Create(state.VitessRelease.Repo)
 		pl.NewStepf("Pull Request created %s", url)
 		done = true
 		return url

@@ -36,7 +36,7 @@ func TagRelease(state *releaser.State) (*logging.ProgressLogging, func() string)
 
 	return pl, func() string {
 		pl.NewStepf("Fetch from git remote")
-		git.CorrectCleanRepo(state.VitessRepo)
+		git.CorrectCleanRepo(state.VitessRelease.Repo)
 		git.ResetHard(state.Remote, state.ReleaseBranch)
 
 		// We want to transform the release name into lower case in case the release is an RC
@@ -58,7 +58,7 @@ func TagRelease(state *releaser.State) (*logging.ProgressLogging, func() string)
 
 		pl.NewStepf("Create the release on the GitHub UI")
 		releaseNotesPath := path.Join(pre_release.GetReleaseNotesDirPath(releaser.RemoveRCFromReleaseTitle(state.Release)), "release_notes.md")
-		url := github.CreateRelease(state.VitessRepo, gitTag, releaseNotesPath, state.IsLatestRelease)
+		url := github.CreateRelease(state.VitessRelease.Repo, gitTag, releaseNotesPath, state.IsLatestRelease)
 
 		pl.NewStepf("Done %s", url)
 		state.Issue.TagRelease.Done = true

@@ -35,17 +35,17 @@ func CloseMilestone(state *releaser.State) (*logging.ProgressLogging, func() str
 		nextMilestone := fmt.Sprintf("v%s", nextRelease)
 
 		pl.NewStepf("Get opened Pull Requests for Milestone %s", milestone)
-		prs := github.GetOpenedPRsByMilestone(state.VitessRepo, milestone)
+		prs := github.GetOpenedPRsByMilestone(state.VitessRelease.Repo, milestone)
 
 		if len(prs) > 0 {
 			pl.NewStepf("Move %d Pull Requests to the %s Milestone", len(prs), nextMilestone)
-			github.AssignMilestoneToPRs(state.VitessRepo, nextMilestone, prs)
+			github.AssignMilestoneToPRs(state.VitessRelease.Repo, nextMilestone, prs)
 		} else {
 			pl.TotalSteps--
 		}
 
 		pl.NewStepf("Close Milestone %s", milestone)
-		url := github.CloseMilestone(state.VitessRepo, milestone)
+		url := github.CloseMilestone(state.VitessRelease.Repo, milestone)
 
 		pl.NewStepf("Update Issue %s on GitHub", state.IssueLink)
 		state.Issue.CloseMilestone.Done = true

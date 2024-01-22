@@ -21,4 +21,5 @@ const (
 	ReleaseDate  = "date"
 	RCIncrement  = "rc"
 	RunLive      = "live"
+	VtOpRelease  = "vtop-release"
 )

@@ -44,7 +44,7 @@ func UpdateSnapshotOnMain(state *releaser.State) (*logging.ProgressLogging, func
 		}()
 
 		pl.NewStepf("Fetch from git remote")
-		git.CorrectCleanRepo(state.VitessRepo)
+		git.CorrectCleanRepo(state.VitessRelease.Repo)
 		git.Checkout("main")
 		git.ResetHard(state.Remote, "main")
 
@@ -55,7 +55,7 @@ func UpdateSnapshotOnMain(state *releaser.State) (*logging.ProgressLogging, func
 
 		// look for existing PRs
 		pl.NewStepf("Look for an existing Pull Request named '%s'", snapshotUpdatePRName)
-		if _, url = github.FindPR(state.VitessRepo, snapshotUpdatePRName); url != "" {
+		if _, url = github.FindPR(state.VitessRelease.Repo, snapshotUpdatePRName); url != "" {
 			pl.TotalSteps = 5 // only 5 total steps in this situation
 			pl.NewStepf("An opened Pull Request was found: %s", url)
 			done = true
@@ -88,7 +88,7 @@ func UpdateSnapshotOnMain(state *releaser.State) (*logging.ProgressLogging, func
 			Base:   "main",
 			Labels: []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}},
 		}
-		_, url = pr.Create(state.VitessRepo)
+		_, url = pr.Create(state.VitessRelease.Repo)
 		pl.NewStepf("Pull Request created %s", url)
 		done = true
 		return ""

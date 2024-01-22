@@ -48,12 +48,12 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 	}
 
 	waitForPRToBeMerged := func(nb int) {
-		pl.NewStepf("Waiting for the PR to be merged. You must enable bypassing the branch protection rules in: https://github.com/%s/settings/branches", state.VitessRepo)
+		pl.NewStepf("Waiting for the PR to be merged. You must enable bypassing the branch protection rules in: https://github.com/%s/settings/branches", state.VitessRelease.Repo)
 	outer:
 		for {
 			select {
 			case <-time.After(5 * time.Second):
-				if github.IsPRMerged(state.VitessRepo, nb) {
+				if github.IsPRMerged(state.VitessRelease.Repo, nb) {
 					break outer
 				}
 			}
@@ -81,7 +81,7 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 			pl.NewStepf("Fetch from git remote")
 		}
 
-		git.CorrectCleanRepo(state.VitessRepo)
+		git.CorrectCleanRepo(state.VitessRelease.Repo)
 
 		if state.Issue.RC == 1 {
 			git.ResetHard(state.Remote, "main")
@@ -98,7 +98,7 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 
 		// look for existing code freeze PRs
 		pl.NewStepf("Look for an existing Code Freeze Pull Request named '%s'", codeFreezePRName)
-		if nb, url = github.FindPR(state.VitessRepo, codeFreezePRName); url != "" {
+		if nb, url = github.FindPR(state.VitessRelease.Repo, codeFreezePRName); url != "" {
 			pl.TotalSteps = 7 // only 7 total steps in this situation
 			pl.NewStepf("An opened Code Freeze Pull Request was found: %s", url)
 			waitForPRToBeMerged(nb)
@@ -138,7 +138,7 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 			Base:   state.ReleaseBranch,
 			Labels: []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}},
 		}
-		nb, url = pr.Create(state.VitessRepo)
+		nb, url = pr.Create(state.VitessRelease.Repo)
 		pl.NewStepf("Pull Request created %s", url)
 		waitForPRToBeMerged(nb)
 		done = true

@@ -33,5 +33,5 @@ func AnnouncementMessage(state *releaser.State) string {
 }
 
 func PostReleaseMessage(state *releaser.State) string {
-	return fmt.Sprintf(postReleaseSlackMessage, state.Release, state.VitessRepo, strings.ToLower(state.Release))
+	return fmt.Sprintf(postReleaseSlackMessage, state.Release, state.VitessRelease.Repo, strings.ToLower(state.Release))
 }

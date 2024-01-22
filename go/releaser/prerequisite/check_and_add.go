@@ -34,11 +34,11 @@ func CheckAndAddPRsIssues(state *releaser.State) (*logging.ProgressLogging, func
 		state.LoadIssue()
 
 		pl.NewStepf("Check and add Pull Requests")
-		prsOnGH := github.CheckBackportToPRs(state.VitessRepo, state.MajorRelease)
+		prsOnGH := github.CheckBackportToPRs(state.VitessRelease.Repo, state.MajorRelease)
 		state.Issue.CheckBackport = addLinksToParentOfItems(state.Issue.CheckBackport, prsOnGH)
 
 		pl.NewStepf("Check and add Release Blocker Issues")
-		issuesOnGH := github.CheckReleaseBlockerIssues(state.VitessRepo, state.MajorRelease)
+		issuesOnGH := github.CheckReleaseBlockerIssues(state.VitessRelease.Repo, state.MajorRelease)
 		state.Issue.ReleaseBlocker = addLinksToParentOfItems(state.Issue.ReleaseBlocker, issuesOnGH)
 
 		pl.NewStepf("Update Issue %s on GitHub", state.IssueLink)

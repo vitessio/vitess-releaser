@@ -45,7 +45,7 @@ func BackToDevMode(state *releaser.State) (*logging.ProgressLogging, func() stri
 		}()
 
 		pl.NewStepf("Fetch from git remote")
-		git.CorrectCleanRepo(state.VitessRepo)
+		git.CorrectCleanRepo(state.VitessRelease.Repo)
 		git.ResetHard(state.Remote, state.ReleaseBranch)
 
 		// If we are releasing an RC release, the next SNAPSHOT version on the release branch
@@ -63,7 +63,7 @@ func BackToDevMode(state *releaser.State) (*logging.ProgressLogging, func() stri
 
 		// look for existing PRs
 		pl.NewStepf("Look for an existing Pull Request named '%s'", backToDevModePRName)
-		if _, url = github.FindPR(state.VitessRepo, backToDevModePRName); url != "" {
+		if _, url = github.FindPR(state.VitessRelease.Repo, backToDevModePRName); url != "" {
 			pl.TotalSteps = 5 // only 5 total steps in this situation
 			pl.NewStepf("An opened Pull Request was found: %s", url)
 			done = true
@@ -96,7 +96,7 @@ func BackToDevMode(state *releaser.State) (*logging.ProgressLogging, func() stri
 			Base:   state.ReleaseBranch,
 			Labels: []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}},
 		}
-		_, url = pr.Create(state.VitessRepo)
+		_, url = pr.Create(state.VitessRelease.Repo)
 		pl.NewStepf("Pull Request created %s", url)
 		done = true
 		return ""

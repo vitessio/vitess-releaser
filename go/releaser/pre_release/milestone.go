@@ -49,7 +49,7 @@ func NewMilestone(state *releaser.State) (*logging.ProgressLogging, func() strin
 		nextNextRelease := releaser.FindVersionAfterNextRelease(state)
 		newMilestone := fmt.Sprintf("v%s", nextNextRelease)
 
-		ms := github.GetMilestonesByName(state.VitessRepo, newMilestone)
+		ms := github.GetMilestonesByName(state.VitessRelease.Repo, newMilestone)
 		if len(ms) > 0 {
 			pl.SetTotalStep(4) // we do one lest step if the milestone already exist
 			link = ms[0].URL
@@ -58,7 +58,7 @@ func NewMilestone(state *releaser.State) (*logging.ProgressLogging, func() strin
 		}
 
 		pl.NewStepf("Creating Milestone %s on GitHub", newMilestone)
-		link = github.CreateNewMilestone(state.VitessRepo, newMilestone)
+		link = github.CreateNewMilestone(state.VitessRelease.Repo, newMilestone)
 		pl.NewStepf("New Milestone %s created: %s", newMilestone, link)
 		return link
 	}

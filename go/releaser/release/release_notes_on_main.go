@@ -45,7 +45,7 @@ func ReleaseNotesOnMain(state *releaser.State) (*logging.ProgressLogging, func()
 		}()
 
 		pl.NewStepf("Fetch from git remote")
-		git.CorrectCleanRepo(state.VitessRepo)
+		git.CorrectCleanRepo(state.VitessRelease.Repo)
 		git.ResetHard(state.Remote, state.ReleaseBranch)
 
 		git.Checkout("main")
@@ -54,7 +54,7 @@ func ReleaseNotesOnMain(state *releaser.State) (*logging.ProgressLogging, func()
 		prName := fmt.Sprintf("Copy `v%s` release notes on `main`", state.Release)
 
 		pl.NewStepf("Look for an existing Pull Request named '%s'", prName)
-		if _, url = github.FindPR(state.VitessRepo, prName); url != "" {
+		if _, url = github.FindPR(state.VitessRelease.Repo, prName); url != "" {
 			pl.TotalSteps = 5 // only 5 total steps in this situation
 			pl.NewStepf("An opened Pull Request was found: %s", url)
 			done = true
@@ -85,7 +85,7 @@ func ReleaseNotesOnMain(state *releaser.State) (*logging.ProgressLogging, func()
 			Base:   "main",
 			Labels: []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}},
 		}
-		_, url = pr.Create(state.VitessRepo)
+		_, url = pr.Create(state.VitessRelease.Repo)
 		pl.NewStepf("Pull Request created %s", url)
 		done = true
 		return url
