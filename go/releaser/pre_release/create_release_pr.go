@@ -112,10 +112,8 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 			git.Push(state.Remote, newBranchName)
 		}
 
-		releaseWithNoRC := releaser.RemoveRCFromReleaseTitle(state.Release)
-
 		pl.NewStepf("Generate the release notes")
-		generateReleaseNotes(state, releaseWithNoRC)
+		generateReleaseNotes(state, releaser.RemoveRCFromReleaseTitle(state.Release))
 
 		pl.NewStepf("Commit the release notes")
 		if !git.CommitAll("Addition of release notes") {
@@ -123,14 +121,15 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 			git.Push(state.Remote, newBranchName)
 		}
 
+		lowerRelease := strings.ToLower(state.Release)
 		pl.NewStepf("Update the code examples")
-		updateExamples(strings.ToLower(state.Release), "") // TODO: vitess-operator version not implemented
+		updateExamples(lowerRelease, "") // TODO: vitess-operator version not implemented
 
 		pl.NewStepf("Update version.go")
-		UpdateVersionGoFile(releaseWithNoRC)
+		UpdateVersionGoFile(lowerRelease)
 
 		pl.NewStepf("Update the Java directory")
-		UpdateJavaDir(releaseWithNoRC)
+		UpdateJavaDir(lowerRelease)
 
 		pl.NewStepf("Commit the update to the codebase for the v%s release", state.Release)
 		if !git.CommitAll(fmt.Sprintf("Update codebase for the v%s release", state.Release)) {

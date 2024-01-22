@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"path"
 	"regexp"
 	"sort"
@@ -182,6 +183,13 @@ Thanks to all our contributors: @%s
 	}
 
 	releaseNotes.generate()
+
+	// update the entire changelog directory
+	// go run ./go/tools/releases/releases.go
+	out, err := exec.Command("go", "run", "./go/tools/releases/releases.go").CombinedOutput()
+	if err != nil {
+		log.Fatalf("%s: %s", err, out)
+	}
 }
 
 func (rn *releaseNote) generate() {

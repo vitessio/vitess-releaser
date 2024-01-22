@@ -48,7 +48,15 @@ func BackToDevMode(state *releaser.State) (*logging.ProgressLogging, func() stri
 		git.CorrectCleanRepo(state.VitessRepo)
 		git.ResetHard(state.Remote, state.ReleaseBranch)
 
-		nextNextRelease := releaser.FindVersionAfterNextRelease(state)
+		// If we are releasing an RC release, the next SNAPSHOT version on the release branch
+		// will be the same release as the RC but without the RC tag.
+		var nextNextRelease string
+		if state.Issue.RC > 0 {
+			nextNextRelease = releaser.RemoveRCFromReleaseTitle(state.Release)
+		} else {
+			nextNextRelease = releaser.FindVersionAfterNextRelease(state)
+		}
+
 		devModeRelease := fmt.Sprintf("%s-SNAPSHOT", nextNextRelease)
 
 		backToDevModePRName := fmt.Sprintf("[%s] Bump to `v%s` after the `v%s` release", state.ReleaseBranch, devModeRelease, state.Release)
