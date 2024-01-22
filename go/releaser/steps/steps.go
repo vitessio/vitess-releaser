@@ -26,9 +26,11 @@ const (
 	CheckSummary      = "Check Release Summary"
 
 	// Pre-Release
-	CodeFreeze      = "Code Freeze"
-	CreateReleasePR = "Create Release PR"
-	CreateMilestone = "Create Milestone"
+	CodeFreeze                = "Code Freeze"
+	CopyBranchProtectionRules = "Copy branch protection rules"
+	UpdateSnapshotOnMain      = "Update SNAPSHOT on main"
+	CreateReleasePR           = "Create Release PR"
+	CreateMilestone           = "Create Milestone"
 
 	// Release
 	MergeReleasePR       = "Merge Release PR"

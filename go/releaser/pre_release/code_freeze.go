@@ -48,7 +48,7 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 	}
 
 	waitForPRToBeMerged := func(nb int) {
-		pl.NewStepf("Waiting for the PR to be merged. You must enable bypassing the branch protection rules in: https://github.com/vitessio/vitess/settings/branches")
+		pl.NewStepf("Waiting for the PR to be merged. You must enable bypassing the branch protection rules in: https://github.com/%s/settings/branches", state.VitessRepo)
 	outer:
 		for {
 			select {
@@ -75,9 +75,24 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 			pl.NewStepf("Issue updated, see: %s", issueLink)
 		}()
 
-		pl.NewStepf("Fetch from git remote")
+		if state.Issue.RC == 1 {
+			pl.NewStepf("Fetch from git remote and create branch %s", state.ReleaseBranch)
+		} else {
+			pl.NewStepf("Fetch from git remote")
+		}
+
 		git.CorrectCleanRepo(state.VitessRepo)
-		git.ResetHard(state.Remote, state.ReleaseBranch)
+
+		if state.Issue.RC == 1 {
+			git.ResetHard(state.Remote, "main")
+			if err := git.CreateBranchAndCheckout(state.ReleaseBranch, fmt.Sprintf("%s/main", state.Remote)); err != nil {
+				git.Checkout(state.ReleaseBranch)
+			} else {
+				git.Push(state.Remote, state.ReleaseBranch)
+			}
+		} else {
+			git.ResetHard(state.Remote, state.ReleaseBranch)
+		}
 
 		codeFreezePRName := fmt.Sprintf("[%s] Code Freeze for `v%s`", state.ReleaseBranch, state.Release)
 

@@ -1,5 +1,5 @@
 /*
-Copyright 2023 The Vitess Authors.
+Copyright 2024 The Vitess Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package prerequisite
+package pre_release
 
 import (
 	"fmt"
@@ -22,10 +22,9 @@ import (
 	"vitess.io/vitess-releaser/go/releaser"
 )
 
-func CheckSummary(state *releaser.State) []string {
+func CopyBranchProtectionRules(state *releaser.State) []string {
 	return []string{
-		"If the release does not contain significant changes (i.e. a small patch release) then this step can be skipped",
-		fmt.Sprintf("The summary file is located in: ./changelog/%s.0/%s/summary.md.", state.MajorRelease, releaser.RemoveRCFromReleaseTitle(state.Release)),
-		"The summary file for a release candidate is the same as the one for the GA release.",
+		fmt.Sprintf("Since we have created the new branch %s, we need to copy the branch protection rules from main into %s", state.ReleaseBranch, state.ReleaseBranch),
+		fmt.Sprintf("To do this, head over to https://github.com/%s/settings/branches and create a new rule for branch %s", state.VitessRepo, state.ReleaseBranch),
 	}
 }

@@ -53,23 +53,29 @@ type (
 
 		previous            *MenuItem
 		DontCountInProgress bool
+
+		Ignore bool
 	}
 )
 
 var columns = []string{"TASK", "STATUS", "INFO"}
 
 func NewMenu(ctx context.Context, title string, items ...*MenuItem) *Menu {
+	var mi []*MenuItem
 	for i, item := range items {
-		if i == 0 {
+		if item.Ignore {
 			continue
 		}
-		item.previous = items[i-1]
+		if i > 0 {
+			item.previous = mi[len(mi)-1]
+		}
+		mi = append(mi, item)
 	}
 	return &Menu{
 		state:   releaser.UnwrapState(ctx),
 		columns: columns,
 		title:   title,
-		Items:   items,
+		Items:   mi,
 	}
 }
 

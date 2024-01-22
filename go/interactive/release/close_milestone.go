@@ -39,6 +39,9 @@ func CloseMilestoneItem(ctx context.Context) *ui.MenuItem {
 		Update: closeMilestoneUpdate,
 		Info:   state.Issue.CloseMilestone.URL,
 		IsDone: state.Issue.CloseMilestone.Done,
+
+		// We do not want to close the milestone if this is an RC release
+		Ignore: state.Issue.RC > 0,
 	}
 }
 

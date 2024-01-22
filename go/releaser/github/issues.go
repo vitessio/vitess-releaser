@@ -81,14 +81,14 @@ func (i *Issue) UpdateBody(repo string) string {
 	return strings.ReplaceAll(stdOut.String(), "\n", "")
 }
 
-func GetIssueBody(repo string, nb int) string {
+func GetIssueTitleAndBody(repo string, nb int) (string, string) {
 	var i Issue
 	stdOut, _, err := gh.Exec(
 		"issue", "view",
 		strconv.Itoa(nb),
 		"--repo", repo,
 		"--json",
-		"body",
+		"title,body",
 	)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -98,10 +98,10 @@ func GetIssueBody(repo string, nb int) string {
 		log.Fatal(err.Error())
 	}
 
-	return i.Body
+	return i.Title, i.Body
 }
 
-func GetReleaseIssue(repo, release string) (string, string) {
+func GetReleaseIssue(repo, release string, rcIncrement int) (string, string) {
 	res, _, err := gh.Exec(
 		"issue", "list",
 		"-l", "Type: Release",
@@ -122,14 +122,19 @@ func GetReleaseIssue(repo, release string) (string, string) {
 		title := issue["title"]
 		prefix := "Release of v"
 		if strings.HasPrefix(title, fmt.Sprintf("%s%s", prefix, release)) {
+			// If we have an RC increment but the title does not match the RC increment we skip this issue
+			if rcIncrement > 0 && !strings.Contains(title, fmt.Sprintf("-RC%d", rcIncrement)) {
+				continue
+			}
+
 			return issue["url"], title[len(prefix):]
 		}
 	}
 	return "", ""
 }
 
-func GetReleaseIssueInfo(repo, majorRelease string) (nb int, url string, release string) {
-	url, release = GetReleaseIssue(repo, majorRelease)
+func GetReleaseIssueInfo(repo, majorRelease string, rcIncrement int) (nb int, url, release string) {
+	url, release = GetReleaseIssue(repo, majorRelease, rcIncrement)
 	if url == "" {
 		// no issue found
 		return 0, "", ""

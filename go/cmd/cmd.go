@@ -19,6 +19,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -36,6 +37,7 @@ import (
 var (
 	releaseVersion string
 	releaseDate    string
+	rcIncrement    int
 	live           = true
 )
 
@@ -48,6 +50,7 @@ var rootCmd = &cobra.Command{
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&releaseVersion, flags.MajorRelease, "r", "", "Number of the major release on which we want to create a new release.")
 	rootCmd.PersistentFlags().StringVarP(&releaseDate, flags.ReleaseDate, "d", "", "Date of the release with the format: YYYY-MM-DD. Required when initiating a release.")
+	rootCmd.PersistentFlags().IntVarP(&rcIncrement, flags.RCIncrement, "", 0, "Define the release as an RC release, the integer value is used to determine the number of the RC.")
 	rootCmd.PersistentFlags().BoolVar(&live, flags.RunLive, false, "If live is true, will run against vitessio/vitess. Otherwise everything is done against your personal repository")
 
 	err := cobra.MarkFlagRequired(rootCmd.PersistentFlags(), flags.MajorRelease)
@@ -86,8 +89,14 @@ func Execute() {
 	git.CorrectCleanRepo(s.VitessRepo)
 
 	remote := git.FindRemoteName(s.VitessRepo)
-	release, releaseBranch, isLatestRelease := releaser.FindNextRelease(remote, s.MajorRelease)
-	issueNb, issueLink, releaseFromIssue := github.GetReleaseIssueInfo(s.VitessRepo, s.MajorRelease)
+	release, releaseBranch, isLatestRelease, isFromMain := releaser.FindNextRelease(remote, s.MajorRelease)
+	issueNb, issueLink, releaseFromIssue := github.GetReleaseIssueInfo(s.VitessRepo, s.MajorRelease, rcIncrement)
+
+	// if we want to do an RC-1 release and the branch is different from `main`, something is wrong
+	// and if we want to do an >= RC-2 release, the release as to be the latest AKA on the latest release branch
+	if rcIncrement == 1 && !isFromMain || rcIncrement >= 2 && !isLatestRelease {
+		log.Fatalf("wanted: RC %d but release branch was %s, latest release was %v and is from main is %v", rcIncrement, releaseBranch, isLatestRelease, isFromMain)
+	}
 
 	s.Remote = remote
 	s.ReleaseBranch = releaseBranch
@@ -98,6 +107,7 @@ func Execute() {
 	if releaseFromIssue == "" {
 		s.Release = release
 	}
+	s.Issue.RC = rcIncrement
 
 	// We only require the release date if the release issue does not exist on GH
 	// If the issue already exist we ignore the flag, the value will be loaded from the Issue

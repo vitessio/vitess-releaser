@@ -1,5 +1,5 @@
 /*
-Copyright 2023 The Vitess Authors.
+Copyright 2024 The Vitess Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package release
+package pre_release
 
 import (
 	"fmt"
@@ -23,20 +23,19 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/git"
 	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/logging"
-	"vitess.io/vitess-releaser/go/releaser/pre_release"
 )
 
-func ReleaseNotesOnMain(state *releaser.State) (*logging.ProgressLogging, func() string) {
+func UpdateSnapshotOnMain(state *releaser.State) (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
-		TotalSteps: 9,
+		TotalSteps: 10,
 	}
 
 	var done bool
 	var url string
 	return pl, func() string {
 		defer func() {
-			state.Issue.ReleaseNotesOnMain.Done = done
-			state.Issue.ReleaseNotesOnMain.URL = url
+			state.Issue.UpdateSnapshotOnMain.Done = done
+			state.Issue.UpdateSnapshotOnMain.URL = url
 			pl.NewStepf("Update Issue %s on GitHub", state.IssueLink)
 			_, fn := state.UploadIssue()
 			issueLink := fn()
@@ -46,32 +45,36 @@ func ReleaseNotesOnMain(state *releaser.State) (*logging.ProgressLogging, func()
 
 		pl.NewStepf("Fetch from git remote")
 		git.CorrectCleanRepo(state.VitessRepo)
-		git.ResetHard(state.Remote, state.ReleaseBranch)
-
 		git.Checkout("main")
 		git.ResetHard(state.Remote, "main")
 
-		prName := fmt.Sprintf("Copy `v%s` release notes on `main`", state.Release)
+		nextNextRelease := releaser.FindVersionAfterNextRelease(state)
+		snapshotRelease := fmt.Sprintf("%s-SNAPSHOT", nextNextRelease)
 
-		pl.NewStepf("Look for an existing Pull Request named '%s'", prName)
-		if _, url = github.FindPR(state.VitessRepo, prName); url != "" {
+		snapshotUpdatePRName := fmt.Sprintf("Bump to `v%s` after the `v%s` release", snapshotRelease, state.Release)
+
+		// look for existing PRs
+		pl.NewStepf("Look for an existing Pull Request named '%s'", snapshotUpdatePRName)
+		if _, url = github.FindPR(state.VitessRepo, snapshotUpdatePRName); url != "" {
 			pl.TotalSteps = 5 // only 5 total steps in this situation
 			pl.NewStepf("An opened Pull Request was found: %s", url)
 			done = true
 			return url
 		}
 
-		pl.NewStepf("Create new branch based on %s/main", state.Remote)
-		newBranchName := git.FindNewGeneratedBranch(state.Remote, "main", "release-notes-main")
+		pl.NewStepf("Create new branch based on %s/%s", state.Remote, "main")
+		newBranchName := git.FindNewGeneratedBranch(state.Remote, "main", "snapshot-update")
 
-		pl.NewStepf("Copy release notes from %s/%s", state.Remote, state.ReleaseBranch)
-		releaseNotesPath := pre_release.GetReleaseNotesDirPathForMajor(releaser.RemoveRCFromReleaseTitle(state.Release))
-		git.CheckoutPath(state.Remote, state.ReleaseBranch, releaseNotesPath)
+		pl.NewStepf("Update version.go")
+		UpdateVersionGoFile(snapshotRelease)
+
+		pl.NewStepf("Update the Java directory")
+		UpdateJavaDir(snapshotRelease)
 
 		pl.NewStepf("Commit and push to branch %s", newBranchName)
-		if git.CommitAll(fmt.Sprintf("Copy release notes from %s into main", state.ReleaseBranch)) {
-			pl.TotalSteps = 8 // only 8 total steps in this situation
-			pl.NewStepf("Nothing to commit, seems like the release notes have already been copied")
+		if git.CommitAll(fmt.Sprintf("Snapshot update: %s", snapshotUpdatePRName)) {
+			pl.TotalSteps = 9 // only 9 total steps in this situation
+			pl.NewStepf("Nothing to commit, seems like back to dev mode is already done")
 			done = true
 			return ""
 		}
@@ -79,8 +82,8 @@ func ReleaseNotesOnMain(state *releaser.State) (*logging.ProgressLogging, func()
 
 		pl.NewStepf("Create Pull Request")
 		pr := github.PR{
-			Title:  prName,
-			Body:   fmt.Sprintf("This Pull Request copies the release notes found on `%s` to keep release notes up-to-date after the `v%s` release.", state.ReleaseBranch, state.Release),
+			Title:  snapshotUpdatePRName,
+			Body:   fmt.Sprintf("Includes the changes required to update the SNAPSHOT version (v%s) after the release of v%s.", snapshotRelease, state.Release),
 			Branch: newBranchName,
 			Base:   "main",
 			Labels: []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}},
@@ -88,6 +91,6 @@ func ReleaseNotesOnMain(state *releaser.State) (*logging.ProgressLogging, func()
 		_, url = pr.Create(state.VitessRepo)
 		pl.NewStepf("Pull Request created %s", url)
 		done = true
-		return url
+		return ""
 	}
 }

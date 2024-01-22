@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"text/template"
 	"time"
@@ -34,6 +35,7 @@ const (
 	stateReadingBackport
 	stateReadingReleaseBlockerIssue
 	stateReadingCodeFreezeItem
+	stateReadingUpdateSnapshotOnMainItem
 	stateReadingCreateReleasePRItem
 	stateReadingNewMilestoneItem
 	stateReadingMergedReleasePRItem
@@ -58,9 +60,11 @@ const (
 	releaseBlockerItem       = "Make sure release blocker Issues are closed, list below."
 
 	// Pre-Release
-	codeFreezeItem      = "Code Freeze."
-	createReleasePRItem = "Create Release PR."
-	newMilestoneItem    = "Create new GitHub Milestone."
+	codeFreezeItem                = "Code Freeze."
+	copyBranchProtectionRulesItem = "Copy branch protection rules."
+	updateSnapshotOnMainItem      = "Update the SNAPSHOT version on main."
+	createReleasePRItem           = "Create Release PR."
+	newMilestoneItem              = "Create new GitHub Milestone."
 
 	// Release
 	mergeReleasePRItem   = "Merge the Release PR."
@@ -94,6 +98,7 @@ type (
 
 	Issue struct {
 		Date time.Time
+		RC   int
 
 		// Prerequisites
 		SlackPreRequisite bool
@@ -102,9 +107,11 @@ type (
 		ReleaseBlocker    ParentOfItems
 
 		// Pre-Release
-		CodeFreeze         ItemWithLink
-		CreateReleasePR    ItemWithLink
-		NewGitHubMilestone ItemWithLink
+		CodeFreeze                ItemWithLink
+		CopyBranchProtectionRules bool
+		UpdateSnapshotOnMain      ItemWithLink
+		CreateReleasePR           ItemWithLink
+		NewGitHubMilestone        ItemWithLink
 
 		// Release
 		MergeReleasePR       ItemWithLink
@@ -130,7 +137,11 @@ const (
 
 - [{{fmtStatus .SlackPreRequisite}}] Notify the community on Slack.
 - [{{fmtStatus .CheckSummary}}] Make sure the release notes summary is prepared and clean.
+{{- if eq .RC 0 }}
 - Make sure backport Pull Requests are merged, list below.
+{{- else }}
+- Make sure important Pull Requests are merged, list below.
+{{- end }}
 {{- range $item := .CheckBackport.Items }}
   - [{{fmtStatus $item.Done}}] {{$item.URL}}
 {{- end }}
@@ -146,13 +157,22 @@ const (
 {{- if .CodeFreeze.URL }}
   - {{ .CodeFreeze.URL }}
 {{- end }}
+{{- if eq .RC 1 }}
+- [{{fmtStatus .CopyBranchProtectionRules}}] Copy branch protection rules.
+- [{{fmtStatus .UpdateSnapshotOnMain.Done}}] Update the SNAPSHOT version on main.
+{{- if .UpdateSnapshotOnMain.URL }}
+  - {{ .UpdateSnapshotOnMain.URL }}
+{{- end }}
+{{- end }}
 - [{{fmtStatus .CreateReleasePR.Done}}] Create Release PR.
 {{- if .CreateReleasePR.URL }}
   - {{ .CreateReleasePR.URL }}
 {{- end }}
+{{- if lt .RC 2 }}
 - [{{fmtStatus .NewGitHubMilestone.Done}}] Create new GitHub Milestone.
 {{- if .NewGitHubMilestone.URL }}
   - {{ .NewGitHubMilestone.URL }}
+{{- end }}
 {{- end }}
 
 ### Release
@@ -179,9 +199,11 @@ const (
 {{- end }}
 - [{{fmtStatus .Benchmarked}}] Make sure the release is benchmarked by arewefastyet.
 - [{{fmtStatus .DockerImages}}] Docker Images available on DockerHub.
+{{- if eq .RC 0 }}
 - [{{fmtStatus .CloseMilestone.Done}}] Close current GitHub Milestone.
 {{- if .CloseMilestone.URL }}
   - {{ .CloseMilestone.URL }}
+{{- end }}
 {{- end }}
 
 
@@ -219,11 +241,20 @@ func (ctx *State) LoadIssue() {
 		return
 	}
 
-	body := github.GetIssueBody(ctx.VitessRepo, ctx.IssueNbGH)
+	title, body := github.GetIssueTitleAndBody(ctx.VitessRepo, ctx.IssueNbGH)
 
 	lines := strings.Split(body, "\n")
 
 	var newIssue Issue
+
+	// Parse the title of the Issue to determine the RC increment if any
+	if idx := strings.Index(title, "-RC"); idx != -1 {
+		rc, err := strconv.Atoi(title[idx+len("-RC"):])
+		if err != nil {
+			log.Fatal(err)
+		}
+		newIssue.RC = rc
+	}
 
 	s := stateReadingItem
 	for i, line := range lines {
@@ -256,6 +287,15 @@ func (ctx *State) LoadIssue() {
 				newIssue.CodeFreeze.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
 					s = stateReadingCodeFreezeItem
+				}
+			}
+			if strings.Contains(line, copyBranchProtectionRulesItem) {
+				newIssue.CopyBranchProtectionRules = strings.HasPrefix(line, markdownItemDone)
+			}
+			if strings.Contains(line, updateSnapshotOnMainItem) {
+				newIssue.UpdateSnapshotOnMain.Done = strings.HasPrefix(line, markdownItemDone)
+				if isNextLineAList(lines, i) {
+					s = stateReadingUpdateSnapshotOnMainItem
 				}
 			}
 			if strings.Contains(line, createReleasePRItem) {
@@ -331,6 +371,8 @@ func (ctx *State) LoadIssue() {
 			newIssue.ReleaseBlocker.Items = append(newIssue.ReleaseBlocker.Items, handleNewListItem(lines, i, &s))
 		case stateReadingCodeFreezeItem:
 			newIssue.CodeFreeze.URL = handleSingleTextItem(line, &s)
+		case stateReadingUpdateSnapshotOnMainItem:
+			newIssue.UpdateSnapshotOnMain.URL = handleSingleTextItem(line, &s)
 		case stateReadingCreateReleasePRItem:
 			newIssue.CreateReleasePR.URL = handleSingleTextItem(line, &s)
 		case stateReadingNewMilestoneItem:
@@ -399,8 +441,12 @@ func CreateReleaseIssue(state *State) (*logging.ProgressLogging, func() (int, st
 
 	return pl, func() (int, string) {
 		pl.NewStepf("Create Release Issue on GitHub")
+		issueTitle := fmt.Sprintf("Release of v%s", state.Release)
+		if state.Issue.RC > 0 {
+			issueTitle = fmt.Sprintf("%s-RC%d", issueTitle, state.Issue.RC)
+		}
 		newIssue := github.Issue{
-			Title:    fmt.Sprintf("Release of v%s", state.Release),
+			Title:    issueTitle,
 			Body:     state.Issue.toString(),
 			Labels:   []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}},
 			Assignee: "@me",
@@ -453,4 +499,8 @@ func CloseReleaseIssue(state *State) (*logging.ProgressLogging, func() string) {
 		pl.NewStepf("Issue updated, see: %s", issueLink)
 		return state.IssueLink
 	}
+}
+
+func RemoveRCFromReleaseTitle(release string) string {
+	return release[:strings.Index(release, "-RC")]
 }
