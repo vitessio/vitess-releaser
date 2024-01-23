@@ -65,8 +65,21 @@ func (s *State) GoToVitess() {
 	p := pathVitess
 	if s.currentPath != "" {
 		p = "../" + p
-		s.currentPath = pathVitess
 	}
+	s.currentPath = pathVitess
+	changeDir(p)
+}
+
+func (s *State) GoToVtOp() {
+	p := pathVitessOperator
+	if s.currentPath != "" {
+		p = "../" + p
+	}
+	s.currentPath = pathVitessOperator
+	changeDir(p)
+}
+
+func changeDir(p string) {
 	cwd, err := syscall.Getwd()
 	if err != nil {
 		log.Fatal(err)

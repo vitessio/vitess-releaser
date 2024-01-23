@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
 	"strings"
 )
@@ -130,11 +131,19 @@ func FindRemoteName(repository string) string {
 
 func CorrectCleanRepo(repo string) {
 	if !checkCurrentRepo(repo + ".git") {
-		log.Fatalf("the tool should be run from the %s repository directory", repo)
+		log.Fatalf("failed to find remote %s in %s", repo, getWorkingDir())
 	}
 	if !cleanLocalState() {
-		log.Fatal("the vitess repository should have a clean state")
+		log.Fatalf("the %s repository should have a clean state", getWorkingDir())
 	}
+}
+
+func getWorkingDir() string {
+	dir, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return dir
 }
 
 func FindNewGeneratedBranch(remote, baseBranch, branchName string) string {

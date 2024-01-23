@@ -233,15 +233,15 @@ func (pi ParentOfItems) Done() bool {
 	return true
 }
 
-func (ctx *State) LoadIssue() {
-	if ctx.IssueNbGH == 0 {
+func (s *State) LoadIssue() {
+	if s.IssueNbGH == 0 {
 		// we are in the case where we start vitess-releaser
 		// and the Release Issue hasn't been created yet.
 		// We simply quit, the issue is left empty, nothing to load.
 		return
 	}
 
-	title, body := github.GetIssueTitleAndBody(ctx.VitessRelease.Repo, ctx.IssueNbGH)
+	title, body := github.GetIssueTitleAndBody(s.VitessRelease.Repo, s.IssueNbGH)
 
 	lines := strings.Split(body, "\n")
 
@@ -256,9 +256,9 @@ func (ctx *State) LoadIssue() {
 		newIssue.RC = rc
 	}
 
-	s := stateReadingItem
+	st := stateReadingItem
 	for i, line := range lines {
-		switch s {
+		switch st {
 		case stateReadingItem:
 			// divers
 			if strings.HasPrefix(line, dateItem) {
@@ -278,15 +278,15 @@ func (ctx *State) LoadIssue() {
 				newIssue.CheckSummary = strings.HasPrefix(line, markdownItemDone)
 			}
 			if strings.Contains(line, backportItem) && isNextLineAList(lines, i) {
-				s = stateReadingBackport
+				st = stateReadingBackport
 			}
 			if strings.Contains(line, releaseBlockerItem) && isNextLineAList(lines, i) {
-				s = stateReadingReleaseBlockerIssue
+				st = stateReadingReleaseBlockerIssue
 			}
 			if strings.Contains(line, codeFreezeItem) {
 				newIssue.CodeFreeze.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
-					s = stateReadingCodeFreezeItem
+					st = stateReadingCodeFreezeItem
 				}
 			}
 			if strings.Contains(line, copyBranchProtectionRulesItem) {
@@ -295,19 +295,19 @@ func (ctx *State) LoadIssue() {
 			if strings.Contains(line, updateSnapshotOnMainItem) {
 				newIssue.UpdateSnapshotOnMain.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
-					s = stateReadingUpdateSnapshotOnMainItem
+					st = stateReadingUpdateSnapshotOnMainItem
 				}
 			}
 			if strings.Contains(line, createReleasePRItem) {
 				newIssue.CreateReleasePR.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
-					s = stateReadingCreateReleasePRItem
+					st = stateReadingCreateReleasePRItem
 				}
 			}
 			if strings.Contains(line, newMilestoneItem) {
 				newIssue.NewGitHubMilestone.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
-					s = stateReadingNewMilestoneItem
+					st = stateReadingNewMilestoneItem
 				}
 			}
 
@@ -315,31 +315,31 @@ func (ctx *State) LoadIssue() {
 			if strings.Contains(line, mergeReleasePRItem) {
 				newIssue.MergeReleasePR.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
-					s = stateReadingMergedReleasePRItem
+					st = stateReadingMergedReleasePRItem
 				}
 			}
 			if strings.Contains(line, tagReleaseItem) {
 				newIssue.TagRelease.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
-					s = stateReadingTagReleaseItem
+					st = stateReadingTagReleaseItem
 				}
 			}
 			if strings.Contains(line, releaseNotesMainItem) {
 				newIssue.ReleaseNotesOnMain.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
-					s = stateReadingReleaseNotesMainItem
+					st = stateReadingReleaseNotesMainItem
 				}
 			}
 			if strings.Contains(line, backToDevItem) {
 				newIssue.BackToDevMode.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
-					s = stateReadingBackToDevModeItem
+					st = stateReadingBackToDevModeItem
 				}
 			}
 			if strings.Contains(line, websiteDocItem) {
 				newIssue.WebsiteDocumentation.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
-					s = stateReadingWebsiteDocsItem
+					st = stateReadingWebsiteDocsItem
 				}
 			}
 			if strings.Contains(line, benchmarkedItem) {
@@ -351,7 +351,7 @@ func (ctx *State) LoadIssue() {
 			if strings.Contains(line, closeMilestoneItem) {
 				newIssue.CloseMilestone.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
-					s = stateReadingCloseMilestoneItem
+					st = stateReadingCloseMilestoneItem
 				}
 			}
 
@@ -366,32 +366,32 @@ func (ctx *State) LoadIssue() {
 				newIssue.CloseIssue = strings.HasPrefix(line, markdownItemDone)
 			}
 		case stateReadingBackport:
-			newIssue.CheckBackport.Items = append(newIssue.CheckBackport.Items, handleNewListItem(lines, i, &s))
+			newIssue.CheckBackport.Items = append(newIssue.CheckBackport.Items, handleNewListItem(lines, i, &st))
 		case stateReadingReleaseBlockerIssue:
-			newIssue.ReleaseBlocker.Items = append(newIssue.ReleaseBlocker.Items, handleNewListItem(lines, i, &s))
+			newIssue.ReleaseBlocker.Items = append(newIssue.ReleaseBlocker.Items, handleNewListItem(lines, i, &st))
 		case stateReadingCodeFreezeItem:
-			newIssue.CodeFreeze.URL = handleSingleTextItem(line, &s)
+			newIssue.CodeFreeze.URL = handleSingleTextItem(line, &st)
 		case stateReadingUpdateSnapshotOnMainItem:
-			newIssue.UpdateSnapshotOnMain.URL = handleSingleTextItem(line, &s)
+			newIssue.UpdateSnapshotOnMain.URL = handleSingleTextItem(line, &st)
 		case stateReadingCreateReleasePRItem:
-			newIssue.CreateReleasePR.URL = handleSingleTextItem(line, &s)
+			newIssue.CreateReleasePR.URL = handleSingleTextItem(line, &st)
 		case stateReadingNewMilestoneItem:
-			newIssue.NewGitHubMilestone.URL = handleSingleTextItem(line, &s)
+			newIssue.NewGitHubMilestone.URL = handleSingleTextItem(line, &st)
 		case stateReadingMergedReleasePRItem:
-			newIssue.MergeReleasePR.URL = handleSingleTextItem(line, &s)
+			newIssue.MergeReleasePR.URL = handleSingleTextItem(line, &st)
 		case stateReadingTagReleaseItem:
-			newIssue.TagRelease.URL = handleSingleTextItem(line, &s)
+			newIssue.TagRelease.URL = handleSingleTextItem(line, &st)
 		case stateReadingReleaseNotesMainItem:
-			newIssue.ReleaseNotesOnMain.URL = handleSingleTextItem(line, &s)
+			newIssue.ReleaseNotesOnMain.URL = handleSingleTextItem(line, &st)
 		case stateReadingBackToDevModeItem:
-			newIssue.BackToDevMode.URL = handleSingleTextItem(line, &s)
+			newIssue.BackToDevMode.URL = handleSingleTextItem(line, &st)
 		case stateReadingWebsiteDocsItem:
-			newIssue.WebsiteDocumentation.URL = handleSingleTextItem(line, &s)
+			newIssue.WebsiteDocumentation.URL = handleSingleTextItem(line, &st)
 		case stateReadingCloseMilestoneItem:
-			newIssue.CloseMilestone.URL = handleSingleTextItem(line, &s)
+			newIssue.CloseMilestone.URL = handleSingleTextItem(line, &st)
 		}
 	}
-	ctx.Issue = newIssue
+	s.Issue = newIssue
 }
 
 func handleNewListItem(lines []string, i int, s *int) ItemWithLink {
@@ -419,16 +419,16 @@ func isNextLineAList(lines []string, i int) bool {
 	return len(lines) > i+1 && strings.HasPrefix(lines[i+1], "  -")
 }
 
-func (ctx *State) UploadIssue() (*logging.ProgressLogging, func() string) {
+func (s *State) UploadIssue() (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
 		TotalSteps: 2,
 	}
 
 	return pl, func() string {
-		pl.NewStepf("Update Issue #%d on GitHub", ctx.IssueNbGH)
-		body := ctx.Issue.toString()
-		issue := github.Issue{Body: body, Number: ctx.IssueNbGH}
-		link := issue.UpdateBody(ctx.VitessRelease.Repo)
+		pl.NewStepf("Update Issue #%d on GitHub", s.IssueNbGH)
+		body := s.Issue.toString()
+		issue := github.Issue{Body: body, Number: s.IssueNbGH}
+		link := issue.UpdateBody(s.VitessRelease.Repo)
 		pl.NewStepf("Issue updated: %s", link)
 		return link
 	}

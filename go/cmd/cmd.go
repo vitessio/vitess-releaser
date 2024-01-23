@@ -35,10 +35,11 @@ import (
 )
 
 var (
-	releaseVersion string
-	releaseDate    string
-	rcIncrement    int
-	live           = true
+	releaseVersion     string
+	vtopReleaseVersion string
+	releaseDate        string
+	rcIncrement        int
+	live               = true
 
 	rootCmd = &cobra.Command{
 		Use:   "vitess-releaser",
@@ -49,6 +50,7 @@ var (
 
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&releaseVersion, flags.MajorRelease, "r", "", "Number of the major release on which we want to create a new release.")
+	rootCmd.PersistentFlags().StringVarP(&vtopReleaseVersion, flags.VtOpRelease, "", "", "Number of the major and minor release on which we want to create a new release, i.e. '2.11', leave empty for no vtop release.")
 	rootCmd.PersistentFlags().StringVarP(&releaseDate, flags.ReleaseDate, "d", "", "Date of the release with the format: YYYY-MM-DD. Required when initiating a release.")
 	rootCmd.PersistentFlags().IntVarP(&rcIncrement, flags.RCIncrement, "", 0, "Define the release as an RC release, the integer value is used to determine the number of the RC.")
 	rootCmd.PersistentFlags().BoolVar(&live, flags.RunLive, false, "If live is true, will run against vitessio/vitess. Otherwise everything is done against your personal repository")
@@ -77,20 +79,22 @@ func Execute() {
 		os.Exit(1)
 	}
 
-	var s releaser.State
+	s := &releaser.State{}
 
-	vitessRepo, _ := getGitRepos()
+	vitessRepo, vtopRepo := getGitRepos()
 
 	vitessRelease, issueNb, issueLink := setUpVitessReleaseInformation(s, vitessRepo)
+	vtopRelease := setUpVtOpReleaseInformation(s, vtopRepo)
 
 	s.VitessRelease = vitessRelease
+	s.VtOpRelease = vtopRelease
 	s.IssueNbGH = issueNb
 	s.IssueLink = issueLink
 	s.Issue.RC = rcIncrement
 
-	setUpIssueDate(&s)
+	setUpIssueDate(s)
 
-	ctx := releaser.WrapState(context.Background(), &s)
+	ctx := releaser.WrapState(context.Background(), s)
 
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
 		fmt.Fprintf(os.Stderr, "Whoops. There was an error while executing your CLI '%s'", err)
@@ -98,14 +102,14 @@ func Execute() {
 	}
 }
 
-func setUpVitessReleaseInformation(s releaser.State, repo string) (releaser.ReleaseInformation, int, string) {
+func setUpVitessReleaseInformation(s *releaser.State, repo string) (releaser.ReleaseInformation, int, string) {
 	s.GoToVitess()
 
-	git.CorrectCleanRepo(s.VitessRelease.Repo)
+	git.CorrectCleanRepo(repo)
 
-	remote := git.FindRemoteName(s.VitessRelease.Repo)
-	release, releaseBranch, isLatestRelease, isFromMain := releaser.FindNextRelease(remote, releaseVersion)
-	issueNb, issueLink, releaseFromIssue := github.GetReleaseIssueInfo(s.VitessRelease.Repo, releaseVersion, rcIncrement)
+	remote := git.FindRemoteName(repo)
+	release, releaseBranch, isLatestRelease, isFromMain := releaser.FindNextRelease(remote, releaseVersion, false)
+	issueNb, issueLink, releaseFromIssue := github.GetReleaseIssueInfo(repo, releaseVersion, rcIncrement)
 
 	// if we want to do an RC-1 release and the branch is different from `main`, something is wrong
 	// and if we want to do an >= RC-2 release, the release as to be the latest AKA on the latest release branch
@@ -125,6 +129,29 @@ func setUpVitessReleaseInformation(s releaser.State, repo string) (releaser.Rele
 		vitessRelease.Release = release
 	}
 	return vitessRelease, issueNb, issueLink
+}
+
+func setUpVtOpReleaseInformation(s *releaser.State, repo string) releaser.ReleaseInformation {
+	if vtopReleaseVersion == "" {
+		return releaser.ReleaseInformation{}
+	}
+
+	s.GoToVtOp()
+	defer s.GoToVitess()
+
+	git.CorrectCleanRepo(repo)
+
+	remote := git.FindRemoteName(repo)
+	release, releaseBranch, isLatestRelease, _ := releaser.FindNextRelease(remote, vtopReleaseVersion, true)
+
+	vtopRelease := releaser.ReleaseInformation{
+		Repo:            repo,
+		Remote:          remote,
+		Release:         release,
+		ReleaseBranch:   releaseBranch,
+		IsLatestRelease: isLatestRelease,
+	}
+	return vtopRelease
 }
 
 func setUpIssueDate(s *releaser.State) {
