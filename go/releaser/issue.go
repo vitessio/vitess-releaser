@@ -44,6 +44,8 @@ const (
 	stateReadingBackToDevModeItem
 	stateReadingWebsiteDocsItem
 	stateReadingCloseMilestoneItem
+	stateReadingVtopUpdateGo
+	stateReadingVtopCreateReleasePR
 )
 
 const (
@@ -65,6 +67,10 @@ const (
 	updateSnapshotOnMainItem      = "Update the SNAPSHOT version on main."
 	createReleasePRItem           = "Create Release PR."
 	newMilestoneItem              = "Create new GitHub Milestone."
+	vtopCreateBranchItem          = "Create vitess-operator release branch."
+	vtopUpdateGoItem              = "Update vitess-operator Golang version."
+	vtopUpdateCompTableItem       = "Update vitess-operator compatibility table."
+	vtopCreateReleasePRItem       = "Create vitess-operator Release PR."
 
 	// Release
 	mergeReleasePRItem   = "Merge the Release PR."
@@ -107,11 +113,15 @@ type (
 		ReleaseBlocker    ParentOfItems
 
 		// Pre-Release
-		CodeFreeze                ItemWithLink
-		CopyBranchProtectionRules bool
-		UpdateSnapshotOnMain      ItemWithLink
-		CreateReleasePR           ItemWithLink
-		NewGitHubMilestone        ItemWithLink
+		CodeFreeze                   ItemWithLink
+		CopyBranchProtectionRules    bool
+		UpdateSnapshotOnMain         ItemWithLink
+		CreateReleasePR              ItemWithLink
+		NewGitHubMilestone           ItemWithLink
+		VtopCreateBranch             bool
+		VtopUpdateGolang             ItemWithLink
+		VtopUpdateCompatibilityTable bool
+		VtopCreateReleasePR          ItemWithLink
 
 		// Release
 		MergeReleasePR       ItemWithLink
@@ -173,6 +183,12 @@ const (
 {{- if .NewGitHubMilestone.URL }}
   - {{ .NewGitHubMilestone.URL }}
 {{- end }}
+{{- end }}
+{{- if gt .RC 0 }}
+- [{{fmtStatus .VtopCreateBranch}}] Create vitess-operator release branch.
+- [{{fmtStatus .VtopUpdateGolang.Done}}] Update vitess-operator Golang version.
+- [{{fmtStatus .VtopUpdateCompatibilityTable}}] Update vitess-operator compatibility table.
+- [{{fmtStatus .VtopCreateReleasePR.Done}}] Create vitess-operator Release PR.
 {{- end }}
 
 ### Release
@@ -310,6 +326,24 @@ func (s *State) LoadIssue() {
 					st = stateReadingNewMilestoneItem
 				}
 			}
+			if strings.Contains(line, vtopCreateBranchItem) {
+				newIssue.VtopCreateBranch = strings.HasPrefix(line, markdownItemDone)
+			}
+			if strings.Contains(line, vtopUpdateGoItem) {
+				newIssue.VtopUpdateGolang.Done = strings.HasPrefix(line, markdownItemDone)
+				if isNextLineAList(lines, i) {
+					st = stateReadingVtopUpdateGo
+				}
+			}
+			if strings.Contains(line, vtopUpdateCompTableItem) {
+				newIssue.VtopUpdateCompatibilityTable = strings.HasPrefix(line, markdownItemDone)
+			}
+			if strings.Contains(line, vtopCreateReleasePRItem) {
+				newIssue.VtopCreateReleasePR.Done = strings.HasPrefix(line, markdownItemDone)
+				if isNextLineAList(lines, i) {
+					st = stateReadingVtopCreateReleasePR
+				}
+			}
 
 			// release
 			if strings.Contains(line, mergeReleasePRItem) {
@@ -389,6 +423,10 @@ func (s *State) LoadIssue() {
 			newIssue.WebsiteDocumentation.URL = handleSingleTextItem(line, &st)
 		case stateReadingCloseMilestoneItem:
 			newIssue.CloseMilestone.URL = handleSingleTextItem(line, &st)
+		case stateReadingVtopUpdateGo:
+			newIssue.VtopUpdateGolang.URL = handleSingleTextItem(line, &st)
+		case stateReadingVtopCreateReleasePR:
+			newIssue.VtopCreateReleasePR.URL = handleSingleTextItem(line, &st)
 		}
 	}
 	s.Issue = newIssue
