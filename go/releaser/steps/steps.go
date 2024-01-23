@@ -26,11 +26,15 @@ const (
 	CheckSummary      = "Check Release Summary"
 
 	// Pre-Release
-	CodeFreeze                = "Code Freeze"
-	CopyBranchProtectionRules = "Copy branch protection rules"
-	UpdateSnapshotOnMain      = "Update SNAPSHOT on main"
-	CreateReleasePR           = "Create Release PR"
-	CreateMilestone           = "Create Milestone"
+	CodeFreeze                   = "Code Freeze"
+	CopyBranchProtectionRules    = "Copy branch protection rules"
+	UpdateSnapshotOnMain         = "Update SNAPSHOT on main"
+	CreateReleasePR              = "Create Release PR"
+	CreateMilestone              = "Create Milestone"
+	VtopCreateBranch             = "Create vitess-operator release branch"
+	VtopUpdateGolang             = "Update Go version in vitess-operator"
+	VtopUpdateCompatibilityTable = "Update compatibility table in vitess-operator"
+	VtopCreateReleasePR          = "Create vitess-operator release PR"
 
 	// Release
 	MergeReleasePR       = "Merge Release PR"
