@@ -40,7 +40,7 @@ func VtopCreateBranchMenuItem(ctx context.Context) *ui.MenuItem {
 		Update: vtopCreateBranchUpdate,
 		IsDone: state.Issue.VtopCreateBranch,
 
-		Ignore: state.VtOpRelease.Release == "",
+		Ignore: state.VtOpRelease.Release == "" || state.Issue.RC != 1,
 	}
 }
 

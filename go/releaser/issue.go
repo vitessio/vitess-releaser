@@ -185,17 +185,17 @@ const (
   - {{ .NewGitHubMilestone.URL }}
 {{- end }}
 {{- end }}
-{{- if eq .RC 1 }}
 {{- if .DoVtOp }}
+{{- if eq .RC 1 }}
 - [{{fmtStatus .VtopCreateBranch}}] Create vitess-operator release branch.
 {{- end }}
-{{- end }}
-{{- if .DoVtOp }}
 - [{{fmtStatus .VtopUpdateGolang.Done}}] Update vitess-operator Golang version.
 {{- if .VtopUpdateGolang.URL }}
   - {{ .VtopUpdateGolang.URL }}
 {{- end }}
+{{- if eq .RC 1 }}
 - [{{fmtStatus .VtopUpdateCompatibilityTable}}] Update vitess-operator compatibility table.
+{{- end }}
 - [{{fmtStatus .VtopCreateReleasePR.Done}}] Create vitess-operator Release PR.
 {{- if .VtopCreateReleasePR.URL }}
   - {{ .VtopCreateReleasePR.URL }}
