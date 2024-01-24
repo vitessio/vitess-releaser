@@ -103,8 +103,9 @@ type (
 	}
 
 	Issue struct {
-		Date time.Time
-		RC   int
+		Date   time.Time
+		RC     int
+		DoVtOp bool
 
 		// Prerequisites
 		SlackPreRequisite bool
@@ -184,8 +185,12 @@ const (
   - {{ .NewGitHubMilestone.URL }}
 {{- end }}
 {{- end }}
-{{- if gt .RC 0 }}
+{{- if eq .RC 1 }}
+{{- if .DoVtOp }}
 - [{{fmtStatus .VtopCreateBranch}}] Create vitess-operator release branch.
+{{- end }}
+{{- end }}
+{{- if .DoVtOp }}
 - [{{fmtStatus .VtopUpdateGolang.Done}}] Update vitess-operator Golang version.
 {{- if .VtopUpdateGolang.URL }}
   - {{ .VtopUpdateGolang.URL }}
@@ -268,6 +273,8 @@ func (s *State) LoadIssue() {
 	lines := strings.Split(body, "\n")
 
 	var newIssue Issue
+
+	newIssue.DoVtOp = s.VtOpRelease.Release != ""
 
 	// Parse the title of the Issue to determine the RC increment if any
 	if idx := strings.Index(title, "-RC"); idx != -1 {

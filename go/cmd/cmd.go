@@ -91,6 +91,7 @@ func Execute() {
 	s.IssueNbGH = issueNb
 	s.IssueLink = issueLink
 	s.Issue.RC = rcIncrement
+	s.Issue.DoVtOp = s.VtOpRelease.Release != ""
 
 	setUpIssueDate(s)
 
