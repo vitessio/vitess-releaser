@@ -187,8 +187,14 @@ const (
 {{- if gt .RC 0 }}
 - [{{fmtStatus .VtopCreateBranch}}] Create vitess-operator release branch.
 - [{{fmtStatus .VtopUpdateGolang.Done}}] Update vitess-operator Golang version.
+{{- if .VtopUpdateGolang.URL }}
+  - {{ .VtopUpdateGolang.URL }}
+{{- end }}
 - [{{fmtStatus .VtopUpdateCompatibilityTable}}] Update vitess-operator compatibility table.
 - [{{fmtStatus .VtopCreateReleasePR.Done}}] Create vitess-operator Release PR.
+{{- if .VtopCreateReleasePR.URL }}
+  - {{ .VtopCreateReleasePR.URL }}
+{{- end }}
 {{- end }}
 
 ### Release
