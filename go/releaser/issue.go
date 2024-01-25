@@ -98,6 +98,11 @@ type (
 		URL string
 	}
 
+	ItemWithLinks struct {
+		Done bool
+		URLs []string
+	}
+
 	ParentOfItems struct {
 		Items []ItemWithLink
 	}
@@ -122,7 +127,7 @@ type (
 		VtopCreateBranch             bool
 		VtopUpdateGolang             ItemWithLink
 		VtopUpdateCompatibilityTable bool
-		VtopCreateReleasePR          ItemWithLink
+		VtopCreateReleasePR          ItemWithLinks
 
 		// Release
 		MergeReleasePR       ItemWithLink
@@ -197,8 +202,8 @@ const (
 - [{{fmtStatus .VtopUpdateCompatibilityTable}}] Update vitess-operator compatibility table.
 {{- end }}
 - [{{fmtStatus .VtopCreateReleasePR.Done}}] Create vitess-operator Release PR.
-{{- if .VtopCreateReleasePR.URL }}
-  - {{ .VtopCreateReleasePR.URL }}
+{{- range $item := .VtopCreateReleasePR.URLs }}
+  - {{$item}}
 {{- end }}
 {{- end }}
 
@@ -439,10 +444,22 @@ func (s *State) LoadIssue() {
 		case stateReadingVtopUpdateGo:
 			newIssue.VtopUpdateGolang.URL = handleSingleTextItem(line, &st)
 		case stateReadingVtopCreateReleasePR:
-			newIssue.VtopCreateReleasePR.URL = handleSingleTextItem(line, &st)
+			newLine := handleMultipleTextItem(lines, i, &st)
+			if newLine != "" {
+				newIssue.VtopCreateReleasePR.URLs = append(newIssue.VtopCreateReleasePR.URLs, newLine)
+			}
 		}
 	}
 	s.Issue = newIssue
+}
+
+func handleMultipleTextItem(lines []string, i int, s *int) string {
+	line := strings.TrimSpace(lines[i])
+	url := strings.TrimSpace(line[len(markdownItemDone):])
+	if i+1 == len(lines) || !strings.HasPrefix(lines[i+1], "  -") {
+		*s = stateReadingItem
+	}
+	return url
 }
 
 func handleNewListItem(lines []string, i int, s *int) ItemWithLink {

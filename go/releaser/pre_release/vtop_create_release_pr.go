@@ -23,6 +23,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -65,17 +66,19 @@ var (
 )
 
 func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() string) {
+	hasGoUpgradePR := strings.HasPrefix(state.Issue.VtopUpdateGolang.URL, "https://")
+
 	pl := &logging.ProgressLogging{
 		TotalSteps: 15,
 	}
 
 	var done bool
-	var url string
+	var urls []string
 	var commitCount int
 	return pl, func() string {
 		defer func() {
-			state.Issue.CreateReleasePR.Done = done
-			state.Issue.CreateReleasePR.URL = url
+			state.Issue.VtopCreateReleasePR.Done = done
+			state.Issue.VtopCreateReleasePR.URLs = urls
 			pl.NewStepf("Update Issue %s on GitHub", state.IssueLink)
 			_, fn := state.UploadIssue()
 			issueLink := fn()
@@ -86,14 +89,15 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 		state.GoToVtOp()
 		defer state.GoToVitess()
 
-		// setup
+		// 1. Setup of the vtop codebase
 		pl.NewStepf("Fetch from git remote")
 		git.CorrectCleanRepo(state.VtOpRelease.Repo)
 		git.ResetHard(state.VtOpRelease.Remote, state.VtOpRelease.ReleaseBranch)
 
+		// 2. Check Go Upgrade PR
 		// We must ensure that, if any, the golang upgrade PR has been merged
 		// otherwise we cannot proceed with the creation of the Release PR.
-		if strings.HasPrefix(state.Issue.VtopUpdateGolang.URL, "https://") {
+		if hasGoUpgradePR {
 			prNb := github.URLToNb(state.Issue.VtopUpdateGolang.URL)
 			pl.NewStepf("Checking if %s is merged. Please merge it if not already done. This step will timeout in 2 minutes.", state.Issue.VtopUpdateGolang.URL)
 			timeout := time.After(2 * time.Minute)
@@ -112,50 +116,88 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 			pl.NewStepf("PR has been merged")
 		}
 
+		// 3. Figuring out the name of the release PR
 		releasePRName := fmt.Sprintf("[%s] Release of `v%s`", state.VtOpRelease.ReleaseBranch, state.VtOpRelease.Release)
 		if state.Issue.RC > 0 {
 			releasePRName = fmt.Sprintf("%s-RC%d", releasePRName, state.Issue.RC)
 		}
 
-		// look for existing PRs
+		// 4. Look for existing PRs
 		pl.NewStepf("Look for an existing Release Pull Request named '%s'", releasePRName)
-		if _, url = github.FindPR(state.VtOpRelease.Repo, releasePRName); url != "" {
+		if _, url := github.FindPR(state.VtOpRelease.Repo, releasePRName); url != "" {
 			pl.TotalSteps = 5 // only 5 total steps in this situation
 			pl.NewStepf("An opened Release Pull Request was found: %s", url)
 			done = true
+			urls = append(urls, url)
 			return url
 		}
 
-		// find new branch to create the release
+		// 5. Create temporary branch for the release
 		pl.NewStepf("Create temporary branch from %s", state.VtOpRelease.ReleaseBranch)
 		newBranchName := git.FindNewGeneratedBranch(state.VtOpRelease.Remote, state.VtOpRelease.ReleaseBranch, "create-release")
 
-		// set vitess go deps to the new tag we created
+		// 6. Update the vitess golang dependency with the new vitess tag
+		pl.NewStepf("Update the golang dependency of vitess to tag %s", strings.ToLower(state.VitessRelease.Release))
 		updateVitessDeps(state)
 		if !git.CommitAll(fmt.Sprintf("Set vitess golang dependencies to %s", strings.ToLower(state.VitessRelease.Release))) {
-			git.Push(state.VitessRelease.Remote, newBranchName)
+			commitCount++
+			git.Push(state.VtOpRelease.Remote, newBranchName)
 		}
 
 		releaseNameWithRC := releaser.AddRCToReleaseTitle(state.VtOpRelease.Release, state.Issue.RC)
 		lowerReleaseName := strings.ToLower(releaseNameWithRC)
-		updateVtOpVersionGoFile(lowerReleaseName)
 
+		// 7. Update the version file of vtop
+		pl.NewStepf("Update version file to %s", lowerReleaseName)
+		updateVtOpVersionGoFile(lowerReleaseName)
+		if !git.CommitAll(fmt.Sprintf("Update the version file to %s", lowerReleaseName)) {
+			commitCount++
+			git.Push(state.VtOpRelease.Remote, newBranchName)
+		}
+
+		// 8. Find out what is the previous release of vitess
+		pl.NewStepf("Figuring out what the previous release of vitess is")
 		state.GoToVitess()
 		vitessPreviousRelease := releaser.FindPreviousRelease(state.VitessRelease.Remote, state.VitessRelease.MajorRelease)
 		state.GoToVtOp()
 
+		// 9. Update test code with proper images
+		pl.NewStepf("Update vitess-operator test code to use proper images")
 		updateVtopTests(vitessPreviousRelease, strings.ToLower(state.VitessRelease.Release))
+		if !git.CommitAll(fmt.Sprintf("Update test code to use proper image")) {
+			commitCount++
+			git.Push(state.VtOpRelease.Remote, newBranchName)
+		}
 
+		// 10. Tag the latest commit
+		gitTag := fmt.Sprintf("v%s", lowerReleaseName)
+		pl.NewStepf("Tag and push %s", gitTag)
+		git.TagAndPush(state.VitessRelease.Remote, gitTag)
+
+		// 11. Figure out what is the next vtop release for this branch
+		nextRelease := findNextVtOpVersion(state.VtOpRelease.Release, state.Issue.RC)
+		pl.NewStepf("Go back to dev mode with version = %s", nextRelease)
+		updateVtOpVersionGoFile(nextRelease)
+
+		// 12. Create the Pull Request
 		pl.NewStepf("Create Pull Request")
 		pr := github.PR{
 			Title:  releasePRName,
-			Body:   fmt.Sprintf(""),
+			Body:   fmt.Sprintf("This Pull Request contains all the code for the %s release of vtop + the back to dev mode. Warning: the tag is made on one of the commits of this PR, you must **not** squash merge this PR."),
 			Branch: newBranchName,
 			Base:   state.VtOpRelease.ReleaseBranch,
 			Labels: []github.Label{},
 		}
-		_, url = pr.Create(state.VtOpRelease.Repo)
+		_, url := pr.Create(state.VtOpRelease.Repo)
 		pl.NewStepf("Pull Request created %s", url)
+		urls = append(urls, url)
+
+		// 13. Create the release on the GitHub UI
+		pl.NewStepf("Create the release on the GitHub UI")
+		url = github.CreateRelease(state.VtOpRelease.Repo, gitTag, "", state.VtOpRelease.IsLatestRelease)
+		pl.NewStepf("Done %s", url)
+		urls = append(urls, url)
+
 		done = true
 		return url
 	}
@@ -253,4 +295,24 @@ func vtopTestFiles() []string {
 		log.Fatal(err.Error())
 	}
 	return files
+}
+
+func findNextVtOpVersion(version string, rc int) string {
+	if rc > 0 {
+		return version
+	}
+	segments := strings.Split(version, ".")
+	if len(segments) != 3 {
+		log.Fatal("expected three segments")
+	}
+
+	segmentInts := make([]int, 0, len(segments))
+	for _, segment := range segments {
+		v, err := strconv.Atoi(segment)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		segmentInts = append(segmentInts, v)
+	}
+	return fmt.Sprintf("%d.%d.%d", segmentInts[0], segmentInts[1], segmentInts[2]+1)
 }

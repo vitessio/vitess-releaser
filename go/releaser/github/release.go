@@ -32,9 +32,14 @@ func CreateRelease(repo, tag, notesFilePath string, latest bool) (url string) {
 		"release", "create",
 		"--repo", repo,
 		"--title", fmt.Sprintf("Vitess %s", tag),
-		"-F", notesFilePath,
 		"--target", target,
 		"--verify-tag",
+	}
+
+	if notesFilePath != "" {
+		args = append(args, "-F", notesFilePath)
+	} else {
+		args = append(args, "--generate-notes")
 	}
 
 	if latest {
