@@ -555,3 +555,10 @@ func CloseReleaseIssue(state *State) (*logging.ProgressLogging, func() string) {
 func RemoveRCFromReleaseTitle(release string) string {
 	return release[:strings.Index(release, "-RC")]
 }
+
+func AddRCToReleaseTitle(release string, rc int) string {
+	if rc == 0 {
+		return release
+	}
+	return fmt.Sprintf("%s-RC%d", release, rc)
+}

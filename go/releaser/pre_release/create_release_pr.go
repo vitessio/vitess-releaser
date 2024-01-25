@@ -123,7 +123,7 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 
 		lowerRelease := strings.ToLower(state.VitessRelease.Release)
 		pl.NewStepf("Update the code examples")
-		updateExamples(lowerRelease, "") // TODO: vitess-operator version not implemented
+		updateExamples(lowerRelease, strings.ToLower(releaser.AddRCToReleaseTitle(state.VtOpRelease.Release, state.Issue.RC)))
 
 		pl.NewStepf("Update version.go")
 		UpdateVersionGoFile(lowerRelease)

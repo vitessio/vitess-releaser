@@ -53,6 +53,7 @@ func MainScreen(ctx context.Context) {
 		pre_release.VtopCreateBranchMenuItem(ctx),
 		pre_release.VtopUpdateGolangMenuItem(ctx),
 		pre_release.VtopUpdateCompatibilityTableMenuItem(ctx),
+		pre_release.VtopCreateReleasePRMenuItem(ctx),
 	)
 
 	releaseMenu := ui.NewMenu(

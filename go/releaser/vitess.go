@@ -101,6 +101,20 @@ func FindNextRelease(remote, majorRelease string, isVtOp bool) (
 	return currentRelease, releaseBranchName, mainMajorNb-1 == majorNb, false
 }
 
+func FindPreviousRelease(remote, currentMajor string) string {
+	majorNb, err := strconv.Atoi(currentMajor)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	previousMajor := majorNb - 1
+	previousReleaseBranch := fmt.Sprintf("release-%d.0", previousMajor)
+	git.Checkout(previousReleaseBranch)
+	git.ResetHard(remote, previousReleaseBranch)
+
+	return getCurrentReleaseVitess()
+}
+
 func getCurrentReleaseVitess() string {
 	// Execute the following command to find the version from the `version.go` file:
 	// sed -n 's/.*versionName.*\"\([[:digit:]\.]*\).*\"/\1/p' ./go/vt/servenv/version.go
