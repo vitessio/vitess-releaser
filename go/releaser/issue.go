@@ -201,10 +201,6 @@ const (
 {{- if eq .RC 1 }}
 - [{{fmtStatus .VtopUpdateCompatibilityTable}}] Update vitess-operator compatibility table.
 {{- end }}
-- [{{fmtStatus .VtopCreateReleasePR.Done}}] Create vitess-operator Release PR.
-{{- range $item := .VtopCreateReleasePR.URLs }}
-  - {{$item}}
-{{- end }}
 {{- end }}
 
 ### Release
@@ -216,6 +212,12 @@ const (
 - [{{fmtStatus .TagRelease.Done}}] Tag the release.
 {{- if .TagRelease.URL }}
   - {{ .TagRelease.URL }}
+{{- end }}
+{{- if .DoVtOp }}
+- [{{fmtStatus .VtopCreateReleasePR.Done}}] Create vitess-operator Release PR.
+{{- range $item := .VtopCreateReleasePR.URLs }}
+  - {{$item}}
+{{- end }}
 {{- end }}
 - [{{fmtStatus .ReleaseNotesOnMain.Done}}] Update release notes on main.
 {{- if .ReleaseNotesOnMain.URL }}

@@ -53,7 +53,6 @@ func MainScreen(ctx context.Context) {
 		pre_release.VtopCreateBranchMenuItem(ctx),
 		pre_release.VtopUpdateGolangMenuItem(ctx),
 		pre_release.VtopUpdateCompatibilityTableMenuItem(ctx),
-		pre_release.VtopCreateReleasePRMenuItem(ctx),
 	)
 
 	releaseMenu := ui.NewMenu(
@@ -61,6 +60,7 @@ func MainScreen(ctx context.Context) {
 		"Release",
 		release.MergeReleasePRItem(ctx),
 		release.TagReleaseItem(ctx),
+		release.VtopCreateReleasePRMenuItem(ctx),
 		release.ReleaseNotesOnMainItem(ctx),
 		release.BackToDevModeItem(ctx),
 		release.WebsiteDocumentationItem(ctx),
