@@ -18,6 +18,7 @@ package pre_release
 
 import (
 	"context"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/ui"
@@ -39,7 +40,7 @@ func VtopCreateReleasePRMenuItem(ctx context.Context) *ui.MenuItem {
 		Act:    act,
 		Update: vtopCreateReleasePRUpdate,
 		IsDone: state.Issue.VtopCreateReleasePR.Done,
-		Info:   state.Issue.VtopCreateReleasePR.URL,
+		Info:   strings.Join(state.Issue.VtopCreateReleasePR.URLs, " | "),
 
 		Ignore: state.VtOpRelease.Release == "",
 	}
@@ -54,7 +55,7 @@ func vtopCreateReleasePRUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.
 	}
 
 	mi.IsDone = mi.State.Issue.VtopCreateReleasePR.Done
-	mi.Info = mi.State.Issue.VtopCreateReleasePR.URL
+	mi.Info = strings.Join(mi.State.Issue.VtopCreateReleasePR.URLs, " | ")
 	return mi, nil
 }
 
