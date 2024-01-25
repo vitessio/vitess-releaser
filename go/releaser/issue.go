@@ -457,11 +457,13 @@ func (s *State) LoadIssue() {
 
 func handleMultipleTextItem(lines []string, i int, s *int) string {
 	line := strings.TrimSpace(lines[i])
-	url := strings.TrimSpace(line[len(markdownItemDone):])
+	if line[0] == '-' {
+		line = strings.TrimSpace(line[1:])
+	}
 	if i+1 == len(lines) || !strings.HasPrefix(lines[i+1], "  -") {
 		*s = stateReadingItem
 	}
-	return url
+	return line
 }
 
 func handleNewListItem(lines []string, i int, s *int) ItemWithLink {
