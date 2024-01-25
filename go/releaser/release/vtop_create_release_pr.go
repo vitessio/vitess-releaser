@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pre_release
+package release
 
 import (
 	"fmt"
@@ -277,7 +277,7 @@ func updateVtopTests(vitessPreviousVersion, vitessNewVersion string) {
 	}
 
 	// sed -i.bak -E "s/vitess\/lite:([^-]*)(-rc[0-9]*)?(-mysql.*)?/vitess\/lite:v$new_vitess_version\3\"/g" $ROOT/pkg/apis/planetscale/v2/defaults.go
-	args = append([]string{"-i.bak", "-E", fmt.Sprintf("s/vitess\\/lite:([^-]*)(-rc[0-9]*)?(-mysql.*)?/vitess\\/lite:v%s\"\\3/g", vitessNewVersion)}, vtopDefaultsFile)
+	args = append([]string{"-i.bak", "-E", fmt.Sprintf("s/vitess\\/lite:([^-]*)(-rc[0-9]*)?(-mysql.*)?/vitess\\/lite:v%s\\3/g", vitessNewVersion)}, vtopDefaultsFile)
 	out, err = exec.Command("sed", args...).CombinedOutput()
 	if err != nil {
 		log.Fatalf("%s: %s", err, out)

@@ -127,7 +127,7 @@ func setUpVitessReleaseInformation(s *releaser.State, repo string) (releaser.Rel
 		Release:         releaseFromIssue,
 	}
 	if vitessRelease.Release == "" {
-		vitessRelease.Release = release
+		vitessRelease.Release = releaser.AddRCToReleaseTitle(release, rcIncrement)
 	}
 	return vitessRelease, issueNb, issueLink
 }

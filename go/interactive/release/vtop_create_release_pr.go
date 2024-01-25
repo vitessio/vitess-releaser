@@ -23,9 +23,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
+	"vitess.io/vitess-releaser/go/releaser/release"
 	"vitess.io/vitess-releaser/go/releaser/steps"
-
-	"vitess.io/vitess-releaser/go/releaser/pre_release"
 )
 
 func VtopCreateReleasePRMenuItem(ctx context.Context) *ui.MenuItem {
@@ -60,7 +59,7 @@ func vtopCreateReleasePRUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.
 }
 
 func vtopCreateReleasePRAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
-	pl, freeze := pre_release.VtopCreateReleasePR(mi.State)
+	pl, freeze := release.VtopCreateReleasePR(mi.State)
 	return mi, tea.Batch(func() tea.Msg {
 		return vtopCreateReleasePRUrl(freeze())
 	}, ui.PushDialog(ui.NewProgressDialog(steps.VtopCreateReleasePR, pl)))

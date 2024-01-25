@@ -88,9 +88,6 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 		git.ResetHard(state.VitessRelease.Remote, state.VitessRelease.ReleaseBranch)
 
 		releasePRName := fmt.Sprintf("[%s] Release of `v%s`", state.VitessRelease.ReleaseBranch, state.VitessRelease.Release)
-		if state.Issue.RC > 0 {
-			releasePRName = fmt.Sprintf("[%s] Release of `v%s-RC%d`", state.VitessRelease.ReleaseBranch, state.VitessRelease.Release, state.Issue.RC)
-		}
 
 		// look for existing PRs
 		pl.NewStepf("Look for an existing Release Pull Request named '%s'", releasePRName)
