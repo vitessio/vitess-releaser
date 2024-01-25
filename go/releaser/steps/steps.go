@@ -34,11 +34,11 @@ const (
 	VtopCreateBranch             = "Create vitess-operator release branch"
 	VtopUpdateGolang             = "Update Go version in vitess-operator"
 	VtopUpdateCompatibilityTable = "Update compatibility table in vitess-operator"
-	VtopCreateReleasePR          = "Create vitess-operator release PR"
 
 	// Release
 	MergeReleasePR       = "Merge Release PR"
 	TagRelease           = "Tag Release"
+	VtopCreateReleasePR  = "Create vitess-operator release PR"
 	JavaRelease          = "Java Release"
 	ReleaseNotesOnMain   = "Release Notes on Main"
 	BackToDev            = "Back To Dev Mode"

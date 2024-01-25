@@ -58,7 +58,7 @@ func TagRelease(state *releaser.State) (*logging.ProgressLogging, func() string)
 
 		pl.NewStepf("Create the release on the GitHub UI")
 		releaseNotesPath := path.Join(pre_release.GetReleaseNotesDirPath(releaser.RemoveRCFromReleaseTitle(state.VitessRelease.Release)), "release_notes.md")
-		url := github.CreateRelease(state.VitessRelease.Repo, gitTag, releaseNotesPath, state.VitessRelease.IsLatestRelease)
+		url := github.CreateRelease(state.VitessRelease.Repo, gitTag, releaseNotesPath, state.VitessRelease.IsLatestRelease && state.Issue.RC == 0, state.Issue.RC > 0)
 
 		pl.NewStepf("Done %s", url)
 		state.Issue.TagRelease.Done = true

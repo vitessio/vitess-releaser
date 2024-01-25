@@ -88,6 +88,9 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 		git.ResetHard(state.VitessRelease.Remote, state.VitessRelease.ReleaseBranch)
 
 		releasePRName := fmt.Sprintf("[%s] Release of `v%s`", state.VitessRelease.ReleaseBranch, state.VitessRelease.Release)
+		if state.Issue.RC > 0 {
+			releasePRName = fmt.Sprintf("[%s] Release of `v%s-RC%d`", state.VitessRelease.ReleaseBranch, state.VitessRelease.Release, state.Issue.RC)
+		}
 
 		// look for existing PRs
 		pl.NewStepf("Look for an existing Release Pull Request named '%s'", releasePRName)
@@ -240,7 +243,11 @@ func UpdateJavaDir(newVersion string) {
 	//  cd $ROOT/java || exit 1
 	//  mvn versions:set -DnewVersion=$1
 	cmd := exec.Command("mvn", "versions:set", fmt.Sprintf("-DnewVersion=%s", newVersion))
-	cmd.Dir = path.Join(os.Getenv("PWD"), "/java")
+	pwd, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	cmd.Dir = path.Join(pwd, "/java")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Fatalf("%s: %s", err, out)

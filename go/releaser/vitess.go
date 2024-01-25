@@ -70,7 +70,7 @@ func FindNextRelease(remote, majorRelease string, isVtOp bool) (
 				log.Fatal(err)
 			}
 			if mainMajorNb+1 == majorNb {
-				return currentRelease, releaseBranchName, true, true
+				return fmt.Sprintf("%s.%d.0", mainMajorParts[0], mainMajorNb+1), releaseBranchName, true, true
 			}
 		}
 	} else if mainMajor == majorRelease {
@@ -90,11 +90,11 @@ func FindNextRelease(remote, majorRelease string, isVtOp bool) (
 		log.Fatalf("on branch '%s', could not find the corresponding major release '%s'", releaseBranchName, majorRelease)
 	}
 
-	mainMajorNb, err := strconv.Atoi(mainMajor)
+	mainMajorNb, err := strconv.ParseFloat(mainMajor, 64)
 	if err != nil {
 		log.Fatal(err)
 	}
-	majorNb, err := strconv.Atoi(major)
+	majorNb, err := strconv.ParseFloat(major, 64)
 	if err != nil {
 		log.Fatal(err)
 	}

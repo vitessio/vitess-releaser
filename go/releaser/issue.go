@@ -572,7 +572,11 @@ func CloseReleaseIssue(state *State) (*logging.ProgressLogging, func() string) {
 }
 
 func RemoveRCFromReleaseTitle(release string) string {
-	return release[:strings.Index(release, "-RC")]
+	index := strings.Index(release, "-RC")
+	if index < 0 {
+		return release
+	}
+	return release[:index]
 }
 
 func AddRCToReleaseTitle(release string, rc int) string {

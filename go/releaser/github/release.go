@@ -25,7 +25,7 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/git"
 )
 
-func CreateRelease(repo, tag, notesFilePath string, latest bool) (url string) {
+func CreateRelease(repo, tag, notesFilePath string, latest, prerelease bool) (url string) {
 	target := git.GetSHAForGitRef(tag)
 
 	args := []string{
@@ -44,6 +44,10 @@ func CreateRelease(repo, tag, notesFilePath string, latest bool) (url string) {
 
 	if latest {
 		args = append(args, "--latest")
+	}
+
+	if prerelease {
+		args = append(args, "--prerelease")
 	}
 
 	args = append(args, tag)

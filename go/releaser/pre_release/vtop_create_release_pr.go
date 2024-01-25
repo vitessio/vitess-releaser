@@ -37,7 +37,7 @@ const (
 	vtopDefaultsFile       = "./pkg/apis/planetscale/v2/defaults.go"
 	vtopInitialClusterFile = "./test/endtoend/operator/101_initial_cluster.yaml"
 
-	vtopVersionGoFile = "./go/vt/servenv/version.go"
+	vtopVersionGoFile = "./version/version.go"
 	vtopVersionGo     = `/*
 Copyright %d PlanetScale Inc.
 
@@ -70,6 +70,10 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 
 	pl := &logging.ProgressLogging{
 		TotalSteps: 15,
+	}
+
+	if hasGoUpgradePR {
+		pl.TotalSteps += 2
 	}
 
 	var done bool
@@ -109,6 +113,7 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 						break outer
 					}
 				case <-timeout:
+					pl.TotalSteps = 5
 					pl.NewStepf("This step has timeout, please merge the Pull Request %s and try again.", state.Issue.VtopUpdateGolang.URL)
 					return ""
 				}
@@ -119,13 +124,16 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 		// 3. Figuring out the name of the release PR
 		releasePRName := fmt.Sprintf("[%s] Release of `v%s`", state.VtOpRelease.ReleaseBranch, state.VtOpRelease.Release)
 		if state.Issue.RC > 0 {
-			releasePRName = fmt.Sprintf("%s-RC%d", releasePRName, state.Issue.RC)
+			releasePRName = fmt.Sprintf("[%s] Release of `v%s-RC%d`", state.VtOpRelease.ReleaseBranch, state.VtOpRelease.Release, state.Issue.RC)
 		}
 
 		// 4. Look for existing PRs
 		pl.NewStepf("Look for an existing Release Pull Request named '%s'", releasePRName)
 		if _, url := github.FindPR(state.VtOpRelease.Repo, releasePRName); url != "" {
-			pl.TotalSteps = 5 // only 5 total steps in this situation
+			pl.TotalSteps = 5
+			if hasGoUpgradePR {
+				pl.TotalSteps += 2
+			}
 			pl.NewStepf("An opened Release Pull Request was found: %s", url)
 			done = true
 			urls = append(urls, url)
@@ -178,23 +186,31 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 		nextRelease := findNextVtOpVersion(state.VtOpRelease.Release, state.Issue.RC)
 		pl.NewStepf("Go back to dev mode with version = %s", nextRelease)
 		updateVtOpVersionGoFile(nextRelease)
-
-		// 12. Create the Pull Request
-		pl.NewStepf("Create Pull Request")
-		pr := github.PR{
-			Title:  releasePRName,
-			Body:   fmt.Sprintf("This Pull Request contains all the code for the %s release of vtop + the back to dev mode. Warning: the tag is made on one of the commits of this PR, you must **not** squash merge this PR."),
-			Branch: newBranchName,
-			Base:   state.VtOpRelease.ReleaseBranch,
-			Labels: []github.Label{},
+		if !git.CommitAll(fmt.Sprintf("Update test code to use proper image")) {
+			commitCount++
+			git.Push(state.VtOpRelease.Remote, newBranchName)
 		}
-		_, url := pr.Create(state.VtOpRelease.Repo)
-		pl.NewStepf("Pull Request created %s", url)
-		urls = append(urls, url)
+
+		if commitCount > 0 {
+			// 12. Create the Pull Request
+			pl.NewStepf("Create Pull Request")
+			pr := github.PR{
+				Title:  releasePRName,
+				Body:   fmt.Sprintf("This Pull Request contains all the code for the %s release of vtop + the back to dev mode. Warning: the tag is made on one of the commits of this PR, you must **not** squash merge this PR.", lowerReleaseName),
+				Branch: newBranchName,
+				Base:   state.VtOpRelease.ReleaseBranch,
+				Labels: []github.Label{},
+			}
+			_, url := pr.Create(state.VtOpRelease.Repo)
+			pl.NewStepf("Pull Request created %s", url)
+			urls = append(urls, url)
+		} else {
+			pl.TotalSteps -= 2
+		}
 
 		// 13. Create the release on the GitHub UI
 		pl.NewStepf("Create the release on the GitHub UI")
-		url = github.CreateRelease(state.VtOpRelease.Repo, gitTag, "", state.VtOpRelease.IsLatestRelease)
+		url := github.CreateRelease(state.VtOpRelease.Repo, gitTag, "", state.VtOpRelease.IsLatestRelease && state.Issue.RC == 0, state.Issue.RC > 0)
 		pl.NewStepf("Done %s", url)
 		urls = append(urls, url)
 
@@ -204,6 +220,13 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 }
 
 func updateVitessDeps(state *releaser.State) {
+	if !strings.HasPrefix(state.VitessRelease.Repo, "vitessio/vitess") {
+		// bailing out here, since we are doing a release on a fork / testing the vitess releaser
+		// the release we did on vitess is not on vitessio/vitess and thus updating the deps of
+		// vtop to the new release of vitess will fail
+		return
+	}
+
 	out, err := exec.Command("go", "get", "-u", fmt.Sprintf("vitess.io/vitess@%s", strings.ToLower(state.VitessRelease.Release))).CombinedOutput()
 	if err != nil {
 		log.Fatalf("%s: %s", err, out)
@@ -254,7 +277,7 @@ func updateVtopTests(vitessPreviousVersion, vitessNewVersion string) {
 	}
 
 	// sed -i.bak -E "s/vitess\/lite:([^-]*)(-rc[0-9]*)?(-mysql.*)?/vitess\/lite:v$new_vitess_version\3\"/g" $ROOT/pkg/apis/planetscale/v2/defaults.go
-	args = append([]string{"-i.bak", "-E", fmt.Sprintf("s/vitess\\/lite:([^-]*)(-rc[0-9]*)?(-mysql.*)?/vitess\\/lite:v%s\\3/g", vitessNewVersion)}, vtopDefaultsFile)
+	args = append([]string{"-i.bak", "-E", fmt.Sprintf("s/vitess\\/lite:([^-]*)(-rc[0-9]*)?(-mysql.*)?/vitess\\/lite:v%s\"\\3/g", vitessNewVersion)}, vtopDefaultsFile)
 	out, err = exec.Command("sed", args...).CombinedOutput()
 	if err != nil {
 		log.Fatalf("%s: %s", err, out)
