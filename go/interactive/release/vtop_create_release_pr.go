@@ -18,6 +18,7 @@ package release
 
 import (
 	"context"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/ui"
@@ -26,51 +27,40 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/steps"
 )
 
-func MergeReleasePRItem(ctx context.Context) *ui.MenuItem {
+func VtopCreateReleasePRMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
-	act := mergeReleasePRAct
-	if state.Issue.MergeReleasePR.Done {
+	act := vtopCreateReleasePRAct
+	if state.Issue.VtopCreateReleasePR.Done {
 		act = nil
 	}
-
-	info := "Run this step once the Release Pull Request was created."
-	if state.Issue.CreateReleasePR.URL != "" {
-		info = state.Issue.CreateReleasePR.URL
-	}
-
 	return &ui.MenuItem{
 		State:  state,
-		Name:   steps.MergeReleasePR,
+		Name:   steps.VtopCreateReleasePR,
 		Act:    act,
-		Update: mergeReleasePRUpdate,
-		Info:   info,
-		IsDone: state.Issue.MergeReleasePR.Done,
+		Update: vtopCreateReleasePRUpdate,
+		IsDone: state.Issue.VtopCreateReleasePR.Done,
+		Info:   strings.Join(state.Issue.VtopCreateReleasePR.URLs, " | "),
+
+		Ignore: state.VtOpRelease.Release == "",
 	}
 }
 
-type mergeReleasePRUrl string
+type vtopCreateReleasePRUrl string
 
-func mergeReleasePRUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
-	url, ok := msg.(mergeReleasePRUrl)
+func vtopCreateReleasePRUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
+	_, ok := msg.(vtopCreateReleasePRUrl)
 	if !ok {
 		return mi, nil
 	}
 
-	if url != "" {
-		mi.Info = string(url)
-	}
-	mi.IsDone = mi.State.Issue.MergeReleasePR.Done
+	mi.IsDone = mi.State.Issue.VtopCreateReleasePR.Done
+	mi.Info = strings.Join(mi.State.Issue.VtopCreateReleasePR.URLs, " | ")
 	return mi, nil
 }
 
-func mergeReleasePRAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
-	// If the Release PR was not found in the Release Issue, do nothing
-	if mi.State.Issue.CreateReleasePR.URL == "" {
-		return mi, nil
-	}
-
-	pl, m := release.MergeReleasePR(mi.State)
+func vtopCreateReleasePRAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
+	pl, freeze := release.VtopCreateReleasePR(mi.State)
 	return mi, tea.Batch(func() tea.Msg {
-		return mergeReleasePRUrl(m())
-	}, ui.PushDialog(ui.NewProgressDialog("Merge Release Pull Request", pl)))
+		return vtopCreateReleasePRUrl(freeze())
+	}, ui.PushDialog(ui.NewProgressDialog(steps.VtopCreateReleasePR, pl)))
 }

@@ -1,5 +1,5 @@
 /*
-Copyright 2023 The Vitess Authors.
+Copyright 2024 The Vitess Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,6 +18,14 @@ package releaser
 
 import (
 	"context"
+	"log"
+	"path"
+	"syscall"
+)
+
+const (
+	pathVitess         = "vitess"
+	pathVitessOperator = "vitess-operator"
 )
 
 var (
@@ -44,8 +52,41 @@ type ReleaseInformation struct {
 
 type State struct {
 	VitessRelease ReleaseInformation
+	VtOpRelease   ReleaseInformation
 
 	Issue     Issue
 	IssueLink string
 	IssueNbGH int
+
+	currentPath string
+}
+
+func (s *State) GoToVitess() {
+	p := pathVitess
+	if s.currentPath != "" {
+		p = "../" + p
+	}
+	s.currentPath = pathVitess
+	changeDir(p)
+}
+
+func (s *State) GoToVtOp() {
+	p := pathVitessOperator
+	if s.currentPath != "" {
+		p = "../" + p
+	}
+	s.currentPath = pathVitessOperator
+	changeDir(p)
+}
+
+func changeDir(p string) {
+	cwd, err := syscall.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	p = path.Join(cwd, p)
+	err = syscall.Chdir(p)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

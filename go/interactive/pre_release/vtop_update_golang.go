@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package release
+package pre_release
 
 import (
 	"context"
@@ -22,45 +22,45 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/release"
 	"vitess.io/vitess-releaser/go/releaser/steps"
+
+	"vitess.io/vitess-releaser/go/releaser/pre_release"
 )
 
-func CloseMilestoneItem(ctx context.Context) *ui.MenuItem {
+func VtopUpdateGolangMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
-	act := closeMilestoneAct
-	if state.Issue.CloseMilestone.Done {
+	act := vtopUpdateGolangAct
+	if state.Issue.VtopUpdateGolang.Done {
 		act = nil
 	}
 	return &ui.MenuItem{
 		State:  state,
-		Name:   steps.CloseMilestone,
+		Name:   steps.VtopUpdateGolang,
 		Act:    act,
-		Update: closeMilestoneUpdate,
-		Info:   state.Issue.CloseMilestone.URL,
-		IsDone: state.Issue.CloseMilestone.Done,
+		Update: vtopUpdateGolangUpdate,
+		IsDone: state.Issue.VtopUpdateGolang.Done,
+		Info:   state.Issue.VtopUpdateGolang.URL,
 
-		// We do not want to close the milestone if this is an RC release
-		Ignore: state.Issue.RC > 0,
+		Ignore: state.VtOpRelease.Release == "",
 	}
 }
 
-type closeMilestoneUrl string
+type vtopUpdateGolangUrl string
 
-func closeMilestoneUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
-	_, ok := msg.(closeMilestoneUrl)
+func vtopUpdateGolangUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
+	_, ok := msg.(vtopUpdateGolangUrl)
 	if !ok {
 		return mi, nil
 	}
 
-	mi.Info = mi.State.Issue.CloseMilestone.URL
-	mi.IsDone = mi.State.Issue.CloseMilestone.Done
+	mi.IsDone = mi.State.Issue.VtopUpdateGolang.Done
+	mi.Info = mi.State.Issue.VtopUpdateGolang.URL
 	return mi, nil
 }
 
-func closeMilestoneAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
-	pl, back := release.CloseMilestone(mi.State)
+func vtopUpdateGolangAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
+	pl, freeze := pre_release.VtopUpdateGolang(mi.State)
 	return mi, tea.Batch(func() tea.Msg {
-		return closeMilestoneUrl(back())
-	}, ui.PushDialog(ui.NewProgressDialog("Close Milestone", pl)))
+		return vtopUpdateGolangUrl(freeze())
+	}, ui.PushDialog(ui.NewProgressDialog(steps.VtopUpdateGolang, pl)))
 }

@@ -14,50 +14,40 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package release
+package pre_release
 
 import (
-	"log"
-	"strconv"
-	"strings"
-	"time"
+	"fmt"
 
 	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/github"
+	"vitess.io/vitess-releaser/go/releaser/git"
 	"vitess.io/vitess-releaser/go/releaser/logging"
 )
 
-func MergeReleasePR(state *releaser.State) (*logging.ProgressLogging, func() string) {
+func VtopCreateBranch(state *releaser.State) (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
-		TotalSteps: 5,
+		TotalSteps: 3,
 	}
 
 	return pl, func() string {
-		pl.NewStepf("Resolve Release Pull Request URL")
-		url := state.Issue.CreateReleasePR.URL
-		nb, err := strconv.Atoi(url[strings.LastIndex(url, "/")+1:])
-		if err != nil {
-			log.Fatal(err)
-		}
+		state.GoToVtOp()
+		defer state.GoToVitess()
 
-		pl.NewStepf("Waiting for %s to be merged", url)
-	outer:
-		for {
-			select {
-			case <-time.After(5 * time.Second):
-				if github.IsPRMerged(state.VitessRelease.Repo, nb) {
-					break outer
-				}
-			}
+		git.CorrectCleanRepo(state.VtOpRelease.Repo)
+		pl.NewStepf("Create branch %s", state.VtOpRelease.ReleaseBranch)
+		err := git.CreateBranchAndCheckout(state.VtOpRelease.ReleaseBranch, fmt.Sprintf("%s/main", state.VtOpRelease.Remote))
+		if err != nil {
+			git.Checkout(state.VtOpRelease.ReleaseBranch)
+			git.ResetHard(state.VtOpRelease.Remote, state.VtOpRelease.ReleaseBranch)
+		} else {
+			git.Push(state.VtOpRelease.Remote, state.VtOpRelease.ReleaseBranch)
 		}
-		pl.NewStepf("Pull Request has been merged")
-		state.Issue.MergeReleasePR.Done = true
-		state.Issue.MergeReleasePR.URL = url
+		state.Issue.VtopCreateBranch = true
 		pl.NewStepf("Update Issue %s on GitHub", state.IssueLink)
 		_, fn := state.UploadIssue()
 		issueLink := fn()
 
 		pl.NewStepf("Issue updated, see: %s", issueLink)
-		return url
+		return ""
 	}
 }

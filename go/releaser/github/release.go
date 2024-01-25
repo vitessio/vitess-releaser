@@ -1,5 +1,5 @@
 /*
-Copyright 2023 The Vitess Authors.
+Copyright 2024 The Vitess Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,20 +25,29 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/git"
 )
 
-func CreateRelease(repo, tag, notesFilePath string, latest bool) (url string) {
+func CreateRelease(repo, tag, notesFilePath string, latest, prerelease bool) (url string) {
 	target := git.GetSHAForGitRef(tag)
 
 	args := []string{
 		"release", "create",
 		"--repo", repo,
 		"--title", fmt.Sprintf("Vitess %s", tag),
-		"-F", notesFilePath,
 		"--target", target,
 		"--verify-tag",
 	}
 
+	if notesFilePath != "" {
+		args = append(args, "-F", notesFilePath)
+	} else {
+		args = append(args, "--generate-notes")
+	}
+
 	if latest {
 		args = append(args, "--latest")
+	}
+
+	if prerelease {
+		args = append(args, "--prerelease")
 	}
 
 	args = append(args, tag)

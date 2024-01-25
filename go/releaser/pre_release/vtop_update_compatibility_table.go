@@ -19,25 +19,13 @@ package pre_release
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
 	"vitess.io/vitess-releaser/go/releaser"
-
-	"vitess.io/vitess-releaser/go/releaser/pre_release"
 )
 
-// Code Freeze:
-// - Checkout the proper branch
-// - Find the remote of vitessio/vitess.git
-// - Git pull from the remote
-// - Run the code freeze script
-// - Get the PR URL and prompt it to the user
-var codeFreeze = &cobra.Command{
-	Use:   "code-freeze",
-	Short: "Does the code-freeze of a release",
-	Run: func(cmd *cobra.Command, args []string) {
-		state := releaser.UnwrapState(cmd.Context())
-		_, freeze := pre_release.CodeFreeze(state)
-		out := freeze()
-		fmt.Println("Please force merge the Pull Request created for code freeze:", out)
-	},
+func VtopUpdateCompatibilityTable(state *releaser.State) []string {
+	return []string{
+		fmt.Sprintf("You open a Pull Request that updates the compatibility table found in the README of https://github.com/%s", state.VtOpRelease.Repo),
+		fmt.Sprintf("Add a new row before the last row. This new row should include the v%s.* vitess-operator release and the v%s.0.*, along with the matching K8S version.", state.VtOpRelease.Release, state.VitessRelease.MajorRelease),
+		fmt.Sprintf("Once the Pull Request, you may bypass the branch protection rules by changing the settings in https://github.com/%s/settings/branches", state.VtOpRelease.Repo),
+	}
 }

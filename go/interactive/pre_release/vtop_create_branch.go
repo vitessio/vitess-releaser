@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package release
+package pre_release
 
 import (
 	"context"
@@ -22,45 +22,43 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/release"
 	"vitess.io/vitess-releaser/go/releaser/steps"
+
+	"vitess.io/vitess-releaser/go/releaser/pre_release"
 )
 
-func CloseMilestoneItem(ctx context.Context) *ui.MenuItem {
+func VtopCreateBranchMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
-	act := closeMilestoneAct
-	if state.Issue.CloseMilestone.Done {
+	act := vtopCreateBranchAct
+	if state.Issue.VtopCreateBranch {
 		act = nil
 	}
 	return &ui.MenuItem{
 		State:  state,
-		Name:   steps.CloseMilestone,
+		Name:   steps.VtopCreateBranch,
 		Act:    act,
-		Update: closeMilestoneUpdate,
-		Info:   state.Issue.CloseMilestone.URL,
-		IsDone: state.Issue.CloseMilestone.Done,
+		Update: vtopCreateBranchUpdate,
+		IsDone: state.Issue.VtopCreateBranch,
 
-		// We do not want to close the milestone if this is an RC release
-		Ignore: state.Issue.RC > 0,
+		Ignore: state.VtOpRelease.Release == "" || state.Issue.RC != 1,
 	}
 }
 
-type closeMilestoneUrl string
+type vtopCreateBranchUrl string
 
-func closeMilestoneUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
-	_, ok := msg.(closeMilestoneUrl)
+func vtopCreateBranchUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
+	_, ok := msg.(vtopCreateBranchUrl)
 	if !ok {
 		return mi, nil
 	}
 
-	mi.Info = mi.State.Issue.CloseMilestone.URL
-	mi.IsDone = mi.State.Issue.CloseMilestone.Done
+	mi.IsDone = mi.State.Issue.VtopCreateBranch
 	return mi, nil
 }
 
-func closeMilestoneAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
-	pl, back := release.CloseMilestone(mi.State)
+func vtopCreateBranchAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
+	pl, freeze := pre_release.VtopCreateBranch(mi.State)
 	return mi, tea.Batch(func() tea.Msg {
-		return closeMilestoneUrl(back())
-	}, ui.PushDialog(ui.NewProgressDialog("Close Milestone", pl)))
+		return vtopCreateBranchUrl(freeze())
+	}, ui.PushDialog(ui.NewProgressDialog(steps.VtopCreateBranch, pl)))
 }

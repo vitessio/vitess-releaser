@@ -1,5 +1,5 @@
 /*
-Copyright 2023 The Vitess Authors.
+Copyright 2024 The Vitess Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -50,6 +50,9 @@ func MainScreen(ctx context.Context) {
 		pre_release.UpdateSnapshotOnMainMenuItem(ctx),
 		pre_release.CreateReleasePRMenuItem(ctx),
 		pre_release.CreateMilestoneMenuItem(ctx),
+		pre_release.VtopCreateBranchMenuItem(ctx),
+		pre_release.VtopUpdateGolangMenuItem(ctx),
+		pre_release.VtopUpdateCompatibilityTableMenuItem(ctx),
 	)
 
 	releaseMenu := ui.NewMenu(
@@ -57,6 +60,7 @@ func MainScreen(ctx context.Context) {
 		"Release",
 		release.MergeReleasePRItem(ctx),
 		release.TagReleaseItem(ctx),
+		release.VtopCreateReleasePRMenuItem(ctx),
 		release.ReleaseNotesOnMainItem(ctx),
 		release.BackToDevModeItem(ctx),
 		release.WebsiteDocumentationItem(ctx),

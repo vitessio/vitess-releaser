@@ -1,5 +1,5 @@
 /*
-Copyright 2023 The Vitess Authors.
+Copyright 2024 The Vitess Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -44,6 +44,8 @@ const (
 	stateReadingBackToDevModeItem
 	stateReadingWebsiteDocsItem
 	stateReadingCloseMilestoneItem
+	stateReadingVtopUpdateGo
+	stateReadingVtopCreateReleasePR
 )
 
 const (
@@ -65,6 +67,10 @@ const (
 	updateSnapshotOnMainItem      = "Update the SNAPSHOT version on main."
 	createReleasePRItem           = "Create Release PR."
 	newMilestoneItem              = "Create new GitHub Milestone."
+	vtopCreateBranchItem          = "Create vitess-operator release branch."
+	vtopUpdateGoItem              = "Update vitess-operator Golang version."
+	vtopUpdateCompTableItem       = "Update vitess-operator compatibility table."
+	vtopCreateReleasePRItem       = "Create vitess-operator Release PR."
 
 	// Release
 	mergeReleasePRItem   = "Merge the Release PR."
@@ -92,13 +98,19 @@ type (
 		URL string
 	}
 
+	ItemWithLinks struct {
+		Done bool
+		URLs []string
+	}
+
 	ParentOfItems struct {
 		Items []ItemWithLink
 	}
 
 	Issue struct {
-		Date time.Time
-		RC   int
+		Date   time.Time
+		RC     int
+		DoVtOp bool
 
 		// Prerequisites
 		SlackPreRequisite bool
@@ -107,11 +119,15 @@ type (
 		ReleaseBlocker    ParentOfItems
 
 		// Pre-Release
-		CodeFreeze                ItemWithLink
-		CopyBranchProtectionRules bool
-		UpdateSnapshotOnMain      ItemWithLink
-		CreateReleasePR           ItemWithLink
-		NewGitHubMilestone        ItemWithLink
+		CodeFreeze                   ItemWithLink
+		CopyBranchProtectionRules    bool
+		UpdateSnapshotOnMain         ItemWithLink
+		CreateReleasePR              ItemWithLink
+		NewGitHubMilestone           ItemWithLink
+		VtopCreateBranch             bool
+		VtopUpdateGolang             ItemWithLink
+		VtopUpdateCompatibilityTable bool
+		VtopCreateReleasePR          ItemWithLinks
 
 		// Release
 		MergeReleasePR       ItemWithLink
@@ -174,6 +190,18 @@ const (
   - {{ .NewGitHubMilestone.URL }}
 {{- end }}
 {{- end }}
+{{- if .DoVtOp }}
+{{- if eq .RC 1 }}
+- [{{fmtStatus .VtopCreateBranch}}] Create vitess-operator release branch.
+{{- end }}
+- [{{fmtStatus .VtopUpdateGolang.Done}}] Update vitess-operator Golang version.
+{{- if .VtopUpdateGolang.URL }}
+  - {{ .VtopUpdateGolang.URL }}
+{{- end }}
+{{- if eq .RC 1 }}
+- [{{fmtStatus .VtopUpdateCompatibilityTable}}] Update vitess-operator compatibility table.
+{{- end }}
+{{- end }}
 
 ### Release
 
@@ -184,6 +212,12 @@ const (
 - [{{fmtStatus .TagRelease.Done}}] Tag the release.
 {{- if .TagRelease.URL }}
   - {{ .TagRelease.URL }}
+{{- end }}
+{{- if .DoVtOp }}
+- [{{fmtStatus .VtopCreateReleasePR.Done}}] Create vitess-operator Release PR.
+{{- range $item := .VtopCreateReleasePR.URLs }}
+  - {{$item}}
+{{- end }}
 {{- end }}
 - [{{fmtStatus .ReleaseNotesOnMain.Done}}] Update release notes on main.
 {{- if .ReleaseNotesOnMain.URL }}
@@ -233,19 +267,21 @@ func (pi ParentOfItems) Done() bool {
 	return true
 }
 
-func (ctx *State) LoadIssue() {
-	if ctx.IssueNbGH == 0 {
+func (s *State) LoadIssue() {
+	if s.IssueNbGH == 0 {
 		// we are in the case where we start vitess-releaser
 		// and the Release Issue hasn't been created yet.
 		// We simply quit, the issue is left empty, nothing to load.
 		return
 	}
 
-	title, body := github.GetIssueTitleAndBody(ctx.VitessRelease.Repo, ctx.IssueNbGH)
+	title, body := github.GetIssueTitleAndBody(s.VitessRelease.Repo, s.IssueNbGH)
 
 	lines := strings.Split(body, "\n")
 
 	var newIssue Issue
+
+	newIssue.DoVtOp = s.VtOpRelease.Release != ""
 
 	// Parse the title of the Issue to determine the RC increment if any
 	if idx := strings.Index(title, "-RC"); idx != -1 {
@@ -256,9 +292,9 @@ func (ctx *State) LoadIssue() {
 		newIssue.RC = rc
 	}
 
-	s := stateReadingItem
+	st := stateReadingItem
 	for i, line := range lines {
-		switch s {
+		switch st {
 		case stateReadingItem:
 			// divers
 			if strings.HasPrefix(line, dateItem) {
@@ -278,15 +314,15 @@ func (ctx *State) LoadIssue() {
 				newIssue.CheckSummary = strings.HasPrefix(line, markdownItemDone)
 			}
 			if strings.Contains(line, backportItem) && isNextLineAList(lines, i) {
-				s = stateReadingBackport
+				st = stateReadingBackport
 			}
 			if strings.Contains(line, releaseBlockerItem) && isNextLineAList(lines, i) {
-				s = stateReadingReleaseBlockerIssue
+				st = stateReadingReleaseBlockerIssue
 			}
 			if strings.Contains(line, codeFreezeItem) {
 				newIssue.CodeFreeze.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
-					s = stateReadingCodeFreezeItem
+					st = stateReadingCodeFreezeItem
 				}
 			}
 			if strings.Contains(line, copyBranchProtectionRulesItem) {
@@ -295,19 +331,37 @@ func (ctx *State) LoadIssue() {
 			if strings.Contains(line, updateSnapshotOnMainItem) {
 				newIssue.UpdateSnapshotOnMain.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
-					s = stateReadingUpdateSnapshotOnMainItem
+					st = stateReadingUpdateSnapshotOnMainItem
 				}
 			}
 			if strings.Contains(line, createReleasePRItem) {
 				newIssue.CreateReleasePR.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
-					s = stateReadingCreateReleasePRItem
+					st = stateReadingCreateReleasePRItem
 				}
 			}
 			if strings.Contains(line, newMilestoneItem) {
 				newIssue.NewGitHubMilestone.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
-					s = stateReadingNewMilestoneItem
+					st = stateReadingNewMilestoneItem
+				}
+			}
+			if strings.Contains(line, vtopCreateBranchItem) {
+				newIssue.VtopCreateBranch = strings.HasPrefix(line, markdownItemDone)
+			}
+			if strings.Contains(line, vtopUpdateGoItem) {
+				newIssue.VtopUpdateGolang.Done = strings.HasPrefix(line, markdownItemDone)
+				if isNextLineAList(lines, i) {
+					st = stateReadingVtopUpdateGo
+				}
+			}
+			if strings.Contains(line, vtopUpdateCompTableItem) {
+				newIssue.VtopUpdateCompatibilityTable = strings.HasPrefix(line, markdownItemDone)
+			}
+			if strings.Contains(line, vtopCreateReleasePRItem) {
+				newIssue.VtopCreateReleasePR.Done = strings.HasPrefix(line, markdownItemDone)
+				if isNextLineAList(lines, i) {
+					st = stateReadingVtopCreateReleasePR
 				}
 			}
 
@@ -315,31 +369,31 @@ func (ctx *State) LoadIssue() {
 			if strings.Contains(line, mergeReleasePRItem) {
 				newIssue.MergeReleasePR.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
-					s = stateReadingMergedReleasePRItem
+					st = stateReadingMergedReleasePRItem
 				}
 			}
 			if strings.Contains(line, tagReleaseItem) {
 				newIssue.TagRelease.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
-					s = stateReadingTagReleaseItem
+					st = stateReadingTagReleaseItem
 				}
 			}
 			if strings.Contains(line, releaseNotesMainItem) {
 				newIssue.ReleaseNotesOnMain.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
-					s = stateReadingReleaseNotesMainItem
+					st = stateReadingReleaseNotesMainItem
 				}
 			}
 			if strings.Contains(line, backToDevItem) {
 				newIssue.BackToDevMode.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
-					s = stateReadingBackToDevModeItem
+					st = stateReadingBackToDevModeItem
 				}
 			}
 			if strings.Contains(line, websiteDocItem) {
 				newIssue.WebsiteDocumentation.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
-					s = stateReadingWebsiteDocsItem
+					st = stateReadingWebsiteDocsItem
 				}
 			}
 			if strings.Contains(line, benchmarkedItem) {
@@ -351,7 +405,7 @@ func (ctx *State) LoadIssue() {
 			if strings.Contains(line, closeMilestoneItem) {
 				newIssue.CloseMilestone.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
-					s = stateReadingCloseMilestoneItem
+					st = stateReadingCloseMilestoneItem
 				}
 			}
 
@@ -366,32 +420,50 @@ func (ctx *State) LoadIssue() {
 				newIssue.CloseIssue = strings.HasPrefix(line, markdownItemDone)
 			}
 		case stateReadingBackport:
-			newIssue.CheckBackport.Items = append(newIssue.CheckBackport.Items, handleNewListItem(lines, i, &s))
+			newIssue.CheckBackport.Items = append(newIssue.CheckBackport.Items, handleNewListItem(lines, i, &st))
 		case stateReadingReleaseBlockerIssue:
-			newIssue.ReleaseBlocker.Items = append(newIssue.ReleaseBlocker.Items, handleNewListItem(lines, i, &s))
+			newIssue.ReleaseBlocker.Items = append(newIssue.ReleaseBlocker.Items, handleNewListItem(lines, i, &st))
 		case stateReadingCodeFreezeItem:
-			newIssue.CodeFreeze.URL = handleSingleTextItem(line, &s)
+			newIssue.CodeFreeze.URL = handleSingleTextItem(line, &st)
 		case stateReadingUpdateSnapshotOnMainItem:
-			newIssue.UpdateSnapshotOnMain.URL = handleSingleTextItem(line, &s)
+			newIssue.UpdateSnapshotOnMain.URL = handleSingleTextItem(line, &st)
 		case stateReadingCreateReleasePRItem:
-			newIssue.CreateReleasePR.URL = handleSingleTextItem(line, &s)
+			newIssue.CreateReleasePR.URL = handleSingleTextItem(line, &st)
 		case stateReadingNewMilestoneItem:
-			newIssue.NewGitHubMilestone.URL = handleSingleTextItem(line, &s)
+			newIssue.NewGitHubMilestone.URL = handleSingleTextItem(line, &st)
 		case stateReadingMergedReleasePRItem:
-			newIssue.MergeReleasePR.URL = handleSingleTextItem(line, &s)
+			newIssue.MergeReleasePR.URL = handleSingleTextItem(line, &st)
 		case stateReadingTagReleaseItem:
-			newIssue.TagRelease.URL = handleSingleTextItem(line, &s)
+			newIssue.TagRelease.URL = handleSingleTextItem(line, &st)
 		case stateReadingReleaseNotesMainItem:
-			newIssue.ReleaseNotesOnMain.URL = handleSingleTextItem(line, &s)
+			newIssue.ReleaseNotesOnMain.URL = handleSingleTextItem(line, &st)
 		case stateReadingBackToDevModeItem:
-			newIssue.BackToDevMode.URL = handleSingleTextItem(line, &s)
+			newIssue.BackToDevMode.URL = handleSingleTextItem(line, &st)
 		case stateReadingWebsiteDocsItem:
-			newIssue.WebsiteDocumentation.URL = handleSingleTextItem(line, &s)
+			newIssue.WebsiteDocumentation.URL = handleSingleTextItem(line, &st)
 		case stateReadingCloseMilestoneItem:
-			newIssue.CloseMilestone.URL = handleSingleTextItem(line, &s)
+			newIssue.CloseMilestone.URL = handleSingleTextItem(line, &st)
+		case stateReadingVtopUpdateGo:
+			newIssue.VtopUpdateGolang.URL = handleSingleTextItem(line, &st)
+		case stateReadingVtopCreateReleasePR:
+			newLine := handleMultipleTextItem(lines, i, &st)
+			if newLine != "" {
+				newIssue.VtopCreateReleasePR.URLs = append(newIssue.VtopCreateReleasePR.URLs, newLine)
+			}
 		}
 	}
-	ctx.Issue = newIssue
+	s.Issue = newIssue
+}
+
+func handleMultipleTextItem(lines []string, i int, s *int) string {
+	line := strings.TrimSpace(lines[i])
+	if line[0] == '-' {
+		line = strings.TrimSpace(line[1:])
+	}
+	if i+1 == len(lines) || !strings.HasPrefix(lines[i+1], "  -") {
+		*s = stateReadingItem
+	}
+	return line
 }
 
 func handleNewListItem(lines []string, i int, s *int) ItemWithLink {
@@ -419,16 +491,16 @@ func isNextLineAList(lines []string, i int) bool {
 	return len(lines) > i+1 && strings.HasPrefix(lines[i+1], "  -")
 }
 
-func (ctx *State) UploadIssue() (*logging.ProgressLogging, func() string) {
+func (s *State) UploadIssue() (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
 		TotalSteps: 2,
 	}
 
 	return pl, func() string {
-		pl.NewStepf("Update Issue #%d on GitHub", ctx.IssueNbGH)
-		body := ctx.Issue.toString()
-		issue := github.Issue{Body: body, Number: ctx.IssueNbGH}
-		link := issue.UpdateBody(ctx.VitessRelease.Repo)
+		pl.NewStepf("Update Issue #%d on GitHub", s.IssueNbGH)
+		body := s.Issue.toString()
+		issue := github.Issue{Body: body, Number: s.IssueNbGH}
+		link := issue.UpdateBody(s.VitessRelease.Repo)
 		pl.NewStepf("Issue updated: %s", link)
 		return link
 	}
@@ -502,5 +574,16 @@ func CloseReleaseIssue(state *State) (*logging.ProgressLogging, func() string) {
 }
 
 func RemoveRCFromReleaseTitle(release string) string {
-	return release[:strings.Index(release, "-RC")]
+	index := strings.Index(release, "-RC")
+	if index < 0 {
+		return release
+	}
+	return release[:index]
+}
+
+func AddRCToReleaseTitle(release string, rc int) string {
+	if rc == 0 {
+		return release
+	}
+	return fmt.Sprintf("%s-RC%d", release, rc)
 }

@@ -1,5 +1,5 @@
 /*
-Copyright 2023 The Vitess Authors.
+Copyright 2024 The Vitess Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
 	"strings"
 )
@@ -28,7 +29,7 @@ var (
 	errBranchExists = fmt.Errorf("branch already exists")
 )
 
-func CheckCurrentRepo(repoWanted string) bool {
+func checkCurrentRepo(repoWanted string) bool {
 	out, err := exec.Command("git", "remote", "-v").CombinedOutput()
 	if err != nil {
 		log.Fatalf("%s: %s", err, out)
@@ -37,7 +38,7 @@ func CheckCurrentRepo(repoWanted string) bool {
 	return strings.Contains(outStr, repoWanted)
 }
 
-func CleanLocalState() bool {
+func cleanLocalState() bool {
 	out, err := exec.Command("git", "status", "-s").CombinedOutput()
 	if err != nil {
 		log.Fatalf("%s: %s", err, out)
@@ -129,12 +130,20 @@ func FindRemoteName(repository string) string {
 }
 
 func CorrectCleanRepo(repo string) {
-	if !CheckCurrentRepo(repo + ".git") {
-		log.Fatalf("the tool should be run from the %s repository directory", repo)
+	if !checkCurrentRepo(repo + ".git") {
+		log.Fatalf("failed to find remote %s in %s", repo, getWorkingDir())
 	}
-	if !CleanLocalState() {
-		log.Fatal("the vitess repository should have a clean state")
+	if !cleanLocalState() {
+		log.Fatalf("the %s repository should have a clean state", getWorkingDir())
 	}
+}
+
+func getWorkingDir() string {
+	dir, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return dir
 }
 
 func FindNewGeneratedBranch(remote, baseBranch, branchName string) string {

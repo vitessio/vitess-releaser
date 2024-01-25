@@ -1,5 +1,5 @@
 /*
-Copyright 2023 The Vitess Authors.
+Copyright 2024 The Vitess Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -123,7 +123,7 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 
 		lowerRelease := strings.ToLower(state.VitessRelease.Release)
 		pl.NewStepf("Update the code examples")
-		updateExamples(lowerRelease, "") // TODO: vitess-operator version not implemented
+		updateExamples(lowerRelease, strings.ToLower(releaser.AddRCToReleaseTitle(state.VtOpRelease.Release, state.Issue.RC)))
 
 		pl.NewStepf("Update version.go")
 		UpdateVersionGoFile(lowerRelease)
@@ -240,7 +240,11 @@ func UpdateJavaDir(newVersion string) {
 	//  cd $ROOT/java || exit 1
 	//  mvn versions:set -DnewVersion=$1
 	cmd := exec.Command("mvn", "versions:set", fmt.Sprintf("-DnewVersion=%s", newVersion))
-	cmd.Dir = path.Join(os.Getenv("PWD"), "/java")
+	pwd, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	cmd.Dir = path.Join(pwd, "/java")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Fatalf("%s: %s", err, out)

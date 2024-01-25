@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package prerequisites
+package pre_release
 
 import (
 	"context"
@@ -22,29 +22,36 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/prerequisite"
 	"vitess.io/vitess-releaser/go/releaser/steps"
+
+	"vitess.io/vitess-releaser/go/releaser/pre_release"
 )
 
-type checkSummary []string
-
-func CheckSummaryMenuItem(ctx context.Context) *ui.MenuItem {
+func VtopUpdateCompatibilityTableMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
+	act := vtopUpdateCompatibilityTableAct
+	if state.Issue.VtopUpdateCompatibilityTable {
+		act = nil
+	}
 	return &ui.MenuItem{
 		State:  state,
-		Name:   steps.CheckSummary,
-		IsDone: state.Issue.CheckSummary,
-		Act:    checkSummaryAct,
-		Update: checkSummaryUpdate,
+		Name:   steps.VtopUpdateCompatibilityTable,
+		Act:    act,
+		Update: vtopUpdateCompatibilityTableUpdate,
+		IsDone: state.Issue.VtopUpdateCompatibilityTable,
+
+		Ignore: state.VtOpRelease.Release == "" || state.Issue.RC != 1,
 	}
 }
 
-func checkSummaryUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
+type vtopUpdateCompatibilityTableMsg []string
+
+func vtopUpdateCompatibilityTableUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
 	switch msg := msg.(type) {
-	case checkSummary:
+	case vtopUpdateCompatibilityTableMsg:
 		return mi, ui.PushDialog(&ui.DoneDialog{
 			StepName: mi.Name,
-			Title:    "Check release note summary",
+			Title:    steps.VtopUpdateCompatibilityTable,
 			Message:  msg,
 			IsDone:   mi.IsDone,
 		})
@@ -52,19 +59,19 @@ func checkSummaryUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
 		if string(msg) != mi.Name {
 			return mi, nil
 		}
-		mi.State.Issue.CheckSummary = !mi.State.Issue.CheckSummary
+		mi.State.Issue.VtopUpdateCompatibilityTable = !mi.State.Issue.VtopUpdateCompatibilityTable
 		mi.IsDone = !mi.IsDone
 		pl, fn := mi.State.UploadIssue()
 		return mi, tea.Batch(func() tea.Msg {
 			fn()
 			return tea.Msg("")
-		}, ui.PushDialog(ui.NewProgressDialog("Updating the Release Issue", pl)))
+		}, ui.PushDialog(ui.NewProgressDialog(steps.VtopUpdateCompatibilityTable, pl)))
 	}
 	return mi, nil
 }
 
-func checkSummaryAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
+func vtopUpdateCompatibilityTableAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
 	return mi, func() tea.Msg {
-		return checkSummary(prerequisite.CheckSummary(mi.State))
+		return vtopUpdateCompatibilityTableMsg(pre_release.VtopUpdateCompatibilityTable(mi.State))
 	}
 }

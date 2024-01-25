@@ -1,5 +1,5 @@
 /*
-Copyright 2023 The Vitess Authors.
+Copyright 2024 The Vitess Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,15 +26,19 @@ const (
 	CheckSummary      = "Check Release Summary"
 
 	// Pre-Release
-	CodeFreeze                = "Code Freeze"
-	CopyBranchProtectionRules = "Copy branch protection rules"
-	UpdateSnapshotOnMain      = "Update SNAPSHOT on main"
-	CreateReleasePR           = "Create Release PR"
-	CreateMilestone           = "Create Milestone"
+	CodeFreeze                   = "Code Freeze"
+	CopyBranchProtectionRules    = "Copy branch protection rules"
+	UpdateSnapshotOnMain         = "Update SNAPSHOT on main"
+	CreateReleasePR              = "Create Release PR"
+	CreateMilestone              = "Create Milestone"
+	VtopCreateBranch             = "Create vitess-operator release branch"
+	VtopUpdateGolang             = "Update Go version in vitess-operator"
+	VtopUpdateCompatibilityTable = "Update compatibility table in vitess-operator"
 
 	// Release
 	MergeReleasePR       = "Merge Release PR"
 	TagRelease           = "Tag Release"
+	VtopCreateReleasePR  = "Create vitess-operator release PR"
 	JavaRelease          = "Java Release"
 	ReleaseNotesOnMain   = "Release Notes on Main"
 	BackToDev            = "Back To Dev Mode"
