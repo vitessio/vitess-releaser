@@ -22,31 +22,50 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
+	"vitess.io/vitess-releaser/go/releaser/release"
 	"vitess.io/vitess-releaser/go/releaser/steps"
 )
 
 func WebsiteDocumentationItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
 	act := websiteDocumentationAct
-	if state.Issue.WebsiteDocumentation.Done {
-		act = nil
-	}
 	return &ui.MenuItem{
 		State:  state,
 		Name:   steps.WebsiteDocumentation,
 		Act:    act,
 		Update: websiteDocumentationUpdate,
-		Info:   state.Issue.WebsiteDocumentation.URL,
-		IsDone: state.Issue.WebsiteDocumentation.Done,
+		IsDone: state.Issue.WebsiteDocumentation,
 	}
 }
 
-type websiteDocumentationUrl string
+type websiteDocumentationMsg []string
 
 func websiteDocumentationUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
+	switch msg := msg.(type) {
+	case websiteDocumentationMsg:
+		return mi, ui.PushDialog(&ui.DoneDialog{
+			StepName: mi.Name,
+			Title:    steps.WebsiteDocumentation,
+			Message:  msg,
+			IsDone:   mi.IsDone,
+		})
+	case ui.DoneDialogAction:
+		if string(msg) != mi.Name {
+			return mi, nil
+		}
+		mi.State.Issue.WebsiteDocumentation = !mi.State.Issue.WebsiteDocumentation
+		mi.IsDone = !mi.IsDone
+		pl, fn := mi.State.UploadIssue()
+		return mi, tea.Batch(func() tea.Msg {
+			fn()
+			return tea.Msg("")
+		}, ui.PushDialog(ui.NewProgressDialog("Updating the Release Issue", pl)))
+	}
 	return mi, nil
 }
 
 func websiteDocumentationAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
-	return mi, nil
+	return mi, func() tea.Msg {
+		return websiteDocumentationMsg(release.WebsiteDocs(mi.State))
+	}
 }
