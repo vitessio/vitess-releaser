@@ -108,9 +108,10 @@ type (
 	}
 
 	Issue struct {
-		Date   time.Time
-		RC     int
-		DoVtOp bool
+		Date        time.Time
+		RC          int
+		DoVtOp      bool
+		VtopRelease string
 
 		// Prerequisites
 		SlackPreRequisite bool
@@ -148,6 +149,10 @@ type (
 
 const (
 	releaseIssueTemplate = `This release is scheduled for {{fmtDate .Date }}
+
+{{- if .DoVtOp }}
+The release of vitess-operator v{{.VtopRelease}} is also planned
+{{- end }}
 
 ### Prerequisites for Release
 
@@ -281,8 +286,6 @@ func (s *State) LoadIssue() {
 
 	var newIssue Issue
 
-	newIssue.DoVtOp = s.VtOpRelease.Release != ""
-
 	// Parse the title of the Issue to determine the RC increment if any
 	if idx := strings.Index(title, "-RC"); idx != -1 {
 		rc, err := strconv.Atoi(title[idx+len("-RC"):])
@@ -291,6 +294,9 @@ func (s *State) LoadIssue() {
 		}
 		newIssue.RC = rc
 	}
+
+	newIssue.DoVtOp = s.VtOpRelease.Release != ""
+	newIssue.VtopRelease = AddRCToReleaseTitle(s.VtOpRelease.Release, newIssue.RC)
 
 	st := stateReadingItem
 	for i, line := range lines {
@@ -486,9 +492,9 @@ func CreateReleaseIssue(state *State) (*logging.ProgressLogging, func() (int, st
 
 	return pl, func() (int, string) {
 		pl.NewStepf("Create Release Issue on GitHub")
-		issueTitle := fmt.Sprintf("Release of v%s", state.VitessRelease.Release)
+		issueTitle := fmt.Sprintf("Release of `v%s`", state.VitessRelease.Release)
 		if state.Issue.RC > 0 {
-			issueTitle = fmt.Sprintf("%s-RC%d", issueTitle, state.Issue.RC)
+			issueTitle = fmt.Sprintf("Release of `v%s-RC%d`", state.VitessRelease.Release, state.Issue.RC)
 		}
 		newIssue := github.Issue{
 			Title:    issueTitle,
