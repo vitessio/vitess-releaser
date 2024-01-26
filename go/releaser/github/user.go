@@ -26,13 +26,13 @@ import (
 func CurrentUser() string {
 	exec, _, err := gh.Exec("api", "user")
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Panicf(err.Error())
 	}
 	x := map[string]any{}
 
 	err = json.Unmarshal(exec.Bytes(), &x)
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Panicf(err.Error())
 	}
 
 	return x["login"].(string)

@@ -180,7 +180,7 @@ func findFilesRecursive() []string {
 			return nil
 		})
 		if err != nil {
-			log.Fatal(err.Error())
+			log.Panic(err.Error())
 		}
 	}
 	return files
@@ -196,14 +196,14 @@ func updateExamples(newVersion, vtopNewVersion string) {
 	args := append([]string{"-i.bak", "-E", fmt.Sprintf("s/vitess\\/lite:(.*)/vitess\\/lite:v%s/g", newVersion)}, files...)
 	out, err := exec.Command("sed", args...).CombinedOutput()
 	if err != nil {
-		log.Fatalf("%s: %s", err, out)
+		log.Panicf("%s: %s", err, out)
 	}
 
 	// sed -i.bak -E "s/vitess\/vtadmin:(.*)/vitess\/vtadmin:v$1/g" $compose_example_files $compose_example_sub_files $vtop_example_files
 	args = append([]string{"-i.bak", "-E", fmt.Sprintf("s/vitess\\/vtadmin:(.*)/vitess\\/vtadmin:v%s/g", newVersion)}, files...)
 	out, err = exec.Command("sed", args...).CombinedOutput()
 	if err != nil {
-		log.Fatalf("%s: %s", err, out)
+		log.Panicf("%s: %s", err, out)
 	}
 
 	// modify the docker image tag used for planetscale/vitess-operator
@@ -213,7 +213,7 @@ func updateExamples(newVersion, vtopNewVersion string) {
 		args = append([]string{"-i.bak", "-E", fmt.Sprintf("s/planetscale\\/vitess-operator:(.*)/planetscale\\/vitess-operator:v%s/g", vtopNewVersion)}, files...)
 		out, err = exec.Command("sed", args...).CombinedOutput()
 		if err != nil {
-			log.Fatalf("%s: %s", err, out)
+			log.Panicf("%s: %s", err, out)
 		}
 	}
 
@@ -225,14 +225,14 @@ func updateExamples(newVersion, vtopNewVersion string) {
 	args = append([]string{"-f"}, filesBackups...)
 	out, err = exec.Command("rm", args...).CombinedOutput()
 	if err != nil {
-		log.Fatalf("%s: %s", err, out)
+		log.Panicf("%s: %s", err, out)
 	}
 }
 
 func UpdateVersionGoFile(newVersion string) {
 	err := os.WriteFile(versionGoFile, []byte(fmt.Sprintf(versionGo, time.Now().Year(), newVersion)), os.ModePerm)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 }
 
@@ -242,11 +242,11 @@ func UpdateJavaDir(newVersion string) {
 	cmd := exec.Command("mvn", "versions:set", fmt.Sprintf("-DnewVersion=%s", newVersion))
 	pwd, err := os.Getwd()
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	cmd.Dir = path.Join(pwd, "/java")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Fatalf("%s: %s", err, out)
+		log.Panicf("%s: %s", err, out)
 	}
 }

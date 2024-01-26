@@ -149,7 +149,7 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 func isCurrentBranchFrozen() bool {
 	b, err := os.ReadFile(codeFreezeWorkflowFile)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	str := string(b)
 	return strings.Contains(str, "exit 1")
@@ -167,12 +167,12 @@ func changeCodeFreezeWorkflow(s codeFreezeStatus) {
 	// sed -i.bak -E "s/exit (.*)/exit 0/g" $code_freeze_workflow
 	out, err := exec.Command("sed", "-i.bak", "-E", fmt.Sprintf("s/exit (.*)/exit %d/g", s), codeFreezeWorkflowFile).CombinedOutput()
 	if err != nil {
-		log.Fatalf("%s: %s", err, out)
+		log.Panicf("%s: %s", err, out)
 	}
 
 	// remove backup file left by the sed command
 	out, err = exec.Command("rm", "-f", fmt.Sprintf("%s.bak", codeFreezeWorkflowFile)).CombinedOutput()
 	if err != nil {
-		log.Fatalf("%s: %s", err, out)
+		log.Panicf("%s: %s", err, out)
 	}
 }

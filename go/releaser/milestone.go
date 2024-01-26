@@ -33,7 +33,7 @@ func FindVersionAfterNextRelease(state *State) string {
 	for _, segment := range segments {
 		v, err := strconv.Atoi(segment)
 		if err != nil {
-			log.Fatal(err.Error())
+			log.Panic(err.Error())
 		}
 		segmentInts = append(segmentInts, v)
 	}

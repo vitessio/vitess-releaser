@@ -131,7 +131,7 @@ func getSegmentOfReleaseNotesDir(version string) (prefix string, major string, p
 	rx := regexp.MustCompile(`([0-9]+)\.([0-9]+)\.([0-9]+)`)
 	versionMatch := rx.FindStringSubmatch(version)
 	if len(versionMatch) != 4 {
-		log.Fatal("could not parse the release version when generating the release notes")
+		log.Panic("could not parse the release version when generating the release notes")
 	}
 
 	majorVersion := versionMatch[1] + "." + versionMatch[2]
@@ -147,7 +147,7 @@ func generateReleaseNotes(state *releaser.State, version string) {
 
 	err := os.MkdirAll(releaseNotesPath, os.ModePerm)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	releaseNotes := releaseNote{
@@ -159,7 +159,7 @@ func generateReleaseNotes(state *releaser.State, version string) {
 	// summary of the release
 	_, err = os.Stat(summaryFile)
 	if err != nil && !os.IsNotExist(err) {
-		log.Fatal(err)
+		log.Panic(err)
 	} else if err == nil {
 		releaseNotes.Announcement = releaseSummary(summaryFile)
 	}
@@ -188,7 +188,7 @@ Thanks to all our contributors: @%s
 	// go run ./go/tools/releases/releases.go
 	out, err := exec.Command("go", "run", "./go/tools/releases/releases.go").CombinedOutput()
 	if err != nil {
-		log.Fatalf("%s: %s", err, out)
+		log.Panicf("%s: %s", err, out)
 	}
 }
 
@@ -197,24 +197,24 @@ func (rn *releaseNote) generate() {
 	rn.PathToChangeLogFileOnGH = fmt.Sprintf(releaseNotesPathGitHub, rn.ctx.VitessRelease.Repo) + path.Join(rn.SubDirPath, "changelog.md")
 	rnFile, err := os.OpenFile(path.Join(rn.SubDirPath, "release_notes.md"), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	t := template.Must(template.New("release_notes").Parse(markdownTemplate))
 	err = t.ExecuteTemplate(rnFile, "release_notes", rn)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	// Generate the changelog
 	changelogFile, err := os.OpenFile(path.Join(rn.SubDirPath, "changelog.md"), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	t = template.Must(template.New("release_notes_changelog").Parse(markdownTemplateChangelog))
 	err = t.ExecuteTemplate(changelogFile, "release_notes_changelog", rn)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 }
 
@@ -283,7 +283,7 @@ func createSortedPrTypeSlice(prPerType prsByType) []sortedPRType {
 func releaseSummary(summaryFile string) string {
 	contentSummary, err := os.ReadFile(summaryFile)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	return string(contentSummary)
 }
@@ -294,7 +294,7 @@ func getStringForPullRequestInfos(repo string, prPerType prsByType) string {
 	t := template.Must(template.New("markdownTemplatePR").Parse(fmt.Sprintf(markdownTemplatePR, repo)))
 	buff := bytes.Buffer{}
 	if err := t.ExecuteTemplate(&buff, "markdownTemplatePR", data); err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	return buff.String()
 }
@@ -306,7 +306,7 @@ func getStringForKnownIssues(issues []github.Issue) string {
 	t := template.Must(template.New("markdownTemplateKnownIssues").Parse(markdownTemplateKnownIssues))
 	buff := bytes.Buffer{}
 	if err := t.ExecuteTemplate(&buff, "markdownTemplateKnownIssues", issues); err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	return buff.String()
 }

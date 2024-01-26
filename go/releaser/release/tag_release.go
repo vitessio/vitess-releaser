@@ -51,7 +51,7 @@ func TagRelease(state *releaser.State) (*logging.ProgressLogging, func() string)
 		// i.e. if we release v17.0.1, we also want to tag: v0.17.1
 		nextReleaseSplit := strings.Split(lowerCaseRelease, ".")
 		if len(nextReleaseSplit) != 3 {
-			log.Fatalf("%s was not formated x.x.x", state.VitessRelease.Release)
+			log.Panicf("%s was not formated x.x.x", state.VitessRelease.Release)
 		}
 		gdocGitTag := fmt.Sprintf("v0.%s.%s", nextReleaseSplit[0], nextReleaseSplit[2])
 		git.TagAndPush(state.VitessRelease.Remote, gdocGitTag)

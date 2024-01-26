@@ -40,14 +40,14 @@ func GetMilestonesByName(repo, name string) []Milestone {
 		"--state", "all",
 	)
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Panic(err.Error())
 	}
 	str := stdOut.String()
 	str = str[strings.Index(str, "]")+1:]
 	var ms []Milestone
 	err = json.Unmarshal([]byte(str), &ms)
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Panic(err.Error())
 	}
 	return ms
 }
@@ -59,7 +59,7 @@ func CreateNewMilestone(repo, name string) string {
 		"--title", name,
 	)
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Panic(err.Error())
 	}
 	out := strings.ReplaceAll(stdOut.String(), "\n", "")
 	idx := strings.LastIndex(out, fmt.Sprintf("https://github.com/%s/milestone/", repo))
@@ -69,7 +69,7 @@ func CreateNewMilestone(repo, name string) string {
 func CloseMilestone(repo, name string) string {
 	ms := GetMilestonesByName(repo, name)
 	if len(ms) != 1 {
-		log.Fatalf("expected to find one milestone found %d", len(ms))
+		log.Panicf("expected to find one milestone found %d", len(ms))
 	}
 
 	stdOut, _, err := gh.Exec(
@@ -79,7 +79,7 @@ func CloseMilestone(repo, name string) string {
 		"--state", "closed",
 	)
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Panic(err.Error())
 	}
 	out := strings.ReplaceAll(stdOut.String(), "\n", "")
 	idx := strings.LastIndex(out, fmt.Sprintf("https://github.com/%s/milestone/", repo))

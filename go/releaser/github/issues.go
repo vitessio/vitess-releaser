@@ -45,7 +45,7 @@ func CloseReleaseIssue(repo string, nb int) {
 		"--comment", fmt.Sprintf("Release completed."),
 	)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 }
 
@@ -64,7 +64,7 @@ func (i *Issue) Create(repo string) string {
 		"--assignee", i.Assignee,
 	)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	return strings.ReplaceAll(stdOut.String(), "\n", "")
 }
@@ -76,7 +76,7 @@ func (i *Issue) UpdateBody(repo string) string {
 		strconv.Itoa(i.Number), "-b", i.Body,
 	)
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Panic(err.Error())
 	}
 	return strings.ReplaceAll(stdOut.String(), "\n", "")
 }
@@ -91,11 +91,11 @@ func GetIssueTitleAndBody(repo string, nb int) (string, string) {
 		"title,body",
 	)
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Panic(err.Error())
 	}
 	err = json.Unmarshal(stdOut.Bytes(), &i)
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Panic(err.Error())
 	}
 
 	return i.Title, i.Body
@@ -109,13 +109,13 @@ func GetReleaseIssue(repo, release string, rcIncrement int) (string, string) {
 		"--repo", repo,
 	)
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Panic(err.Error())
 	}
 
 	var issues []map[string]string
 	err = json.Unmarshal(res.Bytes(), &issues)
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Panic(err.Error())
 	}
 
 	for _, issue := range issues {
@@ -148,7 +148,7 @@ func URLToNb(url string) int {
 	issueNbStr := url[lastIdx+1:]
 	nb, err := strconv.Atoi(issueNbStr)
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Panic(err.Error())
 	}
 	return nb
 }
@@ -166,12 +166,12 @@ func CheckReleaseBlockerIssues(repo, majorRelease string) map[string]any {
 
 	byteRes, _, err := gh.Exec("issue", "list", "--json", "title,url,labels", "--repo", repo)
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Panicf(err.Error())
 	}
 	var issues []Issue
 	err = json.Unmarshal(byteRes.Bytes(), &issues)
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Panicf(err.Error())
 	}
 
 	var mustClose []Issue
@@ -204,13 +204,13 @@ func LoadKnownIssues(repo, majorRelease string) []Issue {
 		"--json", "title,number",
 	)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	var knownIssues []Issue
 	err = json.Unmarshal(byteRes.Bytes(), &knownIssues)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	return knownIssues
 }
