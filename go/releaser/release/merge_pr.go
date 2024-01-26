@@ -37,7 +37,7 @@ func MergeReleasePR(state *releaser.State) (*logging.ProgressLogging, func() str
 		url := state.Issue.CreateReleasePR.URL
 		nb, err := strconv.Atoi(url[strings.LastIndex(url, "/")+1:])
 		if err != nil {
-			log.Fatal(err)
+			log.Panic(err)
 		}
 
 		pl.NewStepf("Waiting for %s to be merged", url)

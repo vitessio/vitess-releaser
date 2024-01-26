@@ -56,7 +56,7 @@ func CreateRelease(repo, tag, notesFilePath string, latest, prerelease bool) (ur
 		if strings.Contains(err.Error(), "already exists") {
 			return fmt.Sprintf("https://github.com/%s/releases/tag/%s", repo, tag)
 		}
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	return strings.ReplaceAll(stdOut.String(), "\n", "")
 }

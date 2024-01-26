@@ -63,11 +63,11 @@ func FindNextRelease(remote, majorRelease string, isVtOp bool) (
 		if len(mainMajorParts) == 2 && len(majorParts) == 2 {
 			mainMajorNb, err := strconv.Atoi(mainMajorParts[1])
 			if err != nil {
-				log.Fatal(err)
+				log.Panic(err)
 			}
 			majorNb, err := strconv.Atoi(majorParts[1])
 			if err != nil {
-				log.Fatal(err)
+				log.Panic(err)
 			}
 			if mainMajorNb+1 == majorNb {
 				return fmt.Sprintf("%s.%d.0", mainMajorParts[0], mainMajorNb+1), releaseBranchName, true, true
@@ -87,16 +87,16 @@ func FindNextRelease(remote, majorRelease string, isVtOp bool) (
 	// if the current release and the wanted release are different, it means there is an
 	// error, we were not able to find the proper branch / corresponding release
 	if major != majorRelease {
-		log.Fatalf("on branch '%s', could not find the corresponding major release '%s'", releaseBranchName, majorRelease)
+		log.Panicf("on branch '%s', could not find the corresponding major release '%s'", releaseBranchName, majorRelease)
 	}
 
 	mainMajorNb, err := strconv.ParseFloat(mainMajor, 64)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	majorNb, err := strconv.ParseFloat(major, 64)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	return currentRelease, releaseBranchName, mainMajorNb-1 == majorNb, false
 }
@@ -104,7 +104,7 @@ func FindNextRelease(remote, majorRelease string, isVtOp bool) (
 func FindPreviousRelease(remote, currentMajor string) string {
 	majorNb, err := strconv.Atoi(currentMajor)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	previousMajor := majorNb - 1
@@ -120,7 +120,7 @@ func getCurrentReleaseVitess() string {
 	// sed -n 's/.*versionName.*\"\([[:digit:]\.]*\).*\"/\1/p' ./go/vt/servenv/version.go
 	out, err := exec.Command("sed", "-n", "s/.*versionName.*\"\\([[:digit:]\\.]*\\).*\"/\\1/p", "./go/vt/servenv/version.go").CombinedOutput()
 	if err != nil {
-		log.Fatalf("%v: %s", err, out)
+		log.Panicf("%v: %s", err, out)
 	}
 
 	outStr := string(out)
@@ -132,7 +132,7 @@ func getCurrentReleaseVtOp() string {
 	// sed -n 's/.*Version.*\"\([[:digit:]\.]*\).*\"/\1/p' ./version/version.go
 	out, err := exec.Command("sed", "-n", "s/.*Version =.*\"\\([[:digit:]\\.]*\\).*\"/\\1/p", "./version/version.go").CombinedOutput()
 	if err != nil {
-		log.Fatalf("%v: %s", err, out)
+		log.Panicf("%v: %s", err, out)
 	}
 
 	outStr := string(out)
@@ -146,7 +146,7 @@ func releaseToMajorVitess(release string) string {
 func releaseToMajorVtOp(release string) string {
 	parts := strings.Split(release, ".")
 	if len(parts) != 3 {
-		log.Fatalf("expected the vtop version to have format x.x.x but was %s", release)
+		log.Panicf("expected the vtop version to have format x.x.x but was %s", release)
 	}
 	return fmt.Sprintf("%s.%s", parts[0], parts[1])
 }

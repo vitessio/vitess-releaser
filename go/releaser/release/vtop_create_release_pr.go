@@ -229,19 +229,19 @@ func updateVitessDeps(state *releaser.State) {
 
 	out, err := exec.Command("go", "get", "-u", fmt.Sprintf("vitess.io/vitess@%s", strings.ToLower(state.VitessRelease.Release))).CombinedOutput()
 	if err != nil {
-		log.Fatalf("%s: %s", err, out)
+		log.Panicf("%s: %s", err, out)
 	}
 
 	out, err = exec.Command("go", "mod", "tidy").CombinedOutput()
 	if err != nil {
-		log.Fatalf("%s: %s", err, out)
+		log.Panicf("%s: %s", err, out)
 	}
 }
 
 func updateVtOpVersionGoFile(newVersion string) {
 	err := os.WriteFile(vtopVersionGoFile, []byte(fmt.Sprintf(vtopVersionGo, time.Now().Year(), newVersion)), os.ModePerm)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 }
 
@@ -266,28 +266,28 @@ func updateVtopTests(vitessPreviousVersion, vitessNewVersion string) {
 	args := append([]string{"-i.bak", "-E", fmt.Sprintf("s/vitess\\/lite:([^-]*)(-rc[0-9]*)?(-mysql.*)?/vitess\\/lite:v%s\\3/g", vitessNewVersion)}, testFiles...)
 	out, err := exec.Command("sed", args...).CombinedOutput()
 	if err != nil {
-		log.Fatalf("%s: %s", err, out)
+		log.Panicf("%s: %s", err, out)
 	}
 
 	// sed -i.bak -E "s/vitess\/vtadmin:([^-]*)(-rc[0-9]*)?(-mysql.*)?/vitess\/vtadmin:v$new_vitess_version\3/g" $operator_files
 	args = append([]string{"-i.bak", "-E", fmt.Sprintf("s/vitess\\/vtadmin:([^-]*)(-rc[0-9]*)?(-mysql.*)?/vitess\\/vtadmin:v%s\\3/g", vitessNewVersion)}, testFiles...)
 	out, err = exec.Command("sed", args...).CombinedOutput()
 	if err != nil {
-		log.Fatalf("%s: %s", err, out)
+		log.Panicf("%s: %s", err, out)
 	}
 
 	// sed -i.bak -E "s/vitess\/lite:([^-]*)(-rc[0-9]*)?(-mysql.*)?/vitess\/lite:v$new_vitess_version\3\"/g" $ROOT/pkg/apis/planetscale/v2/defaults.go
 	args = append([]string{"-i.bak", "-E", fmt.Sprintf("s/vitess\\/lite:([^-]*)(-rc[0-9]*)?(-mysql.*)?/vitess\\/lite:v%s\\3\"/g", vitessNewVersion)}, vtopDefaultsFile)
 	out, err = exec.Command("sed", args...).CombinedOutput()
 	if err != nil {
-		log.Fatalf("%s: %s", err, out)
+		log.Panicf("%s: %s", err, out)
 	}
 
 	// sed -i.bak -E "s/vitess\/lite:([^-]*)(-rc[0-9]*)?(-mysql.*)?/vitess\/lite:v$old_vitess_version\3/g" $ROOT/test/endtoend/operator/101_initial_cluster.yaml
 	args = append([]string{"-i.bak", "-E", fmt.Sprintf("s/vitess\\/lite:([^-]*)(-rc[0-9]*)?(-mysql.*)?/vitess\\/lite:v%s\\3/g", vitessPreviousVersion)}, vtopInitialClusterFile)
 	out, err = exec.Command("sed", args...).CombinedOutput()
 	if err != nil {
-		log.Fatalf("%s: %s", err, out)
+		log.Panicf("%s: %s", err, out)
 	}
 
 	filesBackups := make([]string, 0, len(testFiles)+1)
@@ -299,7 +299,7 @@ func updateVtopTests(vitessPreviousVersion, vitessNewVersion string) {
 	args = append([]string{"-f"}, filesBackups...)
 	out, err = exec.Command("rm", args...).CombinedOutput()
 	if err != nil {
-		log.Fatalf("%s: %s", err, out)
+		log.Panicf("%s: %s", err, out)
 	}
 }
 
@@ -315,7 +315,7 @@ func vtopTestFiles() []string {
 		return nil
 	})
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Panic(err.Error())
 	}
 	return files
 }
@@ -326,14 +326,14 @@ func findNextVtOpVersion(version string, rc int) string {
 	}
 	segments := strings.Split(version, ".")
 	if len(segments) != 3 {
-		log.Fatal("expected three segments")
+		log.Panic("expected three segments")
 	}
 
 	segmentInts := make([]int, 0, len(segments))
 	for _, segment := range segments {
 		v, err := strconv.Atoi(segment)
 		if err != nil {
-			log.Fatal(err.Error())
+			log.Panic(err.Error())
 		}
 		segmentInts = append(segmentInts, v)
 	}

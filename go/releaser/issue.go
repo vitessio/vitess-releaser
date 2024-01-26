@@ -290,7 +290,7 @@ func (s *State) LoadIssue() {
 	if idx := strings.Index(title, "-RC"); idx != -1 {
 		rc, err := strconv.Atoi(title[idx+len("-RC"):])
 		if err != nil {
-			log.Fatal(err)
+			log.Panic(err)
 		}
 		newIssue.RC = rc
 	}
@@ -307,7 +307,7 @@ func (s *State) LoadIssue() {
 				nline := strings.TrimSpace(line[len(dateItem):])
 				parsedDate, err := time.Parse("Mon _2 Jan 2006", nline)
 				if err != nil {
-					log.Fatal(err)
+					log.Panic(err)
 				}
 				newIssue.Date = parsedDate
 			}
@@ -523,12 +523,12 @@ func (i *Issue) toString() string {
 
 	parsed, err := tmpl.Parse(releaseIssueTemplate)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	b := bytes.NewBufferString("")
 	err = parsed.Execute(b, i)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	return b.String()
 }

@@ -62,7 +62,7 @@ func (p *PR) Create(repo string) (nb int, url string) {
 		"--base", p.Base,
 	)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	url = strings.ReplaceAll(stdOut.String(), "\n", "")
 	nb = URLToNb(url)
@@ -76,7 +76,7 @@ func IsPRMerged(repo string, nb int) bool {
 		"--json", "mergedAt",
 	)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	// If the PR is not merged, the output of the gh command will be:
@@ -93,12 +93,12 @@ func CheckBackportToPRs(repo, majorRelease string) map[string]any {
 
 	byteRes, _, err := gh.Exec("pr", "list", "--json", "title,baseRefName,url,labels", "--repo", repo)
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Panicf(err.Error())
 	}
 	var prs []PR
 	err = json.Unmarshal(byteRes.Bytes(), &prs)
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Panicf(err.Error())
 	}
 
 	var mustClose []PR
@@ -133,12 +133,12 @@ func FindPR(repo, prTitle string) (nb int, url string) {
 		"--state", "open",
 	)
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Panicf(err.Error())
 	}
 	var prs []PR
 	err = json.Unmarshal(byteRes.Bytes(), &prs)
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Panicf(err.Error())
 	}
 	if len(prs) != 1 {
 		return 0, ""
@@ -157,12 +157,12 @@ func GetMergedPRsAndAuthorsByMilestone(repo, milestone string) (prs []PR, author
 		"--repo", repo,
 	)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	err = json.Unmarshal(byteRes.Bytes(), &prs)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	// Get the full list of distinct PRs authors and sort them
@@ -190,13 +190,13 @@ func GetOpenedPRsByMilestone(repo, milestone string) []PR {
 		"--repo", repo,
 	)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	var prs []PR
 	err = json.Unmarshal(byteRes.Bytes(), &prs)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	return prs
 }
@@ -210,7 +210,7 @@ func AssignMilestoneToPRs(repo, milestone string, prs []PR) {
 			"--repo", repo,
 		)
 		if err != nil {
-			log.Fatal(err)
+			log.Panic(err)
 		}
 	}
 }

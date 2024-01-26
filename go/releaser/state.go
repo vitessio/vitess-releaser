@@ -82,11 +82,11 @@ func (s *State) GoToVtOp() {
 func changeDir(p string) {
 	cwd, err := syscall.Getwd()
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	p = path.Join(cwd, p)
 	err = syscall.Chdir(p)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 }

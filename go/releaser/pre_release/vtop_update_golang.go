@@ -131,32 +131,32 @@ func VtopUpdateGolang(state *releaser.State) (*logging.ProgressLogging, func() s
 func updateGolangVersionForVtop(targetGoVersion *version.Version) {
 	out, err := exec.Command("sed", "-i.bak", "-E", fmt.Sprintf("s/^go (.*)/go %s/g", targetGoVersion.String()), "go.mod").CombinedOutput()
 	if err != nil {
-		log.Fatalf("%s: %s", err, out)
+		log.Panicf("%s: %s", err, out)
 	}
 	out, err = exec.Command("rm", "-f", "go.mod.bak").CombinedOutput()
 	if err != nil {
-		log.Fatalf("%s: %s", err, out)
+		log.Panicf("%s: %s", err, out)
 	}
 
 	out, err = exec.Command("sed", "-i.bak", "-E", fmt.Sprintf("s/^FROM golang:(.*) AS build/FROM golang:%s AS build/g", targetGoVersion.String()), "build/Dockerfile.release").CombinedOutput()
 	if err != nil {
-		log.Fatalf("%s: %s", err, out)
+		log.Panicf("%s: %s", err, out)
 	}
 	out, err = exec.Command("rm", "-f", "build/Dockerfile.release.bak").CombinedOutput()
 	if err != nil {
-		log.Fatalf("%s: %s", err, out)
+		log.Panicf("%s: %s", err, out)
 	}
 
 	workflowFiles := findVtopWorkflowFiles()
 	args := append([]string{"-i.bak", "-E", fmt.Sprintf("s/go-version: (.*)/go-version: %s/g", targetGoVersion.String())}, workflowFiles...)
 	out, err = exec.Command("sed", args...).CombinedOutput()
 	if err != nil {
-		log.Fatalf("%s: %s", err, out)
+		log.Panicf("%s: %s", err, out)
 	}
 	for _, file := range workflowFiles {
 		out, err = exec.Command("rm", "-f", fmt.Sprintf("%s.bak", file)).CombinedOutput()
 		if err != nil {
-			log.Fatalf("%s: %s", err, out)
+			log.Panicf("%s: %s", err, out)
 		}
 	}
 }
@@ -173,7 +173,7 @@ func findVtopWorkflowFiles() []string {
 		return nil
 	})
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Panic(err.Error())
 	}
 	return files
 }
@@ -181,18 +181,18 @@ func findVtopWorkflowFiles() []string {
 func currentGolangVersionInVitess() *version.Version {
 	contentRaw, err := os.ReadFile("build.env")
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	content := string(contentRaw)
 
 	versre := regexp.MustCompile(regexpFindGolangVersionInVitess)
 	versionStr := versre.FindStringSubmatch(content)
 	if len(versionStr) != 2 {
-		log.Fatalf("malformatted error, got: %v", versionStr)
+		log.Panicf("malformatted error, got: %v", versionStr)
 	}
 	v, err := version.NewVersion(versionStr[1])
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	return v
 }
@@ -200,7 +200,7 @@ func currentGolangVersionInVitess() *version.Version {
 func currentGolangVersionInVtop() *version.Version {
 	contentRaw, err := os.ReadFile("go.mod")
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	content := string(contentRaw)
 
@@ -213,10 +213,10 @@ func currentGolangVersionInVtop() *version.Version {
 		}
 		v, err := version.NewVersion(versionStr[1])
 		if err != nil {
-			log.Fatal(err)
+			log.Panic(err)
 		}
 		return v
 	}
-	log.Fatal("could not parse the go.mod")
+	log.Panic("could not parse the go.mod")
 	return nil
 }
