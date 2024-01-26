@@ -42,7 +42,6 @@ const (
 	stateReadingTagReleaseItem
 	stateReadingReleaseNotesMainItem
 	stateReadingBackToDevModeItem
-	stateReadingWebsiteDocsItem
 	stateReadingCloseMilestoneItem
 	stateReadingVtopUpdateGo
 	stateReadingVtopCreateReleasePR
@@ -50,7 +49,6 @@ const (
 
 const (
 	markdownItemDone = "- [x]"
-	markdownItemToDo = "- [ ]"
 
 	// Divers
 	dateItem = "This release is scheduled for"
@@ -135,7 +133,7 @@ type (
 		TagRelease           ItemWithLink
 		ReleaseNotesOnMain   ItemWithLink
 		BackToDevMode        ItemWithLink
-		WebsiteDocumentation ItemWithLink
+		WebsiteDocumentation bool
 		Benchmarked          bool
 		DockerImages         bool
 		CloseMilestone       ItemWithLink
@@ -232,10 +230,7 @@ The release of vitess-operator v{{.VtopRelease}} is also planned
 {{- if .BackToDevMode.URL }}
   - {{ .BackToDevMode.URL }}
 {{- end }}
-- [{{fmtStatus .WebsiteDocumentation.Done}}] Update the website documentation.
-{{- if .WebsiteDocumentation.URL }}
-  - {{ .WebsiteDocumentation.URL }}
-{{- end }}
+- [{{fmtStatus .WebsiteDocumentation}}] Update the website documentation.
 - [{{fmtStatus .Benchmarked}}] Make sure the release is benchmarked by arewefastyet.
 - [{{fmtStatus .DockerImages}}] Docker Images available on DockerHub.
 {{- if eq .RC 0 }}
@@ -378,10 +373,7 @@ func (s *State) LoadIssue() {
 					st = stateReadingBackToDevModeItem
 				}
 			case strings.Contains(line, websiteDocItem):
-				newIssue.WebsiteDocumentation.Done = strings.HasPrefix(line, markdownItemDone)
-				if isNextLineAList(lines, i) {
-					st = stateReadingWebsiteDocsItem
-				}
+				newIssue.WebsiteDocumentation = strings.HasPrefix(line, markdownItemDone)
 			case strings.Contains(line, benchmarkedItem):
 				newIssue.Benchmarked = strings.HasPrefix(line, markdownItemDone)
 			case strings.Contains(line, dockerImagesItem):
@@ -418,8 +410,6 @@ func (s *State) LoadIssue() {
 			newIssue.ReleaseNotesOnMain.URL = handleSingleTextItem(line, &st)
 		case stateReadingBackToDevModeItem:
 			newIssue.BackToDevMode.URL = handleSingleTextItem(line, &st)
-		case stateReadingWebsiteDocsItem:
-			newIssue.WebsiteDocumentation.URL = handleSingleTextItem(line, &st)
 		case stateReadingCloseMilestoneItem:
 			newIssue.CloseMilestone.URL = handleSingleTextItem(line, &st)
 		case stateReadingVtopUpdateGo:
