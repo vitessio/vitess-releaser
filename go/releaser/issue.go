@@ -306,117 +306,90 @@ func (s *State) LoadIssue() {
 				newIssue.Date = parsedDate
 			}
 
-			// pre-release
-			if strings.Contains(line, preSlackAnnouncementItem) {
+			switch {
+			case strings.Contains(line, preSlackAnnouncementItem):
 				newIssue.SlackPreRequisite = strings.HasPrefix(line, markdownItemDone)
-			}
-			if strings.Contains(line, checkSummaryItem) {
+			case strings.Contains(line, checkSummaryItem):
 				newIssue.CheckSummary = strings.HasPrefix(line, markdownItemDone)
-			}
-			if strings.Contains(line, backportItem) && isNextLineAList(lines, i) {
+			case strings.Contains(line, backportItem) && isNextLineAList(lines, i):
 				st = stateReadingBackport
-			}
-			if strings.Contains(line, releaseBlockerItem) && isNextLineAList(lines, i) {
+			case strings.Contains(line, releaseBlockerItem) && isNextLineAList(lines, i):
 				st = stateReadingReleaseBlockerIssue
-			}
-			if strings.Contains(line, codeFreezeItem) {
+			case strings.Contains(line, codeFreezeItem):
 				newIssue.CodeFreeze.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
 					st = stateReadingCodeFreezeItem
 				}
-			}
-			if strings.Contains(line, copyBranchProtectionRulesItem) {
+			case strings.Contains(line, copyBranchProtectionRulesItem):
 				newIssue.CopyBranchProtectionRules = strings.HasPrefix(line, markdownItemDone)
-			}
-			if strings.Contains(line, updateSnapshotOnMainItem) {
+			case strings.Contains(line, updateSnapshotOnMainItem):
 				newIssue.UpdateSnapshotOnMain.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
 					st = stateReadingUpdateSnapshotOnMainItem
 				}
-			}
-			if strings.Contains(line, createReleasePRItem) {
+			case strings.Contains(line, createReleasePRItem):
 				newIssue.CreateReleasePR.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
 					st = stateReadingCreateReleasePRItem
 				}
-			}
-			if strings.Contains(line, newMilestoneItem) {
+			case strings.Contains(line, newMilestoneItem):
 				newIssue.NewGitHubMilestone.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
 					st = stateReadingNewMilestoneItem
 				}
-			}
-			if strings.Contains(line, vtopCreateBranchItem) {
+			case strings.Contains(line, vtopCreateBranchItem):
 				newIssue.VtopCreateBranch = strings.HasPrefix(line, markdownItemDone)
-			}
-			if strings.Contains(line, vtopUpdateGoItem) {
+			case strings.Contains(line, vtopUpdateGoItem):
 				newIssue.VtopUpdateGolang.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
 					st = stateReadingVtopUpdateGo
 				}
-			}
-			if strings.Contains(line, vtopUpdateCompTableItem) {
+			case strings.Contains(line, vtopUpdateCompTableItem):
 				newIssue.VtopUpdateCompatibilityTable = strings.HasPrefix(line, markdownItemDone)
-			}
-			if strings.Contains(line, vtopCreateReleasePRItem) {
+			case strings.Contains(line, vtopCreateReleasePRItem):
 				newIssue.VtopCreateReleasePR.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
 					st = stateReadingVtopCreateReleasePR
 				}
-			}
-
-			// release
-			if strings.Contains(line, mergeReleasePRItem) {
+			case strings.Contains(line, mergeReleasePRItem):
 				newIssue.MergeReleasePR.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
 					st = stateReadingMergedReleasePRItem
 				}
-			}
-			if strings.Contains(line, tagReleaseItem) {
+			case strings.Contains(line, tagReleaseItem):
 				newIssue.TagRelease.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
 					st = stateReadingTagReleaseItem
 				}
-			}
-			if strings.Contains(line, releaseNotesMainItem) {
+			case strings.Contains(line, releaseNotesMainItem):
 				newIssue.ReleaseNotesOnMain.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
 					st = stateReadingReleaseNotesMainItem
 				}
-			}
-			if strings.Contains(line, backToDevItem) {
+			case strings.Contains(line, backToDevItem):
 				newIssue.BackToDevMode.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
 					st = stateReadingBackToDevModeItem
 				}
-			}
-			if strings.Contains(line, websiteDocItem) {
+			case strings.Contains(line, websiteDocItem):
 				newIssue.WebsiteDocumentation.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
 					st = stateReadingWebsiteDocsItem
 				}
-			}
-			if strings.Contains(line, benchmarkedItem) {
+			case strings.Contains(line, benchmarkedItem):
 				newIssue.Benchmarked = strings.HasPrefix(line, markdownItemDone)
-			}
-			if strings.Contains(line, dockerImagesItem) {
+			case strings.Contains(line, dockerImagesItem):
 				newIssue.DockerImages = strings.HasPrefix(line, markdownItemDone)
-			}
-			if strings.Contains(line, closeMilestoneItem) {
+			case strings.Contains(line, closeMilestoneItem):
 				newIssue.CloseMilestone.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
 					st = stateReadingCloseMilestoneItem
 				}
-			}
-
-			// post-release
-			if strings.Contains(line, postSlackAnnouncementItem) {
+			case strings.Contains(line, postSlackAnnouncementItem):
 				newIssue.SlackPostRelease = strings.HasPrefix(line, markdownItemDone)
-			}
-			if strings.Contains(line, twitterItem) {
+			case strings.Contains(line, twitterItem):
 				newIssue.Twitter = strings.HasPrefix(line, markdownItemDone)
-			}
-			if strings.Contains(line, closeReleaseItem) {
+			case strings.Contains(line, closeReleaseItem):
 				newIssue.CloseIssue = strings.HasPrefix(line, markdownItemDone)
 			}
 		case stateReadingBackport:
