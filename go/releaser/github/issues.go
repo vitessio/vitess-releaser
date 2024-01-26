@@ -120,14 +120,14 @@ func GetReleaseIssue(repo, release string, rcIncrement int) (string, string) {
 
 	for _, issue := range issues {
 		title := issue["title"]
-		prefix := "Release of v"
+		prefix := "Release of `v"
 		if strings.HasPrefix(title, fmt.Sprintf("%s%s", prefix, release)) {
 			// If we have an RC increment but the title does not match the RC increment we skip this issue
 			if rcIncrement > 0 && !strings.Contains(title, fmt.Sprintf("-RC%d", rcIncrement)) {
 				continue
 			}
 
-			return issue["url"], title[len(prefix):]
+			return issue["url"], strings.ReplaceAll(title[len(prefix):], "`", "")
 		}
 	}
 	return "", ""
