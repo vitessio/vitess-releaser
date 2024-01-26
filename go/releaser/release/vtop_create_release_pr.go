@@ -186,7 +186,7 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 		nextRelease := findNextVtOpVersion(state.VtOpRelease.Release, state.Issue.RC)
 		pl.NewStepf("Go back to dev mode with version = %s", nextRelease)
 		updateVtOpVersionGoFile(nextRelease)
-		if !git.CommitAll(fmt.Sprintf("Update test code to use proper image")) {
+		if !git.CommitAll(fmt.Sprintf("Go back to dev mode")) {
 			commitCount++
 			git.Push(state.VtOpRelease.Remote, newBranchName)
 		}
