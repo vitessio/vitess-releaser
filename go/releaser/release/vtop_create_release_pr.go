@@ -186,7 +186,7 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 		nextRelease := findNextVtOpVersion(state.VtOpRelease.Release, state.Issue.RC)
 		pl.NewStepf("Go back to dev mode with version = %s", nextRelease)
 		updateVtOpVersionGoFile(nextRelease)
-		if !git.CommitAll(fmt.Sprintf("Update test code to use proper image")) {
+		if !git.CommitAll(fmt.Sprintf("Go back to dev mode")) {
 			commitCount++
 			git.Push(state.VtOpRelease.Remote, newBranchName)
 		}
@@ -277,7 +277,7 @@ func updateVtopTests(vitessPreviousVersion, vitessNewVersion string) {
 	}
 
 	// sed -i.bak -E "s/vitess\/lite:([^-]*)(-rc[0-9]*)?(-mysql.*)?/vitess\/lite:v$new_vitess_version\3\"/g" $ROOT/pkg/apis/planetscale/v2/defaults.go
-	args = append([]string{"-i.bak", "-E", fmt.Sprintf("s/vitess\\/lite:([^-]*)(-rc[0-9]*)?(-mysql.*)?/vitess\\/lite:v%s\\3/g", vitessNewVersion)}, vtopDefaultsFile)
+	args = append([]string{"-i.bak", "-E", fmt.Sprintf("s/vitess\\/lite:([^-]*)(-rc[0-9]*)?(-mysql.*)?/vitess\\/lite:v%s\\3\"/g", vitessNewVersion)}, vtopDefaultsFile)
 	out, err = exec.Command("sed", args...).CombinedOutput()
 	if err != nil {
 		log.Fatalf("%s: %s", err, out)

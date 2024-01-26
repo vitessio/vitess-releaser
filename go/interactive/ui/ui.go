@@ -122,7 +122,10 @@ func (m UI) View() string {
 	lft := bgStyle.Render(title)
 	width -= len(title)
 	s := bgStyle.Copy().Width(width).Align(lipgloss.Right)
-	rgt := fmt.Sprintf("Repo: %s | Releasing Branch: %s | Release Date: %s", m.State.VitessRelease.Repo, m.State.VitessRelease.MajorRelease, m.State.Issue.Date.Format(time.DateOnly))
+	rgt := fmt.Sprintf("Vitess repo: %s | Vitess release: v%s | Release Date: %s", m.State.VitessRelease.Repo, m.State.VitessRelease.Release, m.State.Issue.Date.Format(time.DateOnly))
+	if m.State.VtOpRelease.Release != "" {
+		rgt = fmt.Sprintf("Vitess repo: %s | Vtop repo: %s | Vitess release: v%s | Vtop release: v%s | Release Date: %s", m.State.VitessRelease.Repo, m.State.VtOpRelease.Repo, m.State.VitessRelease.Release, releaser.AddRCToReleaseTitle(m.State.VtOpRelease.Release, m.State.Issue.RC), m.State.Issue.Date.Format(time.DateOnly))
+	}
 	statusBar := lft + s.Render(rgt)
 	return lipgloss.JoinVertical(
 		lipgloss.Right,
