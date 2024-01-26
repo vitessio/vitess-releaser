@@ -24,7 +24,7 @@ var (
 	cellStyle     = lipgloss.NewStyle().Foreground(lightGray)
 	selectedStyle = lipgloss.NewStyle().Foreground(vitessOrange).Bold(true)
 	headerStyle   = lipgloss.NewStyle().Foreground(white).AlignHorizontal(lipgloss.Center).Bold(true)
-	bgStyle       = lipgloss.NewStyle().Background(darkGray).Foreground(lightGray)
+	bgStyle       = lipgloss.NewStyle().Foreground(vitessOrange)
 	borderStyle   = lipgloss.NewStyle().Foreground(lightGray)
 )
 
