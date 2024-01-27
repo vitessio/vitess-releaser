@@ -62,6 +62,7 @@ func MainScreen(ctx context.Context) {
 		release.MergeReleasePRItem(ctx),
 		release.TagReleaseItem(ctx),
 		release.VtopCreateReleasePRMenuItem(ctx),
+		release.VtopManualUpdateItem(ctx),
 		release.ReleaseNotesOnMainItem(ctx),
 		release.BackToDevModeItem(ctx),
 		release.WebsiteDocumentationItem(ctx),

@@ -40,6 +40,7 @@ const (
 	MergeReleasePR       = "Merge Release PR"
 	TagRelease           = "Tag Release"
 	VtopCreateReleasePR  = "Create vitess-operator release PR"
+	VtopManualUpdate     = "Manual update of vitess-operator tests"
 	JavaRelease          = "Java Release"
 	ReleaseNotesOnMain   = "Release Notes on Main"
 	BackToDev            = "Back To Dev Mode"
