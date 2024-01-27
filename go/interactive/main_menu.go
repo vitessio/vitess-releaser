@@ -70,7 +70,7 @@ func MainScreen(ctx context.Context) {
 		release.DockerImagesItem(ctx),
 		release.CloseMilestoneItem(ctx),
 	)
-	releaseMenu.Sequential = false
+	releaseMenu.Sequential = true
 
 	postReleaseMenu := ui.NewMenu(
 		ctx,
