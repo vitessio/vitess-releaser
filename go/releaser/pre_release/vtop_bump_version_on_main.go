@@ -20,8 +20,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
-	"strings"
 	"time"
 
 	"vitess.io/vitess-releaser/go/releaser"
@@ -84,8 +82,7 @@ func VtopBumpMainVersion(state *releaser.State) (*logging.ProgressLogging, func(
 		git.CorrectCleanRepo(state.VtOpRelease.Repo)
 		git.ResetHard(state.VtOpRelease.Remote, state.VtOpRelease.ReleaseBranch)
 
-		nextMajorVersionVtop := getNextMajorVersionVtop(state.VtOpRelease.Release)
-		bumpPRName := fmt.Sprintf("[main] Bump version.go to %s", nextMajorVersionVtop)
+		bumpPRName := fmt.Sprintf("[main] Bump version.go to %s", state.VtOpRelease.Release)
 		pl.NewStepf("Look for an existing Release Pull Request named '%s'", bumpPRName)
 		if _, url = github.FindPR(state.VtOpRelease.Repo, bumpPRName); url != "" {
 			pl.TotalSteps = 5
@@ -97,15 +94,15 @@ func VtopBumpMainVersion(state *releaser.State) (*logging.ProgressLogging, func(
 		pl.NewStepf("Create temporary branch from main")
 		newBranchName := git.FindNewGeneratedBranch(state.VtOpRelease.Remote, "main", "bump-main-version")
 
-		pl.NewStepf("Bump version.go to %s", nextMajorVersionVtop)
-		UpdateVtOpVersionGoFile(nextMajorVersionVtop)
+		pl.NewStepf("Bump version.go to %s", state.VtOpRelease.Release)
+		UpdateVtOpVersionGoFile(state.VtOpRelease.Release)
 		if !git.CommitAll(fmt.Sprintf("Go back to dev mode")) {
 			git.Push(state.VtOpRelease.Remote, newBranchName)
 
 			pl.NewStepf("Create Pull Request")
 			pr := github.PR{
 				Title:  bumpPRName,
-				Body:   fmt.Sprintf("This Pull Request bumps the version/version.go file to %s", nextMajorVersionVtop),
+				Body:   fmt.Sprintf("This Pull Request bumps the version/version.go file to %s", state.VtOpRelease.Release),
 				Branch: newBranchName,
 				Base:   "main",
 				Labels: []github.Label{},
@@ -116,25 +113,9 @@ func VtopBumpMainVersion(state *releaser.State) (*logging.ProgressLogging, func(
 			pl.TotalSteps -= 2
 		}
 
-		state.Issue.VtopBumpMainVersion.Done = true
+		done = true
 		return ""
 	}
-}
-
-func getNextMajorVersionVtop(version string) string {
-	parts := strings.Split(version, ".")
-	if len(parts) != 3 {
-		log.Panic("expected three segments")
-	}
-	segmentInts := make([]int, 0, len(parts))
-	for _, segment := range parts {
-		v, err := strconv.Atoi(segment)
-		if err != nil {
-			log.Panic(err.Error())
-		}
-		segmentInts = append(segmentInts, v)
-	}
-	return fmt.Sprintf("%d.%d.%d", segmentInts[0], segmentInts[1]+1, 0)
 }
 
 func UpdateVtOpVersionGoFile(newVersion string) {

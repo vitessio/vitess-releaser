@@ -199,7 +199,10 @@ The release of vitess-operator v{{.VtopRelease}} is also planned
 {{- if .DoVtOp }}
 {{- if eq .RC 1 }}
 - [{{fmtStatus .VtopCreateBranch}}] Create vitess-operator release branch.
-- [{{fmtStatus .VtopBumpMainVersion}}] Bump the version vitess-operator main.
+- [{{fmtStatus .VtopBumpMainVersion.Done}}] Bump the version vitess-operator main.
+{{- if .VtopBumpMainVersion.URL }}
+  - {{ .VtopBumpMainVersion.URL }}
+{{- end }}
 {{- end }}
 - [{{fmtStatus .VtopUpdateGolang.Done}}] Update vitess-operator Golang version.
 {{- if .VtopUpdateGolang.URL }}
@@ -286,6 +289,7 @@ func (s *State) LoadIssue() {
 	var newIssue Issue
 
 	// Parse the title of the Issue to determine the RC increment if any
+	title = strings.ReplaceAll(title, "`", "")
 	if idx := strings.Index(title, "-RC"); idx != -1 {
 		rc, err := strconv.Atoi(title[idx+len("-RC"):])
 		if err != nil {
@@ -494,9 +498,6 @@ func CreateReleaseIssue(state *State) (*logging.ProgressLogging, func() (int, st
 	return pl, func() (int, string) {
 		pl.NewStepf("Create Release Issue on GitHub")
 		issueTitle := fmt.Sprintf("Release of `v%s`", state.VitessRelease.Release)
-		if state.Issue.RC > 0 {
-			issueTitle = fmt.Sprintf("Release of `v%s-RC%d`", state.VitessRelease.Release, state.Issue.RC)
-		}
 		newIssue := github.Issue{
 			Title:    issueTitle,
 			Body:     state.Issue.toString(),
