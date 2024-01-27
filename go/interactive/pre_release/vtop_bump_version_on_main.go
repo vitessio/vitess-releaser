@@ -59,8 +59,8 @@ func vtopBumpMainVersionUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.
 }
 
 func vtopBumpMainVersionAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
-	pl, freeze := pre_release.VtopBumpMainVersion(mi.State)
+	pl, fn := pre_release.VtopBumpMainVersion(mi.State)
 	return mi, tea.Batch(func() tea.Msg {
-		return vtopBumpMainVersionUrl(freeze())
+		return vtopBumpMainVersionUrl(fn())
 	}, ui.PushDialog(ui.NewProgressDialog(steps.VtopBumpMainVersion, pl)))
 }

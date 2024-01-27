@@ -19,14 +19,44 @@ package pre_release
 import (
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/git"
 	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/logging"
-	"vitess.io/vitess-releaser/go/releaser/release"
+)
+
+const (
+	vtopVersionGoFile = "./version/version.go"
+	vtopVersionGo     = `/*
+Copyright %d PlanetScale Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package version
+
+// DO NOT EDIT
+// THIS FILE IS AUTO-GENERATED DURING NEW RELEASES BY THE VITESS-RELEASER
+
+var (
+	Version = "%s"
+)
+`
 )
 
 func VtopBumpMainVersion(state *releaser.State) (*logging.ProgressLogging, func() string) {
@@ -68,7 +98,7 @@ func VtopBumpMainVersion(state *releaser.State) (*logging.ProgressLogging, func(
 		newBranchName := git.FindNewGeneratedBranch(state.VtOpRelease.Remote, "main", "bump-main-version")
 
 		pl.NewStepf("Bump version.go to %s", nextMajorVersionVtop)
-		release.UpdateVtOpVersionGoFile(nextMajorVersionVtop)
+		UpdateVtOpVersionGoFile(nextMajorVersionVtop)
 		if !git.CommitAll(fmt.Sprintf("Go back to dev mode")) {
 			git.Push(state.VtOpRelease.Remote, newBranchName)
 
@@ -105,4 +135,11 @@ func getNextMajorVersionVtop(version string) string {
 		segmentInts = append(segmentInts, v)
 	}
 	return fmt.Sprintf("%d.%d.%d", segmentInts[0], segmentInts[1]+1, 0)
+}
+
+func UpdateVtOpVersionGoFile(newVersion string) {
+	err := os.WriteFile(vtopVersionGoFile, []byte(fmt.Sprintf(vtopVersionGo, time.Now().Year(), newVersion)), os.ModePerm)
+	if err != nil {
+		log.Panic(err)
+	}
 }
