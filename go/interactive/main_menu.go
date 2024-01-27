@@ -51,6 +51,7 @@ func MainScreen(ctx context.Context) {
 		pre_release.CreateReleasePRMenuItem(ctx),
 		pre_release.CreateMilestoneMenuItem(ctx),
 		pre_release.VtopCreateBranchMenuItem(ctx),
+		pre_release.VtopBumpMainVersionMenuItem(ctx),
 		pre_release.VtopUpdateGolangMenuItem(ctx),
 		pre_release.VtopUpdateCompatibilityTableMenuItem(ctx),
 	)

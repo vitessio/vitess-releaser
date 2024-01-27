@@ -157,7 +157,7 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 
 		// 7. Update the version file of vtop
 		pl.NewStepf("Update version file to %s", lowerReleaseName)
-		updateVtOpVersionGoFile(lowerReleaseName)
+		UpdateVtOpVersionGoFile(lowerReleaseName)
 		if !git.CommitAll(fmt.Sprintf("Update the version file to %s", lowerReleaseName)) {
 			commitCount++
 			git.Push(state.VtOpRelease.Remote, newBranchName)
@@ -185,7 +185,7 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 		// 11. Figure out what is the next vtop release for this branch
 		nextRelease := findNextVtOpVersion(state.VtOpRelease.Release, state.Issue.RC)
 		pl.NewStepf("Go back to dev mode with version = %s", nextRelease)
-		updateVtOpVersionGoFile(nextRelease)
+		UpdateVtOpVersionGoFile(nextRelease)
 		if !git.CommitAll(fmt.Sprintf("Go back to dev mode")) {
 			commitCount++
 			git.Push(state.VtOpRelease.Remote, newBranchName)
@@ -238,7 +238,7 @@ func updateVitessDeps(state *releaser.State) {
 	}
 }
 
-func updateVtOpVersionGoFile(newVersion string) {
+func UpdateVtOpVersionGoFile(newVersion string) {
 	err := os.WriteFile(vtopVersionGoFile, []byte(fmt.Sprintf(vtopVersionGo, time.Now().Year(), newVersion)), os.ModePerm)
 	if err != nil {
 		log.Panic(err)
