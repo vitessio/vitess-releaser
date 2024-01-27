@@ -45,6 +45,7 @@ const (
 	stateReadingCloseMilestoneItem
 	stateReadingVtopUpdateGo
 	stateReadingVtopCreateReleasePR
+	stateReadingVtopBumpVersionOnMainPR
 )
 
 const (
@@ -66,6 +67,7 @@ const (
 	createReleasePRItem           = "Create Release PR."
 	newMilestoneItem              = "Create new GitHub Milestone."
 	vtopCreateBranchItem          = "Create vitess-operator release branch."
+	vtopBumpVersionOnMain         = "Bump the version vitess-operator main."
 	vtopUpdateGoItem              = "Update vitess-operator Golang version."
 	vtopUpdateCompTableItem       = "Update vitess-operator compatibility table."
 	vtopCreateReleasePRItem       = "Create vitess-operator Release PR."
@@ -124,6 +126,7 @@ type (
 		CreateReleasePR              ItemWithLink
 		NewGitHubMilestone           ItemWithLink
 		VtopCreateBranch             bool
+		VtopBumpMainVersion          ItemWithLink
 		VtopUpdateGolang             ItemWithLink
 		VtopUpdateCompatibilityTable bool
 		VtopCreateReleasePR          ItemWithLinks
@@ -196,6 +199,10 @@ The release of vitess-operator v{{.VtopRelease}} is also planned
 {{- if .DoVtOp }}
 {{- if eq .RC 1 }}
 - [{{fmtStatus .VtopCreateBranch}}] Create vitess-operator release branch.
+- [{{fmtStatus .VtopBumpMainVersion.Done}}] Bump the version vitess-operator main.
+{{- if .VtopBumpMainVersion.URL }}
+  - {{ .VtopBumpMainVersion.URL }}
+{{- end }}
 {{- end }}
 - [{{fmtStatus .VtopUpdateGolang.Done}}] Update vitess-operator Golang version.
 {{- if .VtopUpdateGolang.URL }}
@@ -282,6 +289,7 @@ func (s *State) LoadIssue() {
 	var newIssue Issue
 
 	// Parse the title of the Issue to determine the RC increment if any
+	title = strings.ReplaceAll(title, "`", "")
 	if idx := strings.Index(title, "-RC"); idx != -1 {
 		rc, err := strconv.Atoi(title[idx+len("-RC"):])
 		if err != nil {
@@ -340,6 +348,11 @@ func (s *State) LoadIssue() {
 				}
 			case strings.Contains(line, vtopCreateBranchItem):
 				newIssue.VtopCreateBranch = strings.HasPrefix(line, markdownItemDone)
+			case strings.Contains(line, vtopBumpVersionOnMain):
+				newIssue.VtopBumpMainVersion.Done = strings.HasPrefix(line, markdownItemDone)
+				if isNextLineAList(lines, i) {
+					st = stateReadingVtopBumpVersionOnMainPR
+				}
 			case strings.Contains(line, vtopUpdateGoItem):
 				newIssue.VtopUpdateGolang.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
@@ -419,6 +432,8 @@ func (s *State) LoadIssue() {
 			if newLine != "" {
 				newIssue.VtopCreateReleasePR.URLs = append(newIssue.VtopCreateReleasePR.URLs, newLine)
 			}
+		case stateReadingVtopBumpVersionOnMainPR:
+			newIssue.VtopBumpMainVersion.URL = handleSingleTextItem(line, &st)
 		}
 	}
 	s.Issue = newIssue
@@ -483,9 +498,6 @@ func CreateReleaseIssue(state *State) (*logging.ProgressLogging, func() (int, st
 	return pl, func() (int, string) {
 		pl.NewStepf("Create Release Issue on GitHub")
 		issueTitle := fmt.Sprintf("Release of `v%s`", state.VitessRelease.Release)
-		if state.Issue.RC > 0 {
-			issueTitle = fmt.Sprintf("Release of `v%s-RC%d`", state.VitessRelease.Release, state.Issue.RC)
-		}
 		newIssue := github.Issue{
 			Title:    issueTitle,
 			Body:     state.Issue.toString(),

@@ -32,6 +32,7 @@ const (
 	CreateReleasePR              = "Create Release PR"
 	CreateMilestone              = "Create Milestone"
 	VtopCreateBranch             = "Create vitess-operator release branch"
+	VtopBumpMainVersion          = "Bump version of vitess-operator on main"
 	VtopUpdateGolang             = "Update Go version in vitess-operator"
 	VtopUpdateCompatibilityTable = "Update compatibility table in vitess-operator"
 

@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"io/fs"
 	"log"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
@@ -31,38 +30,12 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/git"
 	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/logging"
+	"vitess.io/vitess-releaser/go/releaser/pre_release"
 )
 
 const (
 	vtopDefaultsFile       = "./pkg/apis/planetscale/v2/defaults.go"
 	vtopInitialClusterFile = "./test/endtoend/operator/101_initial_cluster.yaml"
-
-	vtopVersionGoFile = "./version/version.go"
-	vtopVersionGo     = `/*
-Copyright %d PlanetScale Inc.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
-package version
-
-// DO NOT EDIT
-// THIS FILE IS AUTO-GENERATED DURING NEW RELEASES BY THE VITESS-RELEASER
-
-var (
-	Version = "%s"
-)
-`
 )
 
 func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() string) {
@@ -157,7 +130,7 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 
 		// 7. Update the version file of vtop
 		pl.NewStepf("Update version file to %s", lowerReleaseName)
-		updateVtOpVersionGoFile(lowerReleaseName)
+		pre_release.UpdateVtOpVersionGoFile(lowerReleaseName)
 		if !git.CommitAll(fmt.Sprintf("Update the version file to %s", lowerReleaseName)) {
 			commitCount++
 			git.Push(state.VtOpRelease.Remote, newBranchName)
@@ -185,7 +158,7 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 		// 11. Figure out what is the next vtop release for this branch
 		nextRelease := findNextVtOpVersion(state.VtOpRelease.Release, state.Issue.RC)
 		pl.NewStepf("Go back to dev mode with version = %s", nextRelease)
-		updateVtOpVersionGoFile(nextRelease)
+		pre_release.UpdateVtOpVersionGoFile(nextRelease)
 		if !git.CommitAll(fmt.Sprintf("Go back to dev mode")) {
 			commitCount++
 			git.Push(state.VtOpRelease.Remote, newBranchName)
@@ -235,13 +208,6 @@ func updateVitessDeps(state *releaser.State) {
 	out, err = exec.Command("go", "mod", "tidy").CombinedOutput()
 	if err != nil {
 		log.Panicf("%s: %s", err, out)
-	}
-}
-
-func updateVtOpVersionGoFile(newVersion string) {
-	err := os.WriteFile(vtopVersionGoFile, []byte(fmt.Sprintf(vtopVersionGo, time.Now().Year(), newVersion)), os.ModePerm)
-	if err != nil {
-		log.Panic(err)
 	}
 }
 
