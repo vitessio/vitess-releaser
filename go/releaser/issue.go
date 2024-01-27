@@ -70,17 +70,18 @@ const (
 	vtopBumpVersionOnMain         = "Bump the version vitess-operator main."
 	vtopUpdateGoItem              = "Update vitess-operator Golang version."
 	vtopUpdateCompTableItem       = "Update vitess-operator compatibility table."
-	vtopCreateReleasePRItem       = "Create vitess-operator Release PR."
 
 	// Release
-	mergeReleasePRItem   = "Merge the Release PR."
-	tagReleaseItem       = "Tag the release."
-	releaseNotesMainItem = "Update release notes on main."
-	backToDevItem        = "Go back to dev mode on the release branch."
-	websiteDocItem       = "Update the website documentation."
-	benchmarkedItem      = "Make sure the release is benchmarked by arewefastyet."
-	dockerImagesItem     = "Docker Images available on DockerHub."
-	closeMilestoneItem   = "Close current GitHub Milestone."
+	mergeReleasePRItem      = "Merge the Release PR."
+	tagReleaseItem          = "Tag the release."
+	vtopCreateReleasePRItem = "Create vitess-operator Release PR."
+	vtopManualUpdateItem    = "Manual update of vitess-operator test code."
+	releaseNotesMainItem    = "Update release notes on main."
+	backToDevItem           = "Go back to dev mode on the release branch."
+	websiteDocItem          = "Update the website documentation."
+	benchmarkedItem         = "Make sure the release is benchmarked by arewefastyet."
+	dockerImagesItem        = "Docker Images available on DockerHub."
+	closeMilestoneItem      = "Close current GitHub Milestone."
 
 	// Post-Release
 	postSlackAnnouncementItem = "Notify the community on Slack for the new release."
@@ -130,6 +131,7 @@ type (
 		VtopUpdateGolang             ItemWithLink
 		VtopUpdateCompatibilityTable bool
 		VtopCreateReleasePR          ItemWithLinks
+		VtopManualUpdate             bool
 
 		// Release
 		MergeReleasePR       ItemWithLink
@@ -228,6 +230,7 @@ The release of vitess-operator v{{.VtopRelease}} is also planned
 {{- range $item := .VtopCreateReleasePR.URLs }}
   - {{$item}}
 {{- end }}
+- [{{fmtStatus .VtopManualUpdate}}] Manual update of vitess-operator test code.
 {{- end }}
 - [{{fmtStatus .ReleaseNotesOnMain.Done}}] Update release notes on main.
 {{- if .ReleaseNotesOnMain.URL }}
@@ -365,6 +368,8 @@ func (s *State) LoadIssue() {
 				if isNextLineAList(lines, i) {
 					st = stateReadingVtopCreateReleasePR
 				}
+			case strings.Contains(line, vtopManualUpdateItem):
+				newIssue.VtopManualUpdate = strings.HasPrefix(line, markdownItemDone)
 			case strings.Contains(line, mergeReleasePRItem):
 				newIssue.MergeReleasePR.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
