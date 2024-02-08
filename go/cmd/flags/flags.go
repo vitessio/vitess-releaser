@@ -22,4 +22,5 @@ const (
 	RCIncrement  = "rc"
 	RunLive      = "live"
 	VtOpRelease  = "vtop-release"
+	Help         = "help"
 )

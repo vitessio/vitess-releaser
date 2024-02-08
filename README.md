@@ -5,24 +5,58 @@
 vitess-releaser is a tool designed to automate the process of releasing new versions of Vitess. 
 It streamlines various tasks, such as version bumping, changelog generation, issue creation and everything else that is involved in creating a Vitess release.
 
-### Getting started
+## Install
 
 ```bash
-# Install dependencies
+# Clone the repo
+> gh repo clone vitessio/vitess-releaser
 
+# Install dependencies
 > gh extension install valeriobelli/gh-milestone
 
 # Install the binary
-
+> cd vitess-releaser
 > go install ./go/vitess-releaser.go
+```
 
-# Move to the vitess git folder
+## Usage
+```
+Tooling used to release new versions of Vitess
 
-> cd ~/dev/vitess
+Usage:
+  vitess-releaser [flags]
 
-# Get going
+Flags:
+  -d, --date string           Date of the release with the format: YYYY-MM-DD. Required when initiating a release.
+  -h, --help                  Displays this help.
+      --live                  If live is true, will run against vitessio/vitess and planetscale/vitess-operator. Otherwise everything is done against your own forks.
+      --rc int                Define the release as an RC release, value is used to determine the number of the RC.
+  -r, --release string        Number of the major release on which we want to create a new release.
+      --vtop-release string   Number of the major and minor release on which we want to create a new release, i.e. '2.11', leave empty for no vtop release.
+```
 
-vitess-releaser -h
+## Examples on how to run a release
+
+### RC release
+
+In this example we are releasing `v19.0.0-rc1` of vitess and `v2.12.0-rc1` of vitess-operator. 
+
+> [!NOTE]
+> If you want to do an RC-2, or above, you can just change the value of the `--rc` flag.
+
+> [!IMPORTANT]
+> RC releases are, in most cases, shipped with an equivalent vitess-operator release. We must set the `--vtop-release` flag in this case.
+
+```bash
+vitess-releaser --date="2024-02-07" --live --rc=1 --release=19 --vtop-release=2.12
+```
+
+### Patch release
+
+In this example we are releasing `v18.0.3` of vitess, and there are no vitess-operator release.
+
+```bash
+vitess-releaser --date="2024-02-07" --live --release=18
 ```
 
 ## License
