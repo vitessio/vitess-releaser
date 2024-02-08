@@ -157,6 +157,10 @@ const (
 The release of vitess-operator v{{.VtopRelease}} is also planned
 {{- end }}
 
+<!--- ⚠️ Please do not edit the content of this Issue manually ⚠️ --->
+<!--- The vitess-releaser tool is managing and handling this issue. --->
+<!--- You can however click on the check boxes to mark them as done/not done. --->
+
 ### Prerequisites for Release
 
 - [{{fmtStatus .SlackPreRequisite}}] Notify the community on Slack.
