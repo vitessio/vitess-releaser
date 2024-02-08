@@ -19,8 +19,6 @@ package release
 import (
 	"fmt"
 	"io/fs"
-	"log"
-	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -31,6 +29,7 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/logging"
 	"vitess.io/vitess-releaser/go/releaser/pre_release"
+	"vitess.io/vitess-releaser/go/releaser/utils"
 )
 
 const (
@@ -200,15 +199,8 @@ func updateVitessDeps(state *releaser.State) {
 		return
 	}
 
-	out, err := exec.Command("go", "get", "-u", fmt.Sprintf("vitess.io/vitess@%s", strings.ToLower(state.VitessRelease.Release))).CombinedOutput()
-	if err != nil {
-		log.Panicf("%s: %s", err, out)
-	}
-
-	out, err = exec.Command("go", "mod", "tidy").CombinedOutput()
-	if err != nil {
-		log.Panicf("%s: %s", err, out)
-	}
+	utils.Exec("go", "get", "-u", fmt.Sprintf("vitess.io/vitess@%s", strings.ToLower(state.VitessRelease.Release)))
+	utils.Exec("go", "mod", "tidy")
 }
 
 /*
@@ -230,31 +222,19 @@ func updateVtopTests(vitessPreviousVersion, vitessNewVersion string) {
 
 	// sed -i.bak -E "s/vitess\/lite:([^-]*)(-rc[0-9]*)?(-mysql.*)?/vitess\/lite:v$new_vitess_version\3/g" $operator_files
 	args := append([]string{"-i.bak", "-E", fmt.Sprintf("s/vitess\\/lite:([^-]*)(-rc[0-9]*)?(-mysql.*)?/vitess\\/lite:v%s\\3/g", vitessNewVersion)}, testFiles...)
-	out, err := exec.Command("sed", args...).CombinedOutput()
-	if err != nil {
-		log.Panicf("%s: %s", err, out)
-	}
+	utils.Exec("sed", args...)
 
 	// sed -i.bak -E "s/vitess\/vtadmin:([^-]*)(-rc[0-9]*)?(-mysql.*)?/vitess\/vtadmin:v$new_vitess_version\3/g" $operator_files
 	args = append([]string{"-i.bak", "-E", fmt.Sprintf("s/vitess\\/vtadmin:([^-]*)(-rc[0-9]*)?(-mysql.*)?/vitess\\/vtadmin:v%s\\3/g", vitessNewVersion)}, testFiles...)
-	out, err = exec.Command("sed", args...).CombinedOutput()
-	if err != nil {
-		log.Panicf("%s: %s", err, out)
-	}
+	utils.Exec("sed", args...)
 
 	// sed -i.bak -E "s/vitess\/lite:([^-]*)(-rc[0-9]*)?(-mysql.*)?/vitess\/lite:v$new_vitess_version\3\"/g" $ROOT/pkg/apis/planetscale/v2/defaults.go
 	args = append([]string{"-i.bak", "-E", fmt.Sprintf("s/vitess\\/lite:([^-]*)(-rc[0-9]*)?(-mysql.*)?/vitess\\/lite:v%s\\3\"/g", vitessNewVersion)}, vtopDefaultsFile)
-	out, err = exec.Command("sed", args...).CombinedOutput()
-	if err != nil {
-		log.Panicf("%s: %s", err, out)
-	}
+	utils.Exec("sed", args...)
 
 	// sed -i.bak -E "s/vitess\/lite:([^-]*)(-rc[0-9]*)?(-mysql.*)?/vitess\/lite:v$old_vitess_version\3/g" $ROOT/test/endtoend/operator/101_initial_cluster.yaml
 	args = append([]string{"-i.bak", "-E", fmt.Sprintf("s/vitess\\/lite:([^-]*)(-rc[0-9]*)?(-mysql.*)?/vitess\\/lite:v%s\\3/g", vitessPreviousVersion)}, vtopInitialClusterFile)
-	out, err = exec.Command("sed", args...).CombinedOutput()
-	if err != nil {
-		log.Panicf("%s: %s", err, out)
-	}
+	utils.Exec("sed", args...)
 
 	filesBackups := make([]string, 0, len(testFiles)+1)
 	for _, file := range testFiles {
@@ -263,15 +243,13 @@ func updateVtopTests(vitessPreviousVersion, vitessNewVersion string) {
 	filesBackups = append(filesBackups, vtopInitialClusterFile+".bak")
 	filesBackups = append(filesBackups, vtopDefaultsFile+".bak")
 	args = append([]string{"-f"}, filesBackups...)
-	out, err = exec.Command("rm", args...).CombinedOutput()
-	if err != nil {
-		log.Panicf("%s: %s", err, out)
-	}
+	utils.Exec("rm", args...)
 }
 
 func vtopTestFiles() []string {
 	var files []string
-	err := filepath.WalkDir("./test/endtoend/operator/", func(path string, d fs.DirEntry, err error) error {
+	root := "./test/endtoend/operator/"
+	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -281,7 +259,7 @@ func vtopTestFiles() []string {
 		return nil
 	})
 	if err != nil {
-		log.Panic(err.Error())
+		utils.LogPanic(err, "failed to walk directory %s", root)
 	}
 	return files
 }
@@ -292,14 +270,14 @@ func findNextVtOpVersion(version string, rc int) string {
 	}
 	segments := strings.Split(version, ".")
 	if len(segments) != 3 {
-		log.Panic("expected three segments")
+		utils.LogPanic(nil, "expected three segments when looking at the vtop version, got: %s", version)
 	}
 
 	segmentInts := make([]int, 0, len(segments))
 	for _, segment := range segments {
 		v, err := strconv.Atoi(segment)
 		if err != nil {
-			log.Panic(err.Error())
+			utils.LogPanic(err, "failed to convert segment of the vtop version to an int: %s", segment)
 		}
 		segmentInts = append(segmentInts, v)
 	}

@@ -19,7 +19,6 @@ package pre_release
 import (
 	"fmt"
 	"io/fs"
-	"log"
 	"os"
 	"os/exec"
 	"path"
@@ -31,6 +30,7 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/git"
 	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/logging"
+	"vitess.io/vitess-releaser/go/releaser/utils"
 )
 
 const (
@@ -180,7 +180,7 @@ func findFilesRecursive() []string {
 			return nil
 		})
 		if err != nil {
-			log.Panic(err.Error())
+			utils.LogPanic(err, "failed to find files recursively")
 		}
 	}
 	return files
@@ -194,27 +194,18 @@ func updateExamples(newVersion, vtopNewVersion string) {
 
 	// sed -i.bak -E "s/vitess\/lite:(.*)/vitess\/lite:v$1/g" $compose_example_files $compose_example_sub_files $vtop_example_files
 	args := append([]string{"-i.bak", "-E", fmt.Sprintf("s/vitess\\/lite:(.*)/vitess\\/lite:v%s/g", newVersion)}, files...)
-	out, err := exec.Command("sed", args...).CombinedOutput()
-	if err != nil {
-		log.Panicf("%s: %s", err, out)
-	}
+	utils.Exec("sed", args...)
 
 	// sed -i.bak -E "s/vitess\/vtadmin:(.*)/vitess\/vtadmin:v$1/g" $compose_example_files $compose_example_sub_files $vtop_example_files
 	args = append([]string{"-i.bak", "-E", fmt.Sprintf("s/vitess\\/vtadmin:(.*)/vitess\\/vtadmin:v%s/g", newVersion)}, files...)
-	out, err = exec.Command("sed", args...).CombinedOutput()
-	if err != nil {
-		log.Panicf("%s: %s", err, out)
-	}
+	utils.Exec("sed", args...)
 
 	// modify the docker image tag used for planetscale/vitess-operator
 	// only if we do a new release
 	if vtopNewVersion != "" {
 		// sed -i.bak -E "s/planetscale\/vitess-operator:(.*)/planetscale\/vitess-operator:v$2/g" $vtop_example_files
 		args = append([]string{"-i.bak", "-E", fmt.Sprintf("s/planetscale\\/vitess-operator:(.*)/planetscale\\/vitess-operator:v%s/g", vtopNewVersion)}, files...)
-		out, err = exec.Command("sed", args...).CombinedOutput()
-		if err != nil {
-			log.Panicf("%s: %s", err, out)
-		}
+		utils.Exec("sed", args...)
 	}
 
 	// remove backup files from sed
@@ -223,16 +214,13 @@ func updateExamples(newVersion, vtopNewVersion string) {
 		filesBackups = append(filesBackups, fmt.Sprintf("%s.bak", file))
 	}
 	args = append([]string{"-f"}, filesBackups...)
-	out, err = exec.Command("rm", args...).CombinedOutput()
-	if err != nil {
-		log.Panicf("%s: %s", err, out)
-	}
+	utils.Exec("rm", args...)
 }
 
 func UpdateVersionGoFile(newVersion string) {
 	err := os.WriteFile(versionGoFile, []byte(fmt.Sprintf(versionGo, time.Now().Year(), newVersion)), os.ModePerm)
 	if err != nil {
-		log.Panic(err)
+		utils.LogPanic(err, "failed to write to file %s", versionGoFile)
 	}
 }
 
@@ -242,11 +230,11 @@ func UpdateJavaDir(newVersion string) {
 	cmd := exec.Command("mvn", "versions:set", fmt.Sprintf("-DnewVersion=%s", newVersion))
 	pwd, err := os.Getwd()
 	if err != nil {
-		log.Panic(err)
+		utils.LogPanic(err, "failed to get current working directory")
 	}
 	cmd.Dir = path.Join(pwd, "/java")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Panicf("%s: %s", err, out)
+		utils.LogPanic(err, "failed to execute: %s, got: %s", cmd.String(), string(out))
 	}
 }

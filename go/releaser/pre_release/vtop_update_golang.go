@@ -19,9 +19,7 @@ package pre_release
 import (
 	"fmt"
 	"io/fs"
-	"log"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -31,6 +29,7 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/git"
 	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/logging"
+	"vitess.io/vitess-releaser/go/releaser/utils"
 )
 
 const (
@@ -129,41 +128,24 @@ func VtopUpdateGolang(state *releaser.State) (*logging.ProgressLogging, func() s
 }
 
 func updateGolangVersionForVtop(targetGoVersion *version.Version) {
-	out, err := exec.Command("sed", "-i.bak", "-E", fmt.Sprintf("s/^go (.*)/go %s/g", targetGoVersion.String()), "go.mod").CombinedOutput()
-	if err != nil {
-		log.Panicf("%s: %s", err, out)
-	}
-	out, err = exec.Command("rm", "-f", "go.mod.bak").CombinedOutput()
-	if err != nil {
-		log.Panicf("%s: %s", err, out)
-	}
+	utils.Exec("sed", "-i.bak", "-E", fmt.Sprintf("s/^go (.*)/go %s/g", targetGoVersion.String()), "go.mod")
+	utils.Exec("rm", "-f", "go.mod.bak")
 
-	out, err = exec.Command("sed", "-i.bak", "-E", fmt.Sprintf("s/^FROM golang:(.*) AS build/FROM golang:%s AS build/g", targetGoVersion.String()), "build/Dockerfile.release").CombinedOutput()
-	if err != nil {
-		log.Panicf("%s: %s", err, out)
-	}
-	out, err = exec.Command("rm", "-f", "build/Dockerfile.release.bak").CombinedOutput()
-	if err != nil {
-		log.Panicf("%s: %s", err, out)
-	}
+	utils.Exec("sed", "-i.bak", "-E", fmt.Sprintf("s/^FROM golang:(.*) AS build/FROM golang:%s AS build/g", targetGoVersion.String()), "build/Dockerfile.release")
+	utils.Exec("rm", "-f", "build/Dockerfile.release.bak")
 
 	workflowFiles := findVtopWorkflowFiles()
 	args := append([]string{"-i.bak", "-E", fmt.Sprintf("s/go-version: (.*)/go-version: %s/g", targetGoVersion.String())}, workflowFiles...)
-	out, err = exec.Command("sed", args...).CombinedOutput()
-	if err != nil {
-		log.Panicf("%s: %s", err, out)
-	}
+	utils.Exec("sed", args...)
 	for _, file := range workflowFiles {
-		out, err = exec.Command("rm", "-f", fmt.Sprintf("%s.bak", file)).CombinedOutput()
-		if err != nil {
-			log.Panicf("%s: %s", err, out)
-		}
+		utils.Exec("rm", "-f", fmt.Sprintf("%s.bak", file))
 	}
 }
 
 func findVtopWorkflowFiles() []string {
 	var files []string
-	err := filepath.WalkDir(".github/workflows/", func(path string, d fs.DirEntry, err error) error {
+	root := ".github/workflows/"
+	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -173,34 +155,36 @@ func findVtopWorkflowFiles() []string {
 		return nil
 	})
 	if err != nil {
-		log.Panic(err.Error())
+		utils.LogPanic(err, "failed to walk the directory %s", root)
 	}
 	return files
 }
 
 func currentGolangVersionInVitess() *version.Version {
-	contentRaw, err := os.ReadFile("build.env")
+	buildFile := "build.env"
+	contentRaw, err := os.ReadFile(buildFile)
 	if err != nil {
-		log.Panic(err)
+		utils.LogPanic(err, "failed to read the file %s", buildFile)
 	}
 	content := string(contentRaw)
 
 	versre := regexp.MustCompile(regexpFindGolangVersionInVitess)
 	versionStr := versre.FindStringSubmatch(content)
 	if len(versionStr) != 2 {
-		log.Panicf("malformatted error, got: %v", versionStr)
+		utils.LogPanic(nil, "malformatted error, got: %v", versionStr)
 	}
 	v, err := version.NewVersion(versionStr[1])
 	if err != nil {
-		log.Panic(err)
+		utils.LogPanic(err, "failed to create new version with %s", versionStr[1])
 	}
 	return v
 }
 
 func currentGolangVersionInVtop() *version.Version {
-	contentRaw, err := os.ReadFile("go.mod")
+	gomodFile := "go.mod"
+	contentRaw, err := os.ReadFile(gomodFile)
 	if err != nil {
-		log.Panic(err)
+		utils.LogPanic(err, "failed to read file %s", gomodFile)
 	}
 	content := string(contentRaw)
 
@@ -213,10 +197,10 @@ func currentGolangVersionInVtop() *version.Version {
 		}
 		v, err := version.NewVersion(versionStr[1])
 		if err != nil {
-			log.Panic(err)
+			utils.LogPanic(err, "failed to create new version with %s", versionStr[1])
 		}
 		return v
 	}
-	log.Panic("could not parse the go.mod")
+	utils.LogPanic(nil, "could not parse the %s", gomodFile)
 	return nil
 }

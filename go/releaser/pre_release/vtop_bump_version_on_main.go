@@ -18,7 +18,6 @@ package pre_release
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"time"
 
@@ -26,6 +25,7 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/git"
 	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/logging"
+	"vitess.io/vitess-releaser/go/releaser/utils"
 )
 
 const (
@@ -121,6 +121,6 @@ func VtopBumpMainVersion(state *releaser.State) (*logging.ProgressLogging, func(
 func UpdateVtOpVersionGoFile(newVersion string) {
 	err := os.WriteFile(vtopVersionGoFile, []byte(fmt.Sprintf(vtopVersionGo, time.Now().Year(), newVersion)), os.ModePerm)
 	if err != nil {
-		log.Panic(err)
+		utils.LogPanic(err, "failed to write to file %s", vtopVersionGoFile)
 	}
 }

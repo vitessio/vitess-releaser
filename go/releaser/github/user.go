@@ -18,21 +18,17 @@ package github
 
 import (
 	"encoding/json"
-	"log"
 
-	gh "github.com/cli/go-gh"
+	"vitess.io/vitess-releaser/go/releaser/utils"
 )
 
 func CurrentUser() string {
-	exec, _, err := gh.Exec("api", "user")
-	if err != nil {
-		log.Panicf(err.Error())
-	}
+	exec := execGh("api", "user")
 	x := map[string]any{}
 
-	err = json.Unmarshal(exec.Bytes(), &x)
+	err := json.Unmarshal([]byte(exec), &x)
 	if err != nil {
-		log.Panicf(err.Error())
+		utils.LogPanic(err, "failed to parse the current user, got: %s", exec)
 	}
 
 	return x["login"].(string)

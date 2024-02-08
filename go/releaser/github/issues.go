@@ -19,13 +19,31 @@ package github
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 
 	gh "github.com/cli/go-gh"
 	"vitess.io/vitess-releaser/go/releaser/git"
+	"vitess.io/vitess-releaser/go/releaser/utils"
 )
+
+func execGh(args ...string) string {
+	stdOut, stdErr, err := gh.Exec(args...)
+	if err != nil {
+		cmd := append([]string{"gh"}, strings.Join(args, " "))
+		utils.LogPanic(err, "failed to execute: %s, got: %s", strings.Join(cmd, " "), stdOut.String()+stdErr.String())
+	}
+	return stdOut.String()
+}
+
+func execGhWithError(args ...string) (string, error) {
+	stdOut, stdErr, err := gh.Exec(args...)
+	if err != nil {
+		cmd := append([]string{"gh"}, strings.Join(args, " "))
+		return stdOut.String(), fmt.Errorf("%w: failed to execute: %s, got: %s", err, strings.Join(cmd, " "), stdOut.String()+stdErr.String())
+	}
+	return stdOut.String(), nil
+}
 
 type Issue struct {
 	Title    string  `json:"title"`
@@ -37,16 +55,13 @@ type Issue struct {
 }
 
 func CloseReleaseIssue(repo string, nb int) {
-	_, _, err := gh.Exec(
+	execGh(
 		"issue", "close",
 		"--repo", repo,
 		strconv.Itoa(nb),
 		"--reason", "completed",
 		"--comment", fmt.Sprintf("Release completed."),
 	)
-	if err != nil {
-		log.Panic(err)
-	}
 }
 
 // Create will open the issue on GitHub and return the link of the newly created issue
@@ -55,7 +70,7 @@ func (i *Issue) Create(repo string) string {
 	for _, label := range i.Labels {
 		labels = append(labels, label.Name)
 	}
-	stdOut, _, err := gh.Exec(
+	stdOut := execGh(
 		"issue", "create",
 		"--repo", repo,
 		"--title", i.Title,
@@ -63,59 +78,46 @@ func (i *Issue) Create(repo string) string {
 		"--label", strings.Join(labels, ","),
 		"--assignee", i.Assignee,
 	)
-	if err != nil {
-		log.Panic(err)
-	}
-	return strings.ReplaceAll(stdOut.String(), "\n", "")
+	return strings.ReplaceAll(stdOut, "\n", "")
 }
 
 func (i *Issue) UpdateBody(repo string) string {
-	stdOut, _, err := gh.Exec(
+	stdOut := execGh(
 		"issue", "edit",
 		"--repo", repo,
 		strconv.Itoa(i.Number), "-b", i.Body,
 	)
-	if err != nil {
-		log.Panic(err.Error())
-	}
-	return strings.ReplaceAll(stdOut.String(), "\n", "")
+	return strings.ReplaceAll(stdOut, "\n", "")
 }
 
 func GetIssueTitleAndBody(repo string, nb int) (string, string) {
-	var i Issue
-	stdOut, _, err := gh.Exec(
+	stdOut := execGh(
 		"issue", "view",
 		strconv.Itoa(nb),
 		"--repo", repo,
 		"--json",
 		"title,body",
 	)
+	var i Issue
+	err := json.Unmarshal([]byte(stdOut), &i)
 	if err != nil {
-		log.Panic(err.Error())
+		utils.LogPanic(err, "failed to parse the issue number %d, got: %s", nb, stdOut)
 	}
-	err = json.Unmarshal(stdOut.Bytes(), &i)
-	if err != nil {
-		log.Panic(err.Error())
-	}
-
 	return i.Title, i.Body
 }
 
 func GetReleaseIssue(repo, release string, rcIncrement int) (string, string) {
-	res, _, err := gh.Exec(
+	stdOut := execGh(
 		"issue", "list",
 		"-l", "Type: Release",
 		"--json", "title,url",
 		"--repo", repo,
 	)
-	if err != nil {
-		log.Panic(err.Error())
-	}
 
 	var issues []map[string]string
-	err = json.Unmarshal(res.Bytes(), &issues)
+	err := json.Unmarshal([]byte(stdOut), &issues)
 	if err != nil {
-		log.Panic(err.Error())
+		utils.LogPanic(err, "failed to parse the release issue, got: %s", stdOut)
 	}
 
 	for _, issue := range issues {
@@ -148,7 +150,7 @@ func URLToNb(url string) int {
 	issueNbStr := url[lastIdx+1:]
 	nb, err := strconv.Atoi(issueNbStr)
 	if err != nil {
-		log.Panic(err.Error())
+		utils.LogPanic(err, "failed to convert the end of the GitHub URL to a number, got: %s", issueNbStr)
 	}
 	return nb
 }
@@ -164,14 +166,11 @@ func FormatIssues(issues []Issue) []string {
 func CheckReleaseBlockerIssues(repo, majorRelease string) map[string]any {
 	git.CorrectCleanRepo(repo)
 
-	byteRes, _, err := gh.Exec("issue", "list", "--json", "title,url,labels", "--repo", repo)
-	if err != nil {
-		log.Panicf(err.Error())
-	}
+	stdOut := execGh("issue", "list", "--json", "title,url,labels", "--repo", repo)
 	var issues []Issue
-	err = json.Unmarshal(byteRes.Bytes(), &issues)
+	err := json.Unmarshal([]byte(stdOut), &issues)
 	if err != nil {
-		log.Panicf(err.Error())
+		utils.LogPanic(err, "failed to parse the release blocker issue, got: %s", stdOut)
 	}
 
 	var mustClose []Issue
@@ -197,20 +196,17 @@ func CheckReleaseBlockerIssues(repo, majorRelease string) map[string]any {
 func LoadKnownIssues(repo, majorRelease string) []Issue {
 	label := fmt.Sprintf("Known issue: %s", majorRelease)
 
-	byteRes, _, err := gh.Exec(
+	stdOut := execGh(
 		"issue", "list",
 		"--repo", repo,
 		"--label", label,
 		"--json", "title,number",
 	)
-	if err != nil {
-		log.Panic(err)
-	}
 
 	var knownIssues []Issue
-	err = json.Unmarshal(byteRes.Bytes(), &knownIssues)
+	err := json.Unmarshal([]byte(stdOut), &knownIssues)
 	if err != nil {
-		log.Panic(err)
+		utils.LogPanic(err, "failed to parse known issues, got: %s", stdOut)
 	}
 	return knownIssues
 }

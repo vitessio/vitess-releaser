@@ -19,11 +19,10 @@ package github
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 
-	"github.com/cli/go-gh"
+	"vitess.io/vitess-releaser/go/releaser/utils"
 )
 
 type Milestone struct {
@@ -32,36 +31,30 @@ type Milestone struct {
 }
 
 func GetMilestonesByName(repo, name string) []Milestone {
-	stdOut, _, err := gh.Exec(
+	str := execGh(
 		"milestone", "list",
 		"--query", name,
 		"--repo", repo,
 		"--json", "url,number",
 		"--state", "all",
 	)
-	if err != nil {
-		log.Panic(err.Error())
-	}
-	str := stdOut.String()
+
 	str = str[strings.Index(str, "]")+1:]
 	var ms []Milestone
-	err = json.Unmarshal([]byte(str), &ms)
+	err := json.Unmarshal([]byte(str), &ms)
 	if err != nil {
-		log.Panic(err.Error())
+		utils.LogPanic(err, "failed to parse milestone, got: %s", str)
 	}
 	return ms
 }
 
 func CreateNewMilestone(repo, name string) string {
-	stdOut, _, err := gh.Exec(
+	stdOut := execGh(
 		"milestone", "create",
 		"--repo", repo,
 		"--title", name,
 	)
-	if err != nil {
-		log.Panic(err.Error())
-	}
-	out := strings.ReplaceAll(stdOut.String(), "\n", "")
+	out := strings.ReplaceAll(stdOut, "\n", "")
 	idx := strings.LastIndex(out, fmt.Sprintf("https://github.com/%s/milestone/", repo))
 	return out[idx:]
 }
@@ -69,19 +62,16 @@ func CreateNewMilestone(repo, name string) string {
 func CloseMilestone(repo, name string) string {
 	ms := GetMilestonesByName(repo, name)
 	if len(ms) != 1 {
-		log.Panicf("expected to find one milestone found %d", len(ms))
+		utils.LogPanic(nil, "expected to find one milestone found %d", len(ms))
 	}
 
-	stdOut, _, err := gh.Exec(
+	stdOut := execGh(
 		"milestone", "edit",
 		strconv.Itoa(ms[0].Number),
 		"--repo", repo,
 		"--state", "closed",
 	)
-	if err != nil {
-		log.Panic(err.Error())
-	}
-	out := strings.ReplaceAll(stdOut.String(), "\n", "")
+	out := strings.ReplaceAll(stdOut, "\n", "")
 	idx := strings.LastIndex(out, fmt.Sprintf("https://github.com/%s/milestone/", repo))
 	return out[idx:]
 }

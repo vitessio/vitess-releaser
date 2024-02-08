@@ -18,12 +18,11 @@ package releaser
 
 import (
 	"fmt"
-	"log"
-	"os/exec"
 	"strconv"
 	"strings"
 
 	"vitess.io/vitess-releaser/go/releaser/git"
+	"vitess.io/vitess-releaser/go/releaser/utils"
 )
 
 // FindNextRelease finds the next release that needs to be released for the given
@@ -63,11 +62,11 @@ func FindNextRelease(remote, majorRelease string, isVtOp bool) (
 		if len(mainMajorParts) == 2 && len(majorParts) == 2 {
 			mainMajorNb, err := strconv.Atoi(mainMajorParts[1])
 			if err != nil {
-				log.Panic(err)
+				utils.LogPanic(err, "failed to convert main minor release increment to an int (%s)", mainMajorParts[1])
 			}
 			majorNb, err := strconv.Atoi(majorParts[1])
 			if err != nil {
-				log.Panic(err)
+				utils.LogPanic(err, "failed to convert CLI release argument's minor release increment to an int (%s)", majorParts[1])
 			}
 			if mainMajorNb+1 == majorNb {
 				return fmt.Sprintf("%s.%d.0", mainMajorParts[0], mainMajorNb+1), releaseBranchName, true, true
@@ -87,16 +86,16 @@ func FindNextRelease(remote, majorRelease string, isVtOp bool) (
 	// if the current release and the wanted release are different, it means there is an
 	// error, we were not able to find the proper branch / corresponding release
 	if major != majorRelease {
-		log.Panicf("on branch '%s', could not find the corresponding major release '%s'", releaseBranchName, majorRelease)
+		utils.LogPanic(nil, "on branch '%s', could not find the corresponding major release '%s'", releaseBranchName, majorRelease)
 	}
 
 	mainMajorNb, err := strconv.ParseFloat(mainMajor, 64)
 	if err != nil {
-		log.Panic(err)
+		utils.LogPanic(err, "could not parse main branch major release number as a float (%s)", mainMajor)
 	}
 	majorNb, err := strconv.ParseFloat(major, 64)
 	if err != nil {
-		log.Panic(err)
+		utils.LogPanic(err, "could not parse CLI major release argument as a float (%s)", major)
 	}
 	return currentRelease, releaseBranchName, mainMajorNb-1 == majorNb, false
 }
@@ -104,7 +103,7 @@ func FindNextRelease(remote, majorRelease string, isVtOp bool) (
 func FindPreviousRelease(remote, currentMajor string) string {
 	majorNb, err := strconv.Atoi(currentMajor)
 	if err != nil {
-		log.Panic(err)
+		utils.LogPanic(err, "failed to convert the CLI major release argument to an int (%s)", currentMajor)
 	}
 
 	previousMajor := majorNb - 1
@@ -118,25 +117,15 @@ func FindPreviousRelease(remote, currentMajor string) string {
 func getCurrentReleaseVitess() string {
 	// Execute the following command to find the version from the `version.go` file:
 	// sed -n 's/.*versionName.*\"\([[:digit:]\.]*\).*\"/\1/p' ./go/vt/servenv/version.go
-	out, err := exec.Command("sed", "-n", "s/.*versionName.*\"\\([[:digit:]\\.]*\\).*\"/\\1/p", "./go/vt/servenv/version.go").CombinedOutput()
-	if err != nil {
-		log.Panicf("%v: %s", err, out)
-	}
-
-	outStr := string(out)
-	return strings.ReplaceAll(outStr, "\n", "")
+	out := utils.Exec("sed", "-n", "s/.*versionName.*\"\\([[:digit:]\\.]*\\).*\"/\\1/p", "./go/vt/servenv/version.go")
+	return strings.ReplaceAll(out, "\n", "")
 }
 
 func getCurrentReleaseVtOp() string {
 	// Execute the following command to find the version from the `version.go` file:
 	// sed -n 's/.*Version.*\"\([[:digit:]\.]*\).*\"/\1/p' ./version/version.go
-	out, err := exec.Command("sed", "-n", "s/.*Version =.*\"\\([[:digit:]\\.]*\\).*\"/\\1/p", "./version/version.go").CombinedOutput()
-	if err != nil {
-		log.Panicf("%v: %s", err, out)
-	}
-
-	outStr := string(out)
-	return strings.ReplaceAll(outStr, "\n", "")
+	out := utils.Exec("sed", "-n", "s/.*Version =.*\"\\([[:digit:]\\.]*\\).*\"/\\1/p", "./version/version.go")
+	return strings.ReplaceAll(out, "\n", "")
 }
 
 func releaseToMajorVitess(release string) string {
@@ -146,7 +135,7 @@ func releaseToMajorVitess(release string) string {
 func releaseToMajorVtOp(release string) string {
 	parts := strings.Split(release, ".")
 	if len(parts) != 3 {
-		log.Panicf("expected the vtop version to have format x.x.x but was %s", release)
+		utils.LogPanic(nil, "expected the vtop version to have format x.x.x but was %s", release)
 	}
 	return fmt.Sprintf("%s.%s", parts[0], parts[1])
 }
