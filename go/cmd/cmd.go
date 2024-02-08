@@ -25,9 +25,6 @@ import (
 	"github.com/spf13/cobra"
 	"vitess.io/vitess-releaser/go/cmd/flags"
 	"vitess.io/vitess-releaser/go/cmd/interactive"
-	"vitess.io/vitess-releaser/go/cmd/post_release"
-	"vitess.io/vitess-releaser/go/cmd/pre_release"
-	"vitess.io/vitess-releaser/go/cmd/prerequisite"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/git"
 	"vitess.io/vitess-releaser/go/releaser/github"
@@ -60,9 +57,6 @@ func init() {
 		panic(err)
 	}
 
-	rootCmd.AddCommand(prerequisite.Prerequisite())
-	rootCmd.AddCommand(pre_release.PreRelease())
-	rootCmd.AddCommand(post_release.PostRelease())
 	rootCmd.AddCommand(interactive.Command())
 }
 
