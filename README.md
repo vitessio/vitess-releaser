@@ -39,17 +39,14 @@ Flags:
 
 ### RC release
 
-In this example we are releasing `v19.0.0-rc1` of vitess and `v2.12.0-rc1` of vitess-operator. 
-
-> [!NOTE]
-> If you want to do an RC-2, or above, you can just change the value of the `--rc` flag.
-
-> [!IMPORTANT]
-> RC releases are, in most cases, shipped with an equivalent vitess-operator release. We must set the `--vtop-release` flag in this case.
+In this example we are releasing `v19.0.0-rc1` of vitess and `v2.12.0-rc1` of vitess-operator. If you want to do an RC-2, or above, you can just change the value of the `--rc` flag.
 
 ```bash
 vitess-releaser --date="2024-02-07" --live --rc=1 --release=19 --vtop-release=2.12
 ```
+
+> [!IMPORTANT]
+> RC releases are, in most cases, shipped with an equivalent vitess-operator release. We must set the `--vtop-release` flag in this case.
 
 ### Patch release
 
@@ -58,6 +55,11 @@ In this example we are releasing `v18.0.3` of vitess, and there are no vitess-op
 ```bash
 vitess-releaser --date="2024-02-07" --live --release=18
 ```
+
+## Documentation
+
+The goal of vitess-releaser is to be more and more self-documenting.
+In the meantime you can find the full and original documentation used to run releases [in the vitess repository](https://github.com/vitessio/vitess/tree/main/doc/internal/release).
 
 ## License
 
