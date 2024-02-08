@@ -21,7 +21,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/cli/go-gh"
 	"vitess.io/vitess-releaser/go/releaser/git"
 )
 
@@ -51,12 +50,12 @@ func CreateRelease(repo, tag, notesFilePath string, latest, prerelease bool) (ur
 	}
 
 	args = append(args, tag)
-	stdOut, _, err := gh.Exec(args...)
+	stdOut, err := execGhWithError(args...)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			return fmt.Sprintf("https://github.com/%s/releases/tag/%s", repo, tag)
 		}
 		log.Panic(err)
 	}
-	return strings.ReplaceAll(stdOut.String(), "\n", "")
+	return strings.ReplaceAll(stdOut, "\n", "")
 }

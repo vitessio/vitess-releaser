@@ -18,9 +18,7 @@ package pre_release
 
 import (
 	"fmt"
-	"log"
 	"os"
-	"os/exec"
 	"strings"
 	"time"
 
@@ -28,6 +26,7 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/git"
 	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/logging"
+	"vitess.io/vitess-releaser/go/releaser/utils"
 )
 
 type codeFreezeStatus int
@@ -149,7 +148,7 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 func isCurrentBranchFrozen() bool {
 	b, err := os.ReadFile(codeFreezeWorkflowFile)
 	if err != nil {
-		log.Panic(err)
+		utils.LogPanic(err, "failed to read file %s", codeFreezeWorkflowFile)
 	}
 	str := string(b)
 	return strings.Contains(str, "exit 1")
@@ -165,14 +164,7 @@ func deactivateCodeFreeze() {
 
 func changeCodeFreezeWorkflow(s codeFreezeStatus) {
 	// sed -i.bak -E "s/exit (.*)/exit 0/g" $code_freeze_workflow
-	out, err := exec.Command("sed", "-i.bak", "-E", fmt.Sprintf("s/exit (.*)/exit %d/g", s), codeFreezeWorkflowFile).CombinedOutput()
-	if err != nil {
-		log.Panicf("%s: %s", err, out)
-	}
-
+	utils.Exec("sed", "-i.bak", "-E", fmt.Sprintf("s/exit (.*)/exit %d/g", s), codeFreezeWorkflowFile)
 	// remove backup file left by the sed command
-	out, err = exec.Command("rm", "-f", fmt.Sprintf("%s.bak", codeFreezeWorkflowFile)).CombinedOutput()
-	if err != nil {
-		log.Panicf("%s: %s", err, out)
-	}
+	utils.Exec("rm", "-f", fmt.Sprintf("%s.bak", codeFreezeWorkflowFile))
 }

@@ -19,13 +19,12 @@ package github
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"sort"
 	"strconv"
 	"strings"
 
-	gh "github.com/cli/go-gh"
 	"vitess.io/vitess-releaser/go/releaser/git"
+	"vitess.io/vitess-releaser/go/releaser/utils"
 )
 
 type Label struct {
@@ -52,7 +51,7 @@ func (p *PR) Create(repo string) (nb int, url string) {
 	for _, label := range p.Labels {
 		labels = append(labels, label.Name)
 	}
-	stdOut, _, err := gh.Exec(
+	stdOut := execGh(
 		"pr", "create",
 		"--repo", repo,
 		"--title", p.Title,
@@ -61,23 +60,17 @@ func (p *PR) Create(repo string) (nb int, url string) {
 		"--head", p.Branch,
 		"--base", p.Base,
 	)
-	if err != nil {
-		log.Panic(err)
-	}
-	url = strings.ReplaceAll(stdOut.String(), "\n", "")
+	url = strings.ReplaceAll(stdOut, "\n", "")
 	nb = URLToNb(url)
 	return nb, url
 }
 
 func IsPRMerged(repo string, nb int) bool {
-	stdOut, _, err := gh.Exec(
+	stdOut := execGh(
 		"pr", "view", strconv.Itoa(nb),
 		"--repo", repo,
 		"--json", "mergedAt",
 	)
-	if err != nil {
-		log.Panic(err)
-	}
 
 	// If the PR is not merged, the output of the gh command will be:
 	// {
@@ -85,20 +78,17 @@ func IsPRMerged(repo string, nb int) bool {
 	// }
 	//
 	// We can then grep for "null", if present, the PR has not been merged yet.
-	return !strings.Contains(stdOut.String(), "null")
+	return !strings.Contains(stdOut, "null")
 }
 
 func CheckBackportToPRs(repo, majorRelease string) map[string]any {
 	git.CorrectCleanRepo(repo)
 
-	byteRes, _, err := gh.Exec("pr", "list", "--json", "title,baseRefName,url,labels", "--repo", repo)
-	if err != nil {
-		log.Panicf(err.Error())
-	}
+	stdOut := execGh("pr", "list", "--json", "title,baseRefName,url,labels", "--repo", repo)
 	var prs []PR
-	err = json.Unmarshal(byteRes.Bytes(), &prs)
+	err := json.Unmarshal([]byte(stdOut), &prs)
 	if err != nil {
-		log.Panicf(err.Error())
+		utils.LogPanic(err, "failed to parse backport PRs, got: %s", stdOut)
 	}
 
 	var mustClose []PR
@@ -125,20 +115,17 @@ func CheckBackportToPRs(repo, majorRelease string) map[string]any {
 }
 
 func FindPR(repo, prTitle string) (nb int, url string) {
-	byteRes, _, err := gh.Exec(
+	stdOut := execGh(
 		"pr", "list",
 		"--json", "url",
 		"--repo", repo,
 		"--search", prTitle,
 		"--state", "open",
 	)
-	if err != nil {
-		log.Panicf(err.Error())
-	}
 	var prs []PR
-	err = json.Unmarshal(byteRes.Bytes(), &prs)
+	err := json.Unmarshal([]byte(stdOut), &prs)
 	if err != nil {
-		log.Panicf(err.Error())
+		utils.LogPanic(err, "failed to parse PRs, got: %s", stdOut)
 	}
 	if len(prs) != 1 {
 		return 0, ""
@@ -148,7 +135,7 @@ func FindPR(repo, prTitle string) (nb int, url string) {
 }
 
 func GetMergedPRsAndAuthorsByMilestone(repo, milestone string) (prs []PR, authors []string) {
-	byteRes, _, err := gh.Exec(
+	stdOut := execGh(
 		"pr", "list",
 		"-s", "merged",
 		"-S", fmt.Sprintf("milestone:%s", milestone),
@@ -156,13 +143,10 @@ func GetMergedPRsAndAuthorsByMilestone(repo, milestone string) (prs []PR, author
 		"--limit", "5000",
 		"--repo", repo,
 	)
-	if err != nil {
-		log.Panic(err)
-	}
 
-	err = json.Unmarshal(byteRes.Bytes(), &prs)
+	err := json.Unmarshal([]byte(stdOut), &prs)
 	if err != nil {
-		log.Panic(err)
+		utils.LogPanic(err, "failed to parse PRs, got: %s", stdOut)
 	}
 
 	// Get the full list of distinct PRs authors and sort them
@@ -181,7 +165,7 @@ func GetMergedPRsAndAuthorsByMilestone(repo, milestone string) (prs []PR, author
 }
 
 func GetOpenedPRsByMilestone(repo, milestone string) []PR {
-	byteRes, _, err := gh.Exec(
+	stdOut := execGh(
 		"pr", "list",
 		"-s", "open",
 		"-S", fmt.Sprintf("milestone:%s", milestone),
@@ -189,28 +173,22 @@ func GetOpenedPRsByMilestone(repo, milestone string) []PR {
 		"--limit", "5000",
 		"--repo", repo,
 	)
-	if err != nil {
-		log.Panic(err)
-	}
 
 	var prs []PR
-	err = json.Unmarshal(byteRes.Bytes(), &prs)
+	err := json.Unmarshal([]byte(stdOut), &prs)
 	if err != nil {
-		log.Panic(err)
+		utils.LogPanic(err, "failed to parse PRs, got: %s", stdOut)
 	}
 	return prs
 }
 
 func AssignMilestoneToPRs(repo, milestone string, prs []PR) {
 	for _, pr := range prs {
-		_, _, err := gh.Exec(
+		execGh(
 			"pr", "edit",
 			strconv.Itoa(pr.Number),
 			"--milestone", milestone,
 			"--repo", repo,
 		)
-		if err != nil {
-			log.Panic(err)
-		}
 	}
 }

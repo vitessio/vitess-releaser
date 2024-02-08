@@ -18,9 +18,10 @@ package releaser
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
+
+	"vitess.io/vitess-releaser/go/releaser/utils"
 )
 
 func FindVersionAfterNextRelease(state *State) string {
@@ -33,7 +34,7 @@ func FindVersionAfterNextRelease(state *State) string {
 	for _, segment := range segments {
 		v, err := strconv.Atoi(segment)
 		if err != nil {
-			log.Panic(err.Error())
+			utils.LogPanic(err, "failed to convert release number segment to number (%s)", segment)
 		}
 		segmentInts = append(segmentInts, v)
 	}

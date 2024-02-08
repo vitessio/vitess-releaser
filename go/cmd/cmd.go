@@ -19,7 +19,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"time"
 
@@ -32,6 +31,7 @@ import (
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/git"
 	"vitess.io/vitess-releaser/go/releaser/github"
+	"vitess.io/vitess-releaser/go/releaser/utils"
 )
 
 var (
@@ -116,7 +116,7 @@ func setUpVitessReleaseInformation(s *releaser.State, repo string) (releaser.Rel
 	// if we want to do an RC-1 release and the branch is different from `main`, something is wrong
 	// and if we want to do an >= RC-2 release, the release as to be the latest AKA on the latest release branch
 	if rcIncrement >= 1 && !isLatestRelease {
-		log.Panicf("wanted: RC %d but release branch was %s, latest release was %v and is from main is %v", rcIncrement, releaseBranch, isLatestRelease, isFromMain)
+		utils.LogPanic(nil, "wanted: RC %d but release branch was %s, latest release was %v and is from main is %v", rcIncrement, releaseBranch, isLatestRelease, isFromMain)
 	}
 
 	vitessRelease := releaser.ReleaseInformation{

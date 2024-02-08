@@ -18,7 +18,6 @@ package release
 
 import (
 	"fmt"
-	"log"
 	"path"
 	"strings"
 
@@ -27,6 +26,7 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/logging"
 	"vitess.io/vitess-releaser/go/releaser/pre_release"
+	"vitess.io/vitess-releaser/go/releaser/utils"
 )
 
 func TagRelease(state *releaser.State) (*logging.ProgressLogging, func() string) {
@@ -51,7 +51,7 @@ func TagRelease(state *releaser.State) (*logging.ProgressLogging, func() string)
 		// i.e. if we release v17.0.1, we also want to tag: v0.17.1
 		nextReleaseSplit := strings.Split(lowerCaseRelease, ".")
 		if len(nextReleaseSplit) != 3 {
-			log.Panicf("%s was not formated x.x.x", state.VitessRelease.Release)
+			utils.LogPanic(nil, "%s was not formated x.x.x", state.VitessRelease.Release)
 		}
 		gdocGitTag := fmt.Sprintf("v0.%s.%s", nextReleaseSplit[0], nextReleaseSplit[2])
 		git.TagAndPush(state.VitessRelease.Remote, gdocGitTag)

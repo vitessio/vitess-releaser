@@ -19,10 +19,10 @@ package git
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
-	"os/exec"
 	"strings"
+
+	"vitess.io/vitess-releaser/go/releaser/utils"
 )
 
 var (
@@ -30,78 +30,48 @@ var (
 )
 
 func checkCurrentRepo(repoWanted string) bool {
-	out, err := exec.Command("git", "remote", "-v").CombinedOutput()
-	if err != nil {
-		log.Panicf("%s: %s", err, out)
-	}
-	outStr := string(out)
-	return strings.Contains(outStr, repoWanted)
+	out := utils.Exec("git", "remote", "-v")
+	return strings.Contains(out, repoWanted)
 }
 
 func cleanLocalState() bool {
-	out, err := exec.Command("git", "status", "-s").CombinedOutput()
-	if err != nil {
-		log.Panicf("%s: %s", err, out)
-	}
+	out := utils.Exec("git", "status", "-s")
 	return len(out) == 0
 }
 
 func Checkout(branch string) {
-	out, err := exec.Command("git", "checkout", branch).CombinedOutput()
-	if err != nil {
-		log.Panicf("%s: %s", err, out)
-	}
-}
-
-func Pull(remote, branch string) {
-	out, err := exec.Command("git", "pull", remote, branch).CombinedOutput()
-	if err != nil {
-		log.Panicf("%s: %s", err, out)
-	}
+	utils.Exec("git", "checkout", branch)
 }
 
 func ResetHard(remote, branch string) {
-	out, err := exec.Command("git", "fetch", remote).CombinedOutput()
-	if err != nil {
-		log.Panicf("%s: %s", err, out)
-	}
-
-	out, err = exec.Command("git", "reset", "--hard", remote+"/"+branch).CombinedOutput()
-	if err != nil {
-		log.Panicf("%s: %s", err, out)
-	}
+	utils.Exec("git", "fetch", remote)
+	utils.Exec("git", "reset", "--hard", remote+"/"+branch)
 }
 
 func CreateBranchAndCheckout(branch, base string) error {
-	out, err := exec.Command("git", "checkout", "-b", branch, base).CombinedOutput()
+	out, err := utils.ExecWithError("git", "checkout", "-b", branch, base)
 	if err != nil {
-		if strings.Contains(string(out), fmt.Sprintf("a branch named '%s' already exists", branch)) {
+		if strings.Contains(out, fmt.Sprintf("a branch named '%s' already exists", branch)) {
 			return errBranchExists
 		}
-		log.Panicf("%s: %s", err, out)
+		utils.LogPanic(err, "got: %s", out)
 	}
 	return nil
 }
 
 func Push(remote, branch string) {
-	out, err := exec.Command("git", "push", remote, branch).CombinedOutput()
-	if err != nil {
-		log.Panicf("%s: %s", err, out)
-	}
+	utils.Exec("git", "push", remote, branch)
 }
 
 func CommitAll(msg string) (empty bool) {
-	out, err := exec.Command("git", "add", "--all").CombinedOutput()
-	if err != nil {
-		log.Panicf("%s: %s", err, out)
-	}
+	utils.Exec("git", "add", "--all")
 
-	out, err = exec.Command("git", "commit", "-n", "-s", "-m", msg).CombinedOutput()
+	out, err := utils.ExecWithError("git", "commit", "-n", "-s", "-m", msg)
 	if err != nil {
-		if strings.Contains(string(out), "nothing to commit, working tree clean") {
+		if strings.Contains(out, "nothing to commit, working tree clean") {
 			return true
 		}
-		log.Panicf("%s: %s", err, out)
+		utils.LogPanic(err, "got: %s", out)
 	}
 	return false
 }
@@ -110,13 +80,8 @@ func CommitAll(msg string) (empty bool) {
 // and returns the name of the remote associated with that repository.
 // If no remote is found, an empty string is returned.
 func FindRemoteName(repository string) string {
-	out, err := exec.Command("git", "remote", "-v").CombinedOutput()
-	if err != nil {
-		log.Panicf("%s: %s", err, out)
-	}
-	gitRemoteOutput := string(out)
-
-	lines := strings.Split(gitRemoteOutput, "\n")
+	out := utils.Exec("git", "remote", "-v")
+	lines := strings.Split(out, "\n")
 	for _, line := range lines {
 		parts := strings.Fields(line)
 		if len(parts) >= 2 {
@@ -131,17 +96,17 @@ func FindRemoteName(repository string) string {
 
 func CorrectCleanRepo(repo string) {
 	if !checkCurrentRepo(repo + ".git") {
-		log.Panicf("failed to find remote %s in %s", repo, getWorkingDir())
+		utils.LogPanic(nil, "failed to find remote %s in %s", repo, getWorkingDir())
 	}
 	if !cleanLocalState() {
-		log.Panicf("the %s repository should have a clean state", getWorkingDir())
+		utils.LogPanic(nil, "the %s repository should have a clean state", getWorkingDir())
 	}
 }
 
 func getWorkingDir() string {
 	dir, err := os.Getwd()
 	if err != nil {
-		log.Panic(err)
+		utils.LogPanic(err, "failed to find the current working dir")
 	}
 	return dir
 }
@@ -157,7 +122,7 @@ func FindNewGeneratedBranch(remote, baseBranch, branchName string) string {
 			if errors.Is(err, errBranchExists) {
 				continue
 			}
-			log.Panic(err)
+			utils.LogPanic(err, "bug should not get here")
 		}
 		break
 	}
@@ -165,32 +130,23 @@ func FindNewGeneratedBranch(remote, baseBranch, branchName string) string {
 }
 
 func TagAndPush(remote, tag string) (exists bool) {
-	out, err := exec.Command("git", "tag", tag).CombinedOutput()
+	out, err := utils.ExecWithError("git", "tag", tag)
 	if err != nil {
-		if strings.Contains(string(out), "already exists") {
+		if strings.Contains(out, "already exists") {
 			return true
 		}
-		log.Panicf("%s: %s", err, out)
+		utils.LogPanic(err, "got: %s", out)
 	}
 
-	out, err = exec.Command("git", "push", remote, tag).CombinedOutput()
-	if err != nil {
-		log.Panicf("%s: %s", err, out)
-	}
+	utils.Exec("git", "push", remote, tag)
 	return false
 }
 
 func GetSHAForGitRef(ref string) string {
-	out, err := exec.Command("git", "rev-parse", ref).CombinedOutput()
-	if err != nil {
-		log.Panicf("%s: %s", err, out)
-	}
+	out := utils.Exec("git", "rev-parse", ref)
 	return strings.ReplaceAll(string(out), "\n", "")
 }
 
 func CheckoutPath(remote, branch, path string) {
-	out, err := exec.Command("git", "checkout", fmt.Sprintf("%s/%s", remote, branch), path).CombinedOutput()
-	if err != nil {
-		log.Panicf("%s: %s", err, out)
-	}
+	utils.Exec("git", "checkout", fmt.Sprintf("%s/%s", remote, branch), path)
 }

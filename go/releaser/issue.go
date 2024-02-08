@@ -19,7 +19,6 @@ package releaser
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 	"text/template"
@@ -28,6 +27,7 @@ import (
 	"vitess.io/vitess-releaser/go/interactive/state"
 	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/logging"
+	"vitess.io/vitess-releaser/go/releaser/utils"
 )
 
 const (
@@ -296,7 +296,7 @@ func (s *State) LoadIssue() {
 	if idx := strings.Index(title, "-RC"); idx != -1 {
 		rc, err := strconv.Atoi(title[idx+len("-RC"):])
 		if err != nil {
-			log.Panic(err)
+			utils.LogPanic(err, "failed to parse the RC number from the release issue title (%s)", title)
 		}
 		newIssue.RC = rc
 	}
@@ -313,7 +313,7 @@ func (s *State) LoadIssue() {
 				nline := strings.TrimSpace(line[len(dateItem):])
 				parsedDate, err := time.Parse("Mon _2 Jan 2006", nline)
 				if err != nil {
-					log.Panic(err)
+					utils.LogPanic(err, "failed to parse the date from the release issue body (%s)", nline)
 				}
 				newIssue.Date = parsedDate
 			}
@@ -530,12 +530,12 @@ func (i *Issue) toString() string {
 
 	parsed, err := tmpl.Parse(releaseIssueTemplate)
 	if err != nil {
-		log.Panic(err)
+		utils.LogPanic(err, "failed to parse the release issue template")
 	}
 	b := bytes.NewBufferString("")
 	err = parsed.Execute(b, i)
 	if err != nil {
-		log.Panic(err)
+		utils.LogPanic(err, "failed to execute/write the release issue template")
 	}
 	return b.String()
 }

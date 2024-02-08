@@ -18,9 +18,10 @@ package releaser
 
 import (
 	"context"
-	"log"
 	"path"
 	"syscall"
+
+	"vitess.io/vitess-releaser/go/releaser/utils"
 )
 
 const (
@@ -82,11 +83,11 @@ func (s *State) GoToVtOp() {
 func changeDir(p string) {
 	cwd, err := syscall.Getwd()
 	if err != nil {
-		log.Panic(err)
+		utils.LogPanic(err, "failed to get current working directory")
 	}
 	p = path.Join(cwd, p)
 	err = syscall.Chdir(p)
 	if err != nil {
-		log.Panic(err)
+		utils.LogPanic(err, "failed to change directory to %s", p)
 	}
 }

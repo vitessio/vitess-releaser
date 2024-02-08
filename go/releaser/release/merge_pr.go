@@ -17,7 +17,6 @@ limitations under the License.
 package release
 
 import (
-	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -25,6 +24,7 @@ import (
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/logging"
+	"vitess.io/vitess-releaser/go/releaser/utils"
 )
 
 func MergeReleasePR(state *releaser.State) (*logging.ProgressLogging, func() string) {
@@ -37,7 +37,7 @@ func MergeReleasePR(state *releaser.State) (*logging.ProgressLogging, func() str
 		url := state.Issue.CreateReleasePR.URL
 		nb, err := strconv.Atoi(url[strings.LastIndex(url, "/")+1:])
 		if err != nil {
-			log.Panic(err)
+			utils.LogPanic(err, "failed to parse the PR number from GitHub URL: %s", url)
 		}
 
 		pl.NewStepf("Waiting for %s to be merged", url)
