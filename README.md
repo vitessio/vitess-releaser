@@ -21,20 +21,18 @@ It streamlines various tasks, such as version bumping, changelog generation, iss
 
 ### Usage
 ```
-Usage:
-  vitess-releaser [command]
+Tooling used to release new versions of Vitess
 
-Available Commands:
-  interactive Runs the releaser in interactive mode
+Usage:
+  vitess-releaser [flags]
 
 Flags:
   -d, --date string           Date of the release with the format: YYYY-MM-DD. Required when initiating a release.
-      --live                  If live is true, will run against vitessio/vitess. Otherwise everything is done against your personal repository
-      --rc int                Define the release as an RC release, the integer value is used to determine the number of the RC.
+  -h, --help                  Displays this help.
+      --live                  If live is true, will run against vitessio/vitess and planetscale/vitess-operator. Otherwise everything is done against your own forks.
+      --rc int                Define the release as an RC release, value is used to determine the number of the RC.
   -r, --release string        Number of the major release on which we want to create a new release.
       --vtop-release string   Number of the major and minor release on which we want to create a new release, i.e. '2.11', leave empty for no vtop release.
-
-Use "vitess-releaser [command] --help" for more information about a command.
 ```
 
 ## License

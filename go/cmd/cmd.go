@@ -24,7 +24,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"vitess.io/vitess-releaser/go/cmd/flags"
-	"vitess.io/vitess-releaser/go/cmd/interactive"
+	"vitess.io/vitess-releaser/go/interactive"
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/git"
 	"vitess.io/vitess-releaser/go/releaser/github"
@@ -37,31 +37,46 @@ var (
 	releaseDate        string
 	rcIncrement        int
 	live               = true
+	help               bool
 
 	rootCmd = &cobra.Command{
 		Use:   "vitess-releaser",
-		Short: "vitess-releaser - a tool for releasing vitess",
-		Long:  "vitess-releaser - a tool for releasing vitess",
+		Short: "Tooling used to release new versions of Vitess",
+		Run: func(cmd *cobra.Command, args []string) {
+			ctx := cmd.Context()
+			state := releaser.UnwrapState(ctx)
+			git.CorrectCleanRepo(state.VitessRelease.Repo)
+
+			// TODO: The assumption that the Release Manager won't be
+			// modifying the release issue while using vitess-releaser
+			// is made here, perhaps there is a better way of doing it
+			state.LoadIssue()
+
+			interactive.MainScreen(ctx)
+		},
 	}
 )
 
 func init() {
+	rootCmd.PersistentFlags().StringVarP(&releaseDate, flags.ReleaseDate, "d", "", "Date of the release with the format: YYYY-MM-DD. Required when initiating a release.")
+	rootCmd.PersistentFlags().BoolVarP(&help, flags.Help, "h", false, "Displays this help.")
+	rootCmd.PersistentFlags().BoolVar(&live, flags.RunLive, false, "If live is true, will run against vitessio/vitess and planetscale/vitess-operator. Otherwise everything is done against your own forks.")
+	rootCmd.PersistentFlags().IntVarP(&rcIncrement, flags.RCIncrement, "", 0, "Define the release as an RC release, value is used to determine the number of the RC.")
 	rootCmd.PersistentFlags().StringVarP(&releaseVersion, flags.MajorRelease, "r", "", "Number of the major release on which we want to create a new release.")
 	rootCmd.PersistentFlags().StringVarP(&vtopReleaseVersion, flags.VtOpRelease, "", "", "Number of the major and minor release on which we want to create a new release, i.e. '2.11', leave empty for no vtop release.")
-	rootCmd.PersistentFlags().StringVarP(&releaseDate, flags.ReleaseDate, "d", "", "Date of the release with the format: YYYY-MM-DD. Required when initiating a release.")
-	rootCmd.PersistentFlags().IntVarP(&rcIncrement, flags.RCIncrement, "", 0, "Define the release as an RC release, the integer value is used to determine the number of the RC.")
-	rootCmd.PersistentFlags().BoolVar(&live, flags.RunLive, false, "If live is true, will run against vitessio/vitess. Otherwise everything is done against your personal repository")
 
 	err := cobra.MarkFlagRequired(rootCmd.PersistentFlags(), flags.MajorRelease)
 	if err != nil {
 		panic(err)
 	}
-
-	rootCmd.AddCommand(interactive.Command())
 }
 
 func Execute() {
 	err := rootCmd.ParseFlags(os.Args)
+	if help {
+		_ = rootCmd.Help()
+		os.Exit(0)
+	}
 	if err != nil {
 		panic(err)
 	}
