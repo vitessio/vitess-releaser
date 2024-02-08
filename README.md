@@ -41,7 +41,7 @@ Flags:
 
 In this example we are releasing `v19.0.0-rc1` of vitess and `v2.12.0-rc1` of vitess-operator. 
 
-> [!INFO]
+> [!NOTE]
 > If you want to do an RC-2, or above, you can just change the value of the `--rc` flag.
 
 > [!IMPORTANT]
