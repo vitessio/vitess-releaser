@@ -35,12 +35,7 @@ import (
 // Secondly, if the release we want to use is not on the main branch, it checks out
 // to a release branch matching the given major release number. The SNAPSHOT version
 // on that release branch is then returned.
-func FindNextRelease(remote, majorRelease string, isVtOp bool) (
-	currentRelease,
-	releaseBranchName string,
-	isLatestRelease,
-	isFromMain bool,
-) {
+func FindNextRelease(remote, majorRelease string, isVtOp bool, rc int) (currentRelease, releaseBranchName string, isLatestRelease, isFromMain bool, ) {
 	fnGetCurrentRelease := getCurrentReleaseVitess
 	fnReleaseToMajor := releaseToMajorVitess
 	releaseBranchName = fmt.Sprintf("release-%s.0", majorRelease)
@@ -68,8 +63,8 @@ func FindNextRelease(remote, majorRelease string, isVtOp bool) (
 			if err != nil {
 				utils.LogPanic(err, "failed to convert CLI release argument's minor release increment to an int (%s)", majorParts[1])
 			}
-			if mainMajorNb+1 == majorNb {
-				return fmt.Sprintf("%s.%d.0", mainMajorParts[0], mainMajorNb+1), releaseBranchName, true, true
+			if rc > 0 && mainMajorNb == majorNb || mainMajorNb+1 == majorNb {
+				return fmt.Sprintf("%s.%d.0", mainMajorParts[0], majorNb), releaseBranchName, true, true
 			}
 		}
 	} else if mainMajor == majorRelease {
