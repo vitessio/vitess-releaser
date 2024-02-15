@@ -140,7 +140,7 @@ func getSegmentOfReleaseNotesDir(version string) (prefix string, major string, p
 
 func generateReleaseNotes(state *releaser.State, version string) {
 	releaseNotesPath := GetReleaseNotesDirPath(version)
-	summaryFile := path.Join(releaseNotesPathPrefix, "summary.md")
+	summaryFile := path.Join(releaseNotesPath, "summary.md")
 
 	version = "v" + version
 
