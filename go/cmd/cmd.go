@@ -92,8 +92,8 @@ func Execute() {
 
 	vitessRepo, vtopRepo := getGitRepos()
 
-	vitessRelease, issueNb, issueLink := setUpVitessReleaseInformation(s, vitessRepo)
-	vtopRelease := setUpVtOpReleaseInformation(s, vtopRepo)
+	vitessRelease, issueNb, issueLink := setUpVitessReleaseInformation(s, vitessRepo, rcIncrement)
+	vtopRelease := setUpVtOpReleaseInformation(s, vtopRepo, rcIncrement)
 
 	s.VitessRelease = vitessRelease
 	s.VtOpRelease = vtopRelease
@@ -113,13 +113,13 @@ func Execute() {
 	}
 }
 
-func setUpVitessReleaseInformation(s *releaser.State, repo string) (releaser.ReleaseInformation, int, string) {
+func setUpVitessReleaseInformation(s *releaser.State, repo string, rc int) (releaser.ReleaseInformation, int, string) {
 	s.GoToVitess()
 
 	git.CorrectCleanRepo(repo)
 
 	remote := git.FindRemoteName(repo)
-	release, releaseBranch, isLatestRelease, isFromMain := releaser.FindNextRelease(remote, releaseVersion, false)
+	release, releaseBranch, isLatestRelease, isFromMain := releaser.FindNextRelease(remote, releaseVersion, false, rc)
 	issueNb, issueLink, releaseFromIssue := github.GetReleaseIssueInfo(repo, releaseVersion, rcIncrement)
 
 	// if we want to do an RC-1 release and the branch is different from `main`, something is wrong
@@ -142,7 +142,7 @@ func setUpVitessReleaseInformation(s *releaser.State, repo string) (releaser.Rel
 	return vitessRelease, issueNb, issueLink
 }
 
-func setUpVtOpReleaseInformation(s *releaser.State, repo string) releaser.ReleaseInformation {
+func setUpVtOpReleaseInformation(s *releaser.State, repo string, rc int) releaser.ReleaseInformation {
 	if vtopReleaseVersion == "" {
 		return releaser.ReleaseInformation{}
 	}
@@ -153,7 +153,7 @@ func setUpVtOpReleaseInformation(s *releaser.State, repo string) releaser.Releas
 	git.CorrectCleanRepo(repo)
 
 	remote := git.FindRemoteName(repo)
-	release, releaseBranch, isLatestRelease, _ := releaser.FindNextRelease(remote, vtopReleaseVersion, true)
+	release, releaseBranch, isLatestRelease, _ := releaser.FindNextRelease(remote, vtopReleaseVersion, true, rc)
 
 	vtopRelease := releaser.ReleaseInformation{
 		Repo:            repo,
