@@ -42,5 +42,8 @@ func Exec(cmd string, args ...string) string {
 func ExecWithError(cmd string, args ...string) (string, error) {
 	command := exec.Command(cmd, args...)
 	out, err := command.CombinedOutput()
+	if err == nil {
+		return string(out), nil
+	}
 	return string(out), fmt.Errorf("%w: failed to execute: %s", err, command.String())
 }
