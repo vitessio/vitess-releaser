@@ -24,6 +24,7 @@ const (
 	SlackAnnouncement = "Slack Announcement"
 	CheckAndAdd       = "Pending PRs/Issues"
 	CheckSummary      = "Check Release Summary"
+	BlogPost = "Blog Post"
 
 	// Pre-Release
 	CodeFreeze                   = "Code Freeze"

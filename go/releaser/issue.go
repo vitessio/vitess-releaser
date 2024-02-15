@@ -113,10 +113,12 @@ type (
 		RC          int
 		DoVtOp      bool
 		VtopRelease string
+		GA          bool
 
 		// Prerequisites
 		SlackPreRequisite bool
 		CheckSummary      bool
+		BlogPost          bool
 		CheckBackport     ParentOfItems
 		ReleaseBlocker    ParentOfItems
 
@@ -305,6 +307,7 @@ func (s *State) LoadIssue() {
 		newIssue.RC = rc
 	}
 
+	newIssue.GA = s.VitessRelease.GA
 	newIssue.DoVtOp = s.VtOpRelease.Release != ""
 	newIssue.VtopRelease = AddRCToReleaseTitle(s.VtOpRelease.Release, newIssue.RC)
 

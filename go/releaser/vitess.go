@@ -35,7 +35,7 @@ import (
 // Secondly, if the release we want to use is not on the main branch, it checks out
 // to a release branch matching the given major release number. The SNAPSHOT version
 // on that release branch is then returned.
-func FindNextRelease(remote, majorRelease string, isVtOp bool, rc int) (currentRelease, releaseBranchName string, isLatestRelease, isFromMain bool, ) {
+func FindNextRelease(remote, majorRelease string, isVtOp bool, rc int) (currentRelease, releaseBranchName string, isLatestRelease, isFromMain, ga bool, ) {
 	fnGetCurrentRelease := getCurrentReleaseVitess
 	fnReleaseToMajor := releaseToMajorVitess
 	releaseBranchName = fmt.Sprintf("release-%s.0", majorRelease)
@@ -64,11 +64,11 @@ func FindNextRelease(remote, majorRelease string, isVtOp bool, rc int) (currentR
 				utils.LogPanic(err, "failed to convert CLI release argument's minor release increment to an int (%s)", majorParts[1])
 			}
 			if rc > 0 && mainMajorNb == majorNb || mainMajorNb+1 == majorNb {
-				return fmt.Sprintf("%s.%d.0", mainMajorParts[0], majorNb), releaseBranchName, true, true
+				return fmt.Sprintf("%s.%d.0", mainMajorParts[0], majorNb), releaseBranchName, true, true, ga
 			}
 		}
 	} else if mainMajor == majorRelease {
-		return currentRelease, releaseBranchName, true, true
+		return currentRelease, releaseBranchName, true, true, ga
 	}
 
 	// main branch does not match, let's try release branches
@@ -92,7 +92,11 @@ func FindNextRelease(remote, majorRelease string, isVtOp bool, rc int) (currentR
 	if err != nil {
 		utils.LogPanic(err, "could not parse CLI major release argument as a float (%s)", major)
 	}
-	return currentRelease, releaseBranchName, mainMajorNb-1 == majorNb, false
+	releaseParts := strings.Split(currentRelease, ".")
+	if len(releaseParts) != 3 {
+		utils.LogPanic(nil, "could not parse the found release: %s", currentRelease)
+	}
+	return currentRelease, releaseBranchName, mainMajorNb-1 == majorNb, false, releaseParts[1] == "0" && releaseParts[2] == "0"
 }
 
 func FindPreviousRelease(remote, currentMajor string) string {
