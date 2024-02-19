@@ -72,11 +72,12 @@ const (
 	vtopBumpVersionOnMain         = "Bump the version vitess-operator main."
 	vtopUpdateGoItem              = "Update vitess-operator Golang version."
 	vtopUpdateCompTableItem       = "Update vitess-operator compatibility table."
-	createBlogPostPRItem = "Open a Pull Request on the website repository for the blog post."
+	createBlogPostPRItem          = "Open a Pull Request on the website repository for the blog post."
 
 	// Release
 	mergeReleasePRItem      = "Merge the Release PR."
 	tagReleaseItem          = "Tag the release."
+	javaRelease             = "Java release."
 	vtopCreateReleasePRItem = "Create vitess-operator Release PR."
 	vtopManualUpdateItem    = "Manual update of vitess-operator test code."
 	releaseNotesMainItem    = "Update release notes on main."
@@ -85,7 +86,7 @@ const (
 	benchmarkedItem         = "Make sure the release is benchmarked by arewefastyet."
 	dockerImagesItem        = "Docker Images available on DockerHub."
 	closeMilestoneItem      = "Close current GitHub Milestone."
-	mergeBlogPostItem = "Merge the blog post Pull Request on the website repository."
+	mergeBlogPostItem       = "Merge the blog post Pull Request on the website repository."
 
 	// Post-Release
 	postSlackAnnouncementItem = "Notify the community on Slack for the new release."
@@ -144,6 +145,7 @@ type (
 		// Release
 		MergeReleasePR       ItemWithLink
 		TagRelease           ItemWithLink
+		JavaRelease          bool
 		ReleaseNotesOnMain   ItemWithLink
 		BackToDevMode        ItemWithLink
 		MergeBlogPostPR      bool
@@ -244,6 +246,9 @@ The release of vitess-operator v{{.VtopRelease}} is also planned
 - [{{fmtStatus .TagRelease.Done}}] Tag the release.
 {{- if .TagRelease.URL }}
   - {{ .TagRelease.URL }}
+{{- end }}
+{{- if .GA }}
+- [{{fmtStatus .JavaRelease}}] Java release.
 {{- end }}
 {{- if .DoVtOp }}
 - [{{fmtStatus .VtopCreateReleasePR.Done}}] Create vitess-operator Release PR.
@@ -436,9 +441,11 @@ func (s *State) LoadIssue() {
 			case strings.Contains(line, closeReleaseItem):
 				newIssue.CloseIssue = strings.HasPrefix(line, markdownItemDone)
 			case strings.Contains(line, createBlogPostPRItem):
-				newIssue.CreateBlogPostPR = strings.HasPrefix(line, createBlogPostPRItem)
-			case strings.Contains(line, mergeReleasePRItem):
-				newIssue.MergeBlogPostPR = strings.HasPrefix(line, mergeBlogPostItem)
+				newIssue.CreateBlogPostPR = strings.HasPrefix(line, markdownItemDone)
+			case strings.Contains(line, mergeBlogPostItem):
+				newIssue.MergeBlogPostPR = strings.HasPrefix(line, markdownItemDone)
+			case strings.Contains(line, javaRelease):
+				newIssue.JavaRelease = strings.HasPrefix(line, markdownItemDone)
 			}
 		case stateReadingBackport:
 			newIssue.CheckBackport.Items = append(newIssue.CheckBackport.Items, handleNewListItem(lines, i, &st))
