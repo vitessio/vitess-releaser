@@ -59,6 +59,8 @@ const (
 	checkSummaryItem         = "Make sure the release notes summary is prepared and clean."
 	backportItem             = "Make sure backport Pull Requests are merged, list below."
 	releaseBlockerItem       = "Make sure release blocker Issues are closed, list below."
+	draftBlogPostItem        = "Draft the release blog post."
+	crossBlogPostItem        = "Send requests to cross-post the blog post (CNCF, PlanetScale)."
 
 	// Pre-Release
 	codeFreezeItem                = "Code Freeze."
@@ -116,11 +118,12 @@ type (
 		GA          bool
 
 		// Prerequisites
-		SlackPreRequisite bool
-		CheckSummary      bool
-		BlogPost          bool
-		CheckBackport     ParentOfItems
-		ReleaseBlocker    ParentOfItems
+		SlackPreRequisite        bool
+		CheckSummary             bool
+		DraftBlogPost            bool
+		RequestCrossPostBlogPost bool
+		CheckBackport            ParentOfItems
+		ReleaseBlocker           ParentOfItems
 
 		// Pre-Release
 		CodeFreeze                   ItemWithLink
@@ -178,6 +181,10 @@ The release of vitess-operator v{{.VtopRelease}} is also planned
 - Make sure release blocker Issues are closed, list below.
 {{- range $item := .ReleaseBlocker.Items }}
   - [{{fmtStatus $item.Done}}] {{$item.URL}}
+{{- end }}
+{{- if .GA }}
+- [{{fmtStatus .DraftBlogPost}}] Draft the release blog post.
+- [{{fmtStatus .RequestCrossPostBlogPost}}] Send requests to cross-post the blog post (CNCF, PlanetScale).
 {{- end }}
 
 
@@ -326,6 +333,10 @@ func (s *State) LoadIssue() {
 			}
 
 			switch {
+			case strings.Contains(line, draftBlogPostItem):
+				newIssue.DraftBlogPost = strings.HasPrefix(line, markdownItemDone)
+			case strings.Contains(line, crossBlogPostItem):
+				newIssue.RequestCrossPostBlogPost = strings.HasPrefix(line, markdownItemDone)
 			case strings.Contains(line, preSlackAnnouncementItem):
 				newIssue.SlackPreRequisite = strings.HasPrefix(line, markdownItemDone)
 			case strings.Contains(line, checkSummaryItem):

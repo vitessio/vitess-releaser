@@ -26,27 +26,27 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/steps"
 )
 
-type blogPost []string
+type draftBlogPost []string
 
-func BlogPostMenuItem(ctx context.Context) *ui.MenuItem {
+func DraftBlogPostMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
 	return &ui.MenuItem{
 		State:  state,
-		Name:   steps.BlogPost,
-		IsDone: state.Issue.BlogPost,
+		Name:   steps.DraftBlogPost,
+		IsDone: state.Issue.DraftBlogPost,
 		Act:    blogPostAct,
-		Update: blogPostUpdate,
+		Update: draftBlogPostUpdate,
 
 		Ignore: !state.Issue.GA,
 	}
 }
 
-func blogPostUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
+func draftBlogPostUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
 	switch msg := msg.(type) {
-	case blogPost:
+	case draftBlogPost:
 		return mi, ui.PushDialog(&ui.DoneDialog{
 			StepName: mi.Name,
-			Title:    "Blog Post",
+			Title:    "Draft Blog Post",
 			Message:  msg,
 			IsDone:   mi.IsDone,
 		})
@@ -54,7 +54,7 @@ func blogPostUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
 		if string(msg) != mi.Name {
 			return mi, nil
 		}
-		mi.State.Issue.BlogPost = !mi.State.Issue.BlogPost
+		mi.State.Issue.DraftBlogPost = !mi.State.Issue.DraftBlogPost
 		mi.IsDone = !mi.IsDone
 		pl, fn := mi.State.UploadIssue()
 		return mi, tea.Batch(func() tea.Msg {
@@ -67,6 +67,6 @@ func blogPostUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
 
 func blogPostAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
 	return mi, func() tea.Msg {
-		return blogPost(prerequisite.BlogPost())
+		return draftBlogPost(prerequisite.DraftBlogPost())
 	}
 }

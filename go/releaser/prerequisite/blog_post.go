@@ -16,11 +16,18 @@ limitations under the License.
 
 package prerequisite
 
-func BlogPost() []string {
+func DraftBlogPost() []string {
 	return []string{
 		"The release announcement blog post must be finished before the release day.",
-		"You must coordinate with the different organizations for cross-posting. Usually CNCF and PlanetScale.",
+		"A highlight of the major changes must be included in the blog post, along with a link to the release notes.",
 		"",
 		"A Pull Request on the website repository of Vitess has to be created so we can easily publish the blog during the release day.",
+	}
+}
+
+func RequestCrossPostBlogPost() []string {
+	return []string{
+		"You must coordinate with the different organizations (CNCF and PlanetScale) for cross-posting the blog post.",
+		"Send out an email to both parties to request a cross-post a couple weeks before the GA release.",
 	}
 }

@@ -40,7 +40,8 @@ func MainScreen(ctx context.Context) {
 		"Prerequisites",
 		slackAnnouncementMenuItem(ctx, slackAnnouncementPreRequisite),
 		prerequisites.CheckSummaryMenuItem(ctx),
-		prerequisites.BlogPostMenuItem(ctx),
+		prerequisites.DraftBlogPostMenuItem(ctx),
+		prerequisites.RequestCrossPostBlogPostMenuItem(ctx),
 	)
 
 	preReleaseMenu := ui.NewMenu(
