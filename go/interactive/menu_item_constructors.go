@@ -132,7 +132,7 @@ func createBlogPostPRMenuItem(ctx context.Context) *ui.MenuItem {
 	return newBooleanMenu(
 		ctx,
 		releaser.CreateBlogPostPR(),
-		steps.Twitter,
+		steps.DraftBlogPost,
 		func() { state.Issue.CreateBlogPostPR = !state.Issue.CreateBlogPostPR },
 		state.Issue.CreateBlogPostPR,
 		!state.Issue.GA)
