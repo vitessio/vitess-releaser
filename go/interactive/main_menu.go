@@ -55,6 +55,7 @@ func MainScreen(ctx context.Context) {
 		pre_release.VtopBumpMainVersionMenuItem(ctx),
 		pre_release.VtopUpdateGolangMenuItem(ctx),
 		vtopUpdateCompatibilityTableMenuItem(ctx),
+		createBlogPostPRMenuItem(ctx),
 	)
 
 	releaseMenu := ui.NewMenu(
@@ -66,6 +67,7 @@ func MainScreen(ctx context.Context) {
 		release.VtopManualUpdateItem(ctx),
 		release.ReleaseNotesOnMainItem(ctx),
 		release.BackToDevModeItem(ctx),
+		mergeBlogPostPRMenuItem(ctx),
 		websiteDocumentationItem(ctx),
 		benchmarkedItem(ctx),
 		dockerImagesItem(ctx),

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package prerequisite
+package releaser
 
 func DraftBlogPost() []string {
 	return []string{
@@ -29,5 +29,17 @@ func RequestCrossPostBlogPost() []string {
 	return []string{
 		"You must coordinate with the different organizations (CNCF and PlanetScale) for cross-posting the blog post.",
 		"Send out an email to both parties to request a cross-post a couple weeks before the GA release.",
+	}
+}
+
+func CreateBlogPostPR() []string {
+	return []string{
+		"Open a Pull Request on the website repository that contains the new blog post.",
+	}
+}
+
+func MergeBlogPostPR() []string {
+	return []string{
+		"Merge the blog post Pull Request you have created during the pre-release.",
 	}
 }

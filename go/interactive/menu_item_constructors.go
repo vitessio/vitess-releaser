@@ -43,7 +43,7 @@ func draftBlogPostMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
 	return newBooleanMenu(
 		ctx,
-		prerequisite.DraftBlogPost(),
+		releaser.DraftBlogPost(),
 		steps.DraftBlogPost,
 		func() { state.Issue.DraftBlogPost = !state.Issue.DraftBlogPost },
 		state.Issue.DraftBlogPost,
@@ -54,7 +54,7 @@ func requestCrossPostBlogPostMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
 	return newBooleanMenu(
 		ctx,
-		prerequisite.RequestCrossPostBlogPost(),
+		releaser.RequestCrossPostBlogPost(),
 		steps.CrossPostBlogPost,
 		func() { state.Issue.RequestCrossPostBlogPost = !state.Issue.RequestCrossPostBlogPost },
 		state.Issue.RequestCrossPostBlogPost,
@@ -125,4 +125,26 @@ func twitterMenuItem(ctx context.Context) *ui.MenuItem {
 		func() { state.Issue.Twitter = !state.Issue.Twitter },
 		state.Issue.Twitter,
 		false)
+}
+
+func createBlogPostPRMenuItem(ctx context.Context) *ui.MenuItem {
+	state := releaser.UnwrapState(ctx)
+	return newBooleanMenu(
+		ctx,
+		releaser.CreateBlogPostPR(),
+		steps.Twitter,
+		func() { state.Issue.CreateBlogPostPR = !state.Issue.CreateBlogPostPR },
+		state.Issue.CreateBlogPostPR,
+		!state.Issue.GA)
+}
+
+func mergeBlogPostPRMenuItem(ctx context.Context) *ui.MenuItem {
+	state := releaser.UnwrapState(ctx)
+	return newBooleanMenu(
+		ctx,
+		releaser.MergeBlogPostPR(),
+		steps.Twitter,
+		func() { state.Issue.MergeBlogPostPR = !state.Issue.MergeBlogPostPR },
+		state.Issue.MergeBlogPostPR,
+		!state.Issue.GA)
 }

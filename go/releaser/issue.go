@@ -72,6 +72,7 @@ const (
 	vtopBumpVersionOnMain         = "Bump the version vitess-operator main."
 	vtopUpdateGoItem              = "Update vitess-operator Golang version."
 	vtopUpdateCompTableItem       = "Update vitess-operator compatibility table."
+	createBlogPostPRItem = "Open a Pull Request on the website repository for the blog post."
 
 	// Release
 	mergeReleasePRItem      = "Merge the Release PR."
@@ -84,6 +85,7 @@ const (
 	benchmarkedItem         = "Make sure the release is benchmarked by arewefastyet."
 	dockerImagesItem        = "Docker Images available on DockerHub."
 	closeMilestoneItem      = "Close current GitHub Milestone."
+	mergeBlogPostItem = "Merge the blog post Pull Request on the website repository."
 
 	// Post-Release
 	postSlackAnnouncementItem = "Notify the community on Slack for the new release."
@@ -137,12 +139,14 @@ type (
 		VtopUpdateCompatibilityTable bool
 		VtopCreateReleasePR          ItemWithLinks
 		VtopManualUpdate             bool
+		CreateBlogPostPR             bool
 
 		// Release
 		MergeReleasePR       ItemWithLink
 		TagRelease           ItemWithLink
 		ReleaseNotesOnMain   ItemWithLink
 		BackToDevMode        ItemWithLink
+		MergeBlogPostPR      bool
 		WebsiteDocumentation bool
 		Benchmarked          bool
 		DockerImages         bool
@@ -227,6 +231,9 @@ The release of vitess-operator v{{.VtopRelease}} is also planned
 - [{{fmtStatus .VtopUpdateCompatibilityTable}}] Update vitess-operator compatibility table.
 {{- end }}
 {{- end }}
+{{- if .GA }}
+- [{{fmtStatus .CreateBlogPostPR}}] Open a Pull Request on the website repository for the blog post.
+{{- end }}
 
 ### Release
 
@@ -252,6 +259,9 @@ The release of vitess-operator v{{.VtopRelease}} is also planned
 - [{{fmtStatus .BackToDevMode.Done}}] Go back to dev mode on the release branch.
 {{- if .BackToDevMode.URL }}
   - {{ .BackToDevMode.URL }}
+{{- end }}
+{{- if .GA }}
+- [{{fmtStatus .MergeBlogPostPR}}] Merge the blog post Pull Request on the website repository.
 {{- end }}
 - [{{fmtStatus .WebsiteDocumentation}}] Update the website documentation.
 - [{{fmtStatus .Benchmarked}}] Make sure the release is benchmarked by arewefastyet.
@@ -425,6 +435,10 @@ func (s *State) LoadIssue() {
 				newIssue.Twitter = strings.HasPrefix(line, markdownItemDone)
 			case strings.Contains(line, closeReleaseItem):
 				newIssue.CloseIssue = strings.HasPrefix(line, markdownItemDone)
+			case strings.Contains(line, createBlogPostPRItem):
+				newIssue.CreateBlogPostPR = strings.HasPrefix(line, createBlogPostPRItem)
+			case strings.Contains(line, mergeReleasePRItem):
+				newIssue.MergeBlogPostPR = strings.HasPrefix(line, mergeBlogPostItem)
 			}
 		case stateReadingBackport:
 			newIssue.CheckBackport.Items = append(newIssue.CheckBackport.Items, handleNewListItem(lines, i, &st))
