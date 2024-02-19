@@ -212,11 +212,9 @@ The release of vitess-operator v{{.VtopRelease}} is also planned
   - {{ .CreateReleasePR.URL }}
 {{- end }}
 {{- if lt .RC 2 }}
-{{- if not .GA }}
 - [{{fmtStatus .NewGitHubMilestone.Done}}] Create new GitHub Milestone.
 {{- if .NewGitHubMilestone.URL }}
   - {{ .NewGitHubMilestone.URL }}
-{{- end }}
 {{- end }}
 {{- end }}
 {{- if .DoVtOp }}
