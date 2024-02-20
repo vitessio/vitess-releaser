@@ -46,6 +46,7 @@ const (
 	JavaRelease          = "Java Release"
 	ReleaseNotesOnMain   = "Release Notes on Main"
 	BackToDev            = "Back To Dev Mode"
+	MergeBlogPost = "Merge Blog Post"
 	WebsiteDocumentation = "Website Documentation"
 	Benchmarked          = "Benchmarks"
 	DockerImages         = "Docker Images"

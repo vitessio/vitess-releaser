@@ -143,7 +143,7 @@ func mergeBlogPostPRMenuItem(ctx context.Context) *ui.MenuItem {
 	return newBooleanMenu(
 		ctx,
 		releaser.MergeBlogPostPR(),
-		steps.Twitter,
+		steps.MergeBlogPost,
 		func() { state.Issue.MergeBlogPostPR = !state.Issue.MergeBlogPostPR },
 		state.Issue.MergeBlogPostPR,
 		!state.Issue.GA)
