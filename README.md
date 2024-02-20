@@ -48,9 +48,22 @@ vitess-releaser --date="2024-02-07" --live --rc=1 --release=19 --vtop-release=2.
 > [!IMPORTANT]
 > RC releases are, in most cases, shipped with an equivalent vitess-operator release. We must set the `--vtop-release` flag in this case.
 
+----
+### GA release
+
+In this example we are releasing `v19.0.0` of vitess and `v2.12.0` of vitess-operator. We had previously done the RC on `release-19.0` and `release-2.12`.
+
+```bash
+vitess-releaser --date="2024-02-07" --live --release=19 --vtop-release=2.12
+```
+
+----
 ### Patch release
 
-In this example we are releasing `v18.0.3` of vitess, and there are no vitess-operator release.
+In this example we are releasing `v19.0.1` of vitess, and there are no vitess-operator release.
+
+The version to release is defined based on the `SNAPSHOT` version of the release branch.
+In this case, the `release-19.0` branch is on `19.0.1-SNAPSHOT` as we have just released the GA, which is why `v19.0.1` will be released with the following snippet.
 
 ```bash
 vitess-releaser --date="2024-02-07" --live --release=18
