@@ -24,6 +24,8 @@ const (
 	SlackAnnouncement = "Slack Announcement"
 	CheckAndAdd       = "Pending PRs/Issues"
 	CheckSummary      = "Check Release Summary"
+	DraftBlogPost     = "Draft Blog Post"
+	CrossPostBlogPost = "Cross-post Blog Post"
 
 	// Pre-Release
 	CodeFreeze                   = "Code Freeze"
@@ -44,6 +46,7 @@ const (
 	JavaRelease          = "Java Release"
 	ReleaseNotesOnMain   = "Release Notes on Main"
 	BackToDev            = "Back To Dev Mode"
+	MergeBlogPost = "Merge Blog Post"
 	WebsiteDocumentation = "Website Documentation"
 	Benchmarked          = "Benchmarks"
 	DockerImages         = "Docker Images"

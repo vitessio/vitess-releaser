@@ -59,6 +59,8 @@ const (
 	checkSummaryItem         = "Make sure the release notes summary is prepared and clean."
 	backportItem             = "Make sure backport Pull Requests are merged, list below."
 	releaseBlockerItem       = "Make sure release blocker Issues are closed, list below."
+	draftBlogPostItem        = "Draft the release blog post."
+	crossBlogPostItem        = "Send requests to cross-post the blog post (CNCF, PlanetScale)."
 
 	// Pre-Release
 	codeFreezeItem                = "Code Freeze."
@@ -70,10 +72,12 @@ const (
 	vtopBumpVersionOnMain         = "Bump the version vitess-operator main."
 	vtopUpdateGoItem              = "Update vitess-operator Golang version."
 	vtopUpdateCompTableItem       = "Update vitess-operator compatibility table."
+	createBlogPostPRItem          = "Open a Pull Request on the website repository for the blog post."
 
 	// Release
 	mergeReleasePRItem      = "Merge the Release PR."
 	tagReleaseItem          = "Tag the release."
+	javaRelease             = "Java release."
 	vtopCreateReleasePRItem = "Create vitess-operator Release PR."
 	vtopManualUpdateItem    = "Manual update of vitess-operator test code."
 	releaseNotesMainItem    = "Update release notes on main."
@@ -82,6 +86,7 @@ const (
 	benchmarkedItem         = "Make sure the release is benchmarked by arewefastyet."
 	dockerImagesItem        = "Docker Images available on DockerHub."
 	closeMilestoneItem      = "Close current GitHub Milestone."
+	mergeBlogPostItem       = "Merge the blog post Pull Request on the website repository."
 
 	// Post-Release
 	postSlackAnnouncementItem = "Notify the community on Slack for the new release."
@@ -113,12 +118,15 @@ type (
 		RC          int
 		DoVtOp      bool
 		VtopRelease string
+		GA          bool
 
 		// Prerequisites
-		SlackPreRequisite bool
-		CheckSummary      bool
-		CheckBackport     ParentOfItems
-		ReleaseBlocker    ParentOfItems
+		SlackPreRequisite        bool
+		CheckSummary             bool
+		DraftBlogPost            bool
+		RequestCrossPostBlogPost bool
+		CheckBackport            ParentOfItems
+		ReleaseBlocker           ParentOfItems
 
 		// Pre-Release
 		CodeFreeze                   ItemWithLink
@@ -132,12 +140,15 @@ type (
 		VtopUpdateCompatibilityTable bool
 		VtopCreateReleasePR          ItemWithLinks
 		VtopManualUpdate             bool
+		CreateBlogPostPR             bool
 
 		// Release
 		MergeReleasePR       ItemWithLink
 		TagRelease           ItemWithLink
+		JavaRelease          bool
 		ReleaseNotesOnMain   ItemWithLink
 		BackToDevMode        ItemWithLink
+		MergeBlogPostPR      bool
 		WebsiteDocumentation bool
 		Benchmarked          bool
 		DockerImages         bool
@@ -176,6 +187,10 @@ The release of vitess-operator v{{.VtopRelease}} is also planned
 - Make sure release blocker Issues are closed, list below.
 {{- range $item := .ReleaseBlocker.Items }}
   - [{{fmtStatus $item.Done}}] {{$item.URL}}
+{{- end }}
+{{- if .GA }}
+- [{{fmtStatus .DraftBlogPost}}] Draft the release blog post.
+- [{{fmtStatus .RequestCrossPostBlogPost}}] Send requests to cross-post the blog post (CNCF, PlanetScale).
 {{- end }}
 
 
@@ -218,6 +233,9 @@ The release of vitess-operator v{{.VtopRelease}} is also planned
 - [{{fmtStatus .VtopUpdateCompatibilityTable}}] Update vitess-operator compatibility table.
 {{- end }}
 {{- end }}
+{{- if .GA }}
+- [{{fmtStatus .CreateBlogPostPR}}] Open a Pull Request on the website repository for the blog post.
+{{- end }}
 
 ### Release
 
@@ -228,6 +246,9 @@ The release of vitess-operator v{{.VtopRelease}} is also planned
 - [{{fmtStatus .TagRelease.Done}}] Tag the release.
 {{- if .TagRelease.URL }}
   - {{ .TagRelease.URL }}
+{{- end }}
+{{- if .GA }}
+- [{{fmtStatus .JavaRelease}}] Java release.
 {{- end }}
 {{- if .DoVtOp }}
 - [{{fmtStatus .VtopCreateReleasePR.Done}}] Create vitess-operator Release PR.
@@ -243,6 +264,9 @@ The release of vitess-operator v{{.VtopRelease}} is also planned
 - [{{fmtStatus .BackToDevMode.Done}}] Go back to dev mode on the release branch.
 {{- if .BackToDevMode.URL }}
   - {{ .BackToDevMode.URL }}
+{{- end }}
+{{- if .GA }}
+- [{{fmtStatus .MergeBlogPostPR}}] Merge the blog post Pull Request on the website repository.
 {{- end }}
 - [{{fmtStatus .WebsiteDocumentation}}] Update the website documentation.
 - [{{fmtStatus .Benchmarked}}] Make sure the release is benchmarked by arewefastyet.
@@ -305,6 +329,7 @@ func (s *State) LoadIssue() {
 		newIssue.RC = rc
 	}
 
+	newIssue.GA = s.VitessRelease.GA
 	newIssue.DoVtOp = s.VtOpRelease.Release != ""
 	newIssue.VtopRelease = AddRCToReleaseTitle(s.VtOpRelease.Release, newIssue.RC)
 
@@ -323,6 +348,10 @@ func (s *State) LoadIssue() {
 			}
 
 			switch {
+			case strings.Contains(line, draftBlogPostItem):
+				newIssue.DraftBlogPost = strings.HasPrefix(line, markdownItemDone)
+			case strings.Contains(line, crossBlogPostItem):
+				newIssue.RequestCrossPostBlogPost = strings.HasPrefix(line, markdownItemDone)
 			case strings.Contains(line, preSlackAnnouncementItem):
 				newIssue.SlackPreRequisite = strings.HasPrefix(line, markdownItemDone)
 			case strings.Contains(line, checkSummaryItem):
@@ -411,6 +440,12 @@ func (s *State) LoadIssue() {
 				newIssue.Twitter = strings.HasPrefix(line, markdownItemDone)
 			case strings.Contains(line, closeReleaseItem):
 				newIssue.CloseIssue = strings.HasPrefix(line, markdownItemDone)
+			case strings.Contains(line, createBlogPostPRItem):
+				newIssue.CreateBlogPostPR = strings.HasPrefix(line, markdownItemDone)
+			case strings.Contains(line, mergeBlogPostItem):
+				newIssue.MergeBlogPostPR = strings.HasPrefix(line, markdownItemDone)
+			case strings.Contains(line, javaRelease):
+				newIssue.JavaRelease = strings.HasPrefix(line, markdownItemDone)
 			}
 		case stateReadingBackport:
 			newIssue.CheckBackport.Items = append(newIssue.CheckBackport.Items, handleNewListItem(lines, i, &st))

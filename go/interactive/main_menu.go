@@ -24,7 +24,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/post_release"
 	"vitess.io/vitess-releaser/go/interactive/pre_release"
-	"vitess.io/vitess-releaser/go/interactive/prerequisites"
 	"vitess.io/vitess-releaser/go/interactive/release"
 	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
@@ -39,21 +38,24 @@ func MainScreen(ctx context.Context) {
 		ctx,
 		"Prerequisites",
 		slackAnnouncementMenuItem(ctx, slackAnnouncementPreRequisite),
-		prerequisites.CheckSummaryMenuItem(ctx),
+		checkSummaryMenuItem(ctx),
+		draftBlogPostMenuItem(ctx),
+		requestCrossPostBlogPostMenuItem(ctx),
 	)
 
 	preReleaseMenu := ui.NewMenu(
 		ctx,
 		"Pre Release",
 		pre_release.CodeFreezeMenuItem(ctx),
-		pre_release.CopyBranchProtectionRulesMenuItem(ctx),
+		copyBranchProtectionRulesMenuItem(ctx),
 		pre_release.UpdateSnapshotOnMainMenuItem(ctx),
 		pre_release.CreateReleasePRMenuItem(ctx),
 		pre_release.CreateMilestoneMenuItem(ctx),
 		pre_release.VtopCreateBranchMenuItem(ctx),
 		pre_release.VtopBumpMainVersionMenuItem(ctx),
 		pre_release.VtopUpdateGolangMenuItem(ctx),
-		pre_release.VtopUpdateCompatibilityTableMenuItem(ctx),
+		vtopUpdateCompatibilityTableMenuItem(ctx),
+		createBlogPostPRMenuItem(ctx),
 	)
 
 	releaseMenu := ui.NewMenu(
@@ -61,13 +63,15 @@ func MainScreen(ctx context.Context) {
 		"Release",
 		release.MergeReleasePRItem(ctx),
 		release.TagReleaseItem(ctx),
+		release.JavaReleaseItem(ctx),
 		release.VtopCreateReleasePRMenuItem(ctx),
 		release.VtopManualUpdateItem(ctx),
 		release.ReleaseNotesOnMainItem(ctx),
 		release.BackToDevModeItem(ctx),
-		release.WebsiteDocumentationItem(ctx),
-		release.BenchmarkedItem(ctx),
-		release.DockerImagesItem(ctx),
+		mergeBlogPostPRMenuItem(ctx),
+		websiteDocumentationItem(ctx),
+		benchmarkedItem(ctx),
+		dockerImagesItem(ctx),
 		release.CloseMilestoneItem(ctx),
 	)
 	releaseMenu.Sequential = true
@@ -76,7 +80,7 @@ func MainScreen(ctx context.Context) {
 		ctx,
 		"Post Release",
 		slackAnnouncementMenuItem(ctx, slackAnnouncementPostRelease),
-		post_release.TwitterMenuItem(ctx),
+		twitterMenuItem(ctx),
 		post_release.CloseIssueItem(ctx),
 	)
 

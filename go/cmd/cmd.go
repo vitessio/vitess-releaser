@@ -102,6 +102,7 @@ func Execute() {
 	s.Issue.RC = rcIncrement
 	s.Issue.DoVtOp = s.VtOpRelease.Release != ""
 	s.Issue.VtopRelease = s.VtOpRelease.Release
+	s.Issue.GA = vitessRelease.GA
 
 	setUpIssueDate(s)
 
@@ -119,7 +120,7 @@ func setUpVitessReleaseInformation(s *releaser.State, repo string, rc int) (rele
 	git.CorrectCleanRepo(repo)
 
 	remote := git.FindRemoteName(repo)
-	release, releaseBranch, isLatestRelease, isFromMain := releaser.FindNextRelease(remote, releaseVersion, false, rc)
+	release, releaseBranch, isLatestRelease, isFromMain, ga := releaser.FindNextRelease(remote, releaseVersion, false, rc)
 	issueNb, issueLink, releaseFromIssue := github.GetReleaseIssueInfo(repo, releaseVersion, rcIncrement)
 
 	// if we want to do an RC-1 release and the branch is different from `main`, something is wrong
@@ -135,6 +136,7 @@ func setUpVitessReleaseInformation(s *releaser.State, repo string, rc int) (rele
 		MajorRelease:    releaseVersion,
 		IsLatestRelease: isLatestRelease,
 		Release:         releaseFromIssue,
+		GA: ga,
 	}
 	if vitessRelease.Release == "" {
 		vitessRelease.Release = releaser.AddRCToReleaseTitle(release, rcIncrement)
@@ -153,7 +155,7 @@ func setUpVtOpReleaseInformation(s *releaser.State, repo string, rc int) release
 	git.CorrectCleanRepo(repo)
 
 	remote := git.FindRemoteName(repo)
-	release, releaseBranch, isLatestRelease, _ := releaser.FindNextRelease(remote, vtopReleaseVersion, true, rc)
+	release, releaseBranch, isLatestRelease, _, _ := releaser.FindNextRelease(remote, vtopReleaseVersion, true, rc)
 
 	vtopRelease := releaser.ReleaseInformation{
 		Repo:            repo,

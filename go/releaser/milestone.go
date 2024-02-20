@@ -39,10 +39,10 @@ func FindVersionAfterNextRelease(state *State) string {
 		segmentInts = append(segmentInts, v)
 	}
 
-	// if it is an RC/GA release
-	if segmentInts[1] == 0 && segmentInts[2] == 0 {
+	// if it is an RC release
+	if state.Issue.RC >= 1 && segmentInts[1] == 0 && segmentInts[2] == 0 {
 		return fmt.Sprintf("%d.0.0", segmentInts[0]+1)
 	}
-	// if a patch release
+	// if a patch or GA release
 	return fmt.Sprintf("%d.%d.%d", segmentInts[0], segmentInts[1], segmentInts[2]+1)
 }

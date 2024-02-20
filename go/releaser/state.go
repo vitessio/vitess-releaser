@@ -49,6 +49,7 @@ type ReleaseInformation struct {
 	MajorRelease    string
 	Release         string
 	IsLatestRelease bool
+	GA              bool
 }
 
 type State struct {

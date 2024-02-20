@@ -39,5 +39,12 @@ func WebsiteDocs(state *releaser.State) []string {
 			"The script creates a new entry in the sidebar which represents the next version on main and mark the version we are releasing as RC.",
 		}...)
 	}
+	if state.Issue.GA {
+		msg = append(msg, []string{
+			"",
+			"Since we are doing a GA release, we must use the ./tools/ga_release.sh script in the website repository to update the documentation even further.",
+			"The script will update the RC version as Stable.",
+		}...)
+	}
 	return msg
 }
