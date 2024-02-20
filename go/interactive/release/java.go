@@ -34,6 +34,7 @@ func JavaReleaseItem(ctx context.Context) *ui.MenuItem {
 		Act:    javaReleaseAct,
 		Update: javaReleaseUpdate,
 		IsDone: state.Issue.JavaRelease,
+		Ignore: !state.VitessRelease.GA,
 	}
 }
 
