@@ -35,6 +35,7 @@ const (
 	stateReadingBackport
 	stateReadingReleaseBlockerIssue
 	stateReadingCodeFreezeItem
+	stateReadingCreateBackportLabelItem
 	stateReadingUpdateSnapshotOnMainItem
 	stateReadingCreateReleasePRItem
 	stateReadingNewMilestoneItem
@@ -65,6 +66,7 @@ const (
 	// Pre-Release
 	codeFreezeItem                = "Code Freeze."
 	copyBranchProtectionRulesItem = "Copy branch protection rules."
+	createBackportToLabelItem     = "Create the Backport to label.."
 	updateSnapshotOnMainItem      = "Update the SNAPSHOT version on main."
 	createReleasePRItem           = "Create Release PR."
 	newMilestoneItem              = "Create new GitHub Milestone."
@@ -131,6 +133,7 @@ type (
 		// Pre-Release
 		CodeFreeze                   ItemWithLink
 		CopyBranchProtectionRules    bool
+		CreateBackportToLabel        ItemWithLink
 		UpdateSnapshotOnMain         ItemWithLink
 		CreateReleasePR              ItemWithLink
 		NewGitHubMilestone           ItemWithLink
@@ -202,6 +205,10 @@ The release of vitess-operator v{{.VtopRelease}} is also planned
 {{- end }}
 {{- if eq .RC 1 }}
 - [{{fmtStatus .CopyBranchProtectionRules}}] Copy branch protection rules.
+- [{{fmtStatus .CreateBackportToLabel.Done}}] Create the Backport to label.
+{{- if .CreateBackportToLabel.URL }}
+  - {{ .CreateBackportToLabel.URL }}
+{{- end }}
 - [{{fmtStatus .UpdateSnapshotOnMain.Done}}] Update the SNAPSHOT version on main.
 {{- if .UpdateSnapshotOnMain.URL }}
   - {{ .UpdateSnapshotOnMain.URL }}
@@ -367,6 +374,11 @@ func (s *State) LoadIssue() {
 				}
 			case strings.Contains(line, copyBranchProtectionRulesItem):
 				newIssue.CopyBranchProtectionRules = strings.HasPrefix(line, markdownItemDone)
+			case strings.Contains(line, createBackportToLabelItem):
+				newIssue.CreateBackportToLabel.Done = strings.HasPrefix(line, markdownItemDone)
+				if isNextLineAList(lines, i) {
+					st = stateReadingCreateBackportLabelItem
+				}
 			case strings.Contains(line, updateSnapshotOnMainItem):
 				newIssue.UpdateSnapshotOnMain.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
@@ -453,6 +465,8 @@ func (s *State) LoadIssue() {
 			newIssue.ReleaseBlocker.Items = append(newIssue.ReleaseBlocker.Items, handleNewListItem(lines, i, &st))
 		case stateReadingCodeFreezeItem:
 			newIssue.CodeFreeze.URL = handleSingleTextItem(line, &st)
+		case stateReadingCreateBackportLabelItem:
+			newIssue.CreateBackportToLabel.URL = handleSingleTextItem(line, &st)
 		case stateReadingUpdateSnapshotOnMainItem:
 			newIssue.UpdateSnapshotOnMain.URL = handleSingleTextItem(line, &st)
 		case stateReadingCreateReleasePRItem:
