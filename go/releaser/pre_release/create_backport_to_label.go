@@ -17,6 +17,8 @@ limitations under the License.
 package pre_release
 
 import (
+	"fmt"
+
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/logging"
@@ -30,15 +32,18 @@ const (
 
 func CreateBackportToLabel(state *releaser.State) (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
-		TotalSteps: 3,
+		TotalSteps: 4,
 	}
 
 	return pl, func() string {
 		pl.NewStepf("Duplicating the branch protection rules")
 		github.CreateLabel(state.VitessRelease.Repo, backportToLabelName+state.VitessRelease.ReleaseBranch, backportToLabelColor, backportToLabelDesc+state.VitessRelease.ReleaseBranch)
+		labelURL := fmt.Sprintf("https://github.com/%s/labels?q=Backport+to%%3A+%s", state.VitessRelease.Repo, state.VitessRelease.ReleaseBranch)
+		pl.NewStepf("Label created, see: %s", labelURL)
 
 		pl.NewStepf("Update Issue %s on GitHub", state.IssueLink)
-		state.Issue.CreateBackportToLabel = true
+		state.Issue.CreateBackportToLabel.Done = true
+		state.Issue.CreateBackportToLabel.URL = labelURL
 		_, fn := state.UploadIssue()
 		issueLink := fn()
 		pl.NewStepf("Issue updated, see: %s", issueLink)

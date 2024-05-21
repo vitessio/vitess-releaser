@@ -30,7 +30,7 @@ import (
 func CreateBackportToLabelMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
 	act := createBackportToLabelAct
-	if state.Issue.CreateBackportToLabel {
+	if state.Issue.CreateBackportToLabel.Done {
 		act = nil
 	}
 	return &ui.MenuItem{
@@ -38,7 +38,8 @@ func CreateBackportToLabelMenuItem(ctx context.Context) *ui.MenuItem {
 		Name:   steps.CreateBackportToLabel,
 		Act:    act,
 		Update: createBackportToLabelUpdate,
-		IsDone: state.Issue.CreateBackportToLabel,
+		IsDone: state.Issue.CreateBackportToLabel.Done,
+		Info:   state.Issue.CreateBackportToLabel.URL,
 
 		// We only need to run this step when we are creating a new branch, aka doing RC-1
 		Ignore: state.Issue.RC != 1,
@@ -53,7 +54,8 @@ func createBackportToLabelUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, te
 		return mi, nil
 	}
 
-	mi.IsDone = mi.State.Issue.CreateBackportToLabel
+	mi.IsDone = mi.State.Issue.CreateBackportToLabel.Done
+	mi.Info = mi.State.Issue.CreateBackportToLabel.URL
 	return mi, nil
 }
 
