@@ -61,17 +61,6 @@ func requestCrossPostBlogPostMenuItem(ctx context.Context) *ui.MenuItem {
 		!state.Issue.GA)
 }
 
-func copyBranchProtectionRulesMenuItem(ctx context.Context) *ui.MenuItem {
-	state := releaser.UnwrapState(ctx)
-	return newBooleanMenu(
-		ctx,
-		pre_release.CopyBranchProtectionRules(state),
-		steps.CrossPostBlogPost,
-		func() { state.Issue.CopyBranchProtectionRules = !state.Issue.CopyBranchProtectionRules },
-		state.Issue.CopyBranchProtectionRules,
-		state.Issue.RC != 1)
-}
-
 func vtopUpdateCompatibilityTableMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
 	return newBooleanMenu(

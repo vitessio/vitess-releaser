@@ -47,7 +47,7 @@ func MainScreen(ctx context.Context) {
 		ctx,
 		"Pre Release",
 		pre_release.CodeFreezeMenuItem(ctx),
-		copyBranchProtectionRulesMenuItem(ctx),
+		pre_release.CopyBranchProtectionMenuItem(ctx),
 		pre_release.UpdateSnapshotOnMainMenuItem(ctx),
 		pre_release.CreateReleasePRMenuItem(ctx),
 		pre_release.CreateMilestoneMenuItem(ctx),
