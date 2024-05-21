@@ -131,6 +131,7 @@ type (
 		// Pre-Release
 		CodeFreeze                   ItemWithLink
 		CopyBranchProtectionRules    bool
+		CreateBackportToLabel        bool
 		UpdateSnapshotOnMain         ItemWithLink
 		CreateReleasePR              ItemWithLink
 		NewGitHubMilestone           ItemWithLink
