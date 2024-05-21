@@ -17,14 +17,31 @@ limitations under the License.
 package pre_release
 
 import (
-	"fmt"
-
 	"vitess.io/vitess-releaser/go/releaser"
+	"vitess.io/vitess-releaser/go/releaser/github"
+	"vitess.io/vitess-releaser/go/releaser/logging"
 )
 
-func CopyBranchProtectionRules(state *releaser.State) []string {
-	return []string{
-		fmt.Sprintf("Since we have created the new branch %s, we need to copy the branch protection rules from main into %s", state.VitessRelease.ReleaseBranch, state.VitessRelease.ReleaseBranch),
-		fmt.Sprintf("To do this, head over to https://github.com/%s/settings/branches and create a new rule for branch %s", state.VitessRelease.Repo, state.VitessRelease.ReleaseBranch),
+func CopyBranchProtectionRules(state *releaser.State) (*logging.ProgressLogging, func() string) {
+	pl := &logging.ProgressLogging{
+		TotalSteps: 3,
+	}
+
+	return pl, func() string {
+		defer func() {
+			pl.NewStepf("Update Issue %s on GitHub", state.IssueLink)
+			state.Issue.CopyBranchProtectionRules = true
+			_, fn := state.UploadIssue()
+			issueLink := fn()
+			pl.NewStepf("Issue updated, see: %s", issueLink)
+		}()
+
+		if state.VitessRelease.Repo != "vitessio/vitess" {
+			pl.NewStepf("Skipping as we are not running on vitessio/vitess.")
+			return ""
+		}
+		pl.NewStepf("Duplicating the branch protection rules")
+		github.CopyBranchProtectionRules(state.VitessRelease.Repo, state.VitessRelease.ReleaseBranch)
+		return ""
 	}
 }
