@@ -65,6 +65,7 @@ const (
 	// Pre-Release
 	codeFreezeItem                = "Code Freeze."
 	copyBranchProtectionRulesItem = "Copy branch protection rules."
+	createBackportToLabelItem     = "Create the Backport to label.."
 	updateSnapshotOnMainItem      = "Update the SNAPSHOT version on main."
 	createReleasePRItem           = "Create Release PR."
 	newMilestoneItem              = "Create new GitHub Milestone."
@@ -203,6 +204,7 @@ The release of vitess-operator v{{.VtopRelease}} is also planned
 {{- end }}
 {{- if eq .RC 1 }}
 - [{{fmtStatus .CopyBranchProtectionRules}}] Copy branch protection rules.
+- [{{fmtStatus .CreateBackportToLabel}}] Create the Backport to label.
 - [{{fmtStatus .UpdateSnapshotOnMain.Done}}] Update the SNAPSHOT version on main.
 {{- if .UpdateSnapshotOnMain.URL }}
   - {{ .UpdateSnapshotOnMain.URL }}
@@ -368,6 +370,8 @@ func (s *State) LoadIssue() {
 				}
 			case strings.Contains(line, copyBranchProtectionRulesItem):
 				newIssue.CopyBranchProtectionRules = strings.HasPrefix(line, markdownItemDone)
+			case strings.Contains(line, createBackportToLabelItem):
+				newIssue.CreateBackportToLabel = strings.HasPrefix(line, markdownItemDone)
 			case strings.Contains(line, updateSnapshotOnMainItem):
 				newIssue.UpdateSnapshotOnMain.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
