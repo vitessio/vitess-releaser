@@ -82,9 +82,17 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 
 		git.CorrectCleanRepo(state.VitessRelease.Repo)
 
+		// For RC-1 we need to create two branches, the new release branch ("release-20.0")
+		// and the rc release branch ("release-20.0-rc")
 		if state.Issue.RC == 1 {
 			git.ResetHard(state.VitessRelease.Remote, "main")
-			if err := git.CreateBranchAndCheckout(state.VitessRelease.ReleaseBranch, fmt.Sprintf("%s/main", state.VitessRelease.Remote)); err != nil {
+
+			// create the release branch ("release-20.0")
+			baseReleaseBranch := state.VitessRelease.ReleaseBranch[:len(state.VitessRelease.ReleaseBranch)-len("-rc")]
+			_ = git.CreateBranch(state.VitessRelease.ReleaseBranch, fmt.Sprintf("%s/main", state.VitessRelease.Remote))
+
+			// create the rc release branch ("release-20.0-rc")
+			if err := git.CreateBranchAndCheckout(state.VitessRelease.ReleaseBranch, fmt.Sprintf("%s/%s", state.VitessRelease.Remote, baseReleaseBranch)); err != nil {
 				git.Checkout(state.VitessRelease.ReleaseBranch)
 			} else {
 				git.Push(state.VitessRelease.Remote, state.VitessRelease.ReleaseBranch)

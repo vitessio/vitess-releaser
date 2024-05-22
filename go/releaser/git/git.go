@@ -48,6 +48,17 @@ func ResetHard(remote, branch string) {
 	utils.Exec("git", "reset", "--hard", remote+"/"+branch)
 }
 
+func CreateBranch(branch, base string) error {
+	out, err := utils.ExecWithError("git", "checkout", branch, base)
+	if err != nil {
+		if strings.Contains(out, fmt.Sprintf("a branch named '%s' already exists", branch)) {
+			return errBranchExists
+		}
+		utils.LogPanic(err, "got: %s", out)
+	}
+	return nil
+}
+
 func CreateBranchAndCheckout(branch, base string) error {
 	out, err := utils.ExecWithError("git", "checkout", "-b", branch, base)
 	if err != nil {
