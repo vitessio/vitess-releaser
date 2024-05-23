@@ -37,7 +37,7 @@ func generalPrerequisiteMenuItem(ctx context.Context) *ui.MenuItem {
 		Name:   steps.GeneralPrerequisite,
 		Act:    generalPrerequisiteAct,
 		Update: generalPrerequisiteUpdate,
-		IsDone: state.Issue.General.Done(),
+		IsDone: state.Issue.General.Done() && len(state.Issue.General.Items) > 0,
 	}
 }
 

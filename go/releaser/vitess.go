@@ -97,10 +97,10 @@ func FindNextRelease(remote, majorRelease string, isVtOp bool, rc int) (currentR
 		utils.LogPanic(nil, "could not parse the found release: %s", currentRelease)
 	}
 	isLatest := mainMajorNb-1 == majorNb
-	ga = releaseParts[1] == "0" && releaseParts[2] == "0"
+	ga = rc == 0 && releaseParts[1] == "0" && releaseParts[2] == "0"
 	if isVtOp {
 		isLatest = mainMajorNb == majorNb
-		ga = releaseParts[2] == "0"
+		ga = rc == 0 && releaseParts[2] == "0"
 	}
 	return currentRelease, releaseBranchName, isLatest, false, ga
 }
@@ -116,7 +116,16 @@ func FindPreviousRelease(remote, currentMajor string) string {
 	git.Checkout(previousReleaseBranch)
 	git.ResetHard(remote, previousReleaseBranch)
 
-	return getCurrentReleaseVitess()
+	currentRelease := getCurrentReleaseVitess()
+	currentReleaseSlice := strings.Split(currentRelease, ".")
+	if len(currentReleaseSlice) != 3 {
+		utils.LogPanic(nil, "could not parse the version.go in vitessio/vitess, output: %s", currentRelease)
+	}
+	patchRelease, err := strconv.Atoi(currentReleaseSlice[2])
+	if err != nil {
+		utils.LogPanic(err, "could not parse the version.go in vitessio/vitess, output: %s", currentRelease)
+	}
+	return fmt.Sprintf("%s.%s.%d", currentReleaseSlice[0], currentReleaseSlice[1], patchRelease-1)
 }
 
 func getCurrentReleaseVitess() string {

@@ -24,5 +24,6 @@ func CreateLabel(repo, label, color, desc string) {
 		"--repo", repo,
 		"--color", color,
 		"--description", desc,
+		"--force",
 	)
 }

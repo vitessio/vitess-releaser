@@ -65,14 +65,14 @@ const versionName = "%s"
 
 func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
-		TotalSteps: 14,
+		TotalSteps: 13,
 	}
 
-	// If we are doing a patch release or doing a GA we have one more step to take: unfreeze the branch
+	// If we are doing a patch release or doing a GA we have two more steps to take: unfreeze the branch and commit
 	// RFC https://github.com/vitessio/vitess/issues/15586 defines this new process.
 	unfreezeBranch := state.Issue.RC == 0
 	if unfreezeBranch {
-		pl.TotalSteps++
+		pl.TotalSteps += 2
 	}
 
 	var done bool
@@ -113,12 +113,12 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 		if unfreezeBranch {
 			pl.NewStepf("Deactivate code freeze on %s", state.VitessRelease.ReleaseBranch)
 			deactivateCodeFreeze()
-		}
 
-		pl.NewStepf("Commit unfreezing the branch %s", state.VitessRelease.ReleaseBranch)
-		if !git.CommitAll(fmt.Sprintf("Unfreeze branch %s", state.VitessRelease.ReleaseBranch)) {
-			commitCount++
-			git.Push(state.VitessRelease.Remote, newBranchName)
+			pl.NewStepf("Commit unfreezing the branch %s", state.VitessRelease.ReleaseBranch)
+			if !git.CommitAll(fmt.Sprintf("Unfreeze branch %s", state.VitessRelease.ReleaseBranch)) {
+				commitCount++
+				git.Push(state.VitessRelease.Remote, newBranchName)
+			}
 		}
 
 		pl.NewStepf("Generate the release notes")

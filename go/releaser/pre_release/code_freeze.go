@@ -89,7 +89,9 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 
 			// create the release branch ("release-20.0")
 			baseReleaseBranch := state.VitessRelease.ReleaseBranch[:len(state.VitessRelease.ReleaseBranch)-len("-rc")]
-			_ = git.CreateBranch(state.VitessRelease.ReleaseBranch, fmt.Sprintf("%s/main", state.VitessRelease.Remote))
+			if err := git.CreateBranchAndCheckout(baseReleaseBranch, fmt.Sprintf("%s/main", state.VitessRelease.Remote)); err == nil {
+				git.Push(state.VitessRelease.Remote, baseReleaseBranch)
+			}
 
 			// create the rc release branch ("release-20.0-rc")
 			if err := git.CreateBranchAndCheckout(state.VitessRelease.ReleaseBranch, fmt.Sprintf("%s/%s", state.VitessRelease.Remote, baseReleaseBranch)); err != nil {

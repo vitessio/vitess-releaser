@@ -50,8 +50,8 @@ func releaseNotesOnMainUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.C
 		return mi, nil
 	}
 
-	mi.Info = mi.State.Issue.CodeFreeze.URL
-	mi.IsDone = mi.State.Issue.CodeFreeze.Done
+	mi.Info = mi.State.Issue.ReleaseNotesOnMain.URL
+	mi.IsDone = mi.State.Issue.ReleaseNotesOnMain.Done
 	return mi, nil
 }
 

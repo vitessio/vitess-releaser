@@ -68,7 +68,7 @@ const (
 	// Pre-Release
 	codeFreezeItem                = "Code Freeze."
 	copyBranchProtectionRulesItem = "Copy branch protection rules."
-	createBackportToLabelItem     = "Create the Backport to label.."
+	createBackportToLabelItem     = "Create the Backport to labels."
 	updateSnapshotOnMainItem      = "Update the SNAPSHOT version on main."
 	createReleasePRItem           = "Create Release PR."
 	newMilestoneItem              = "Create new GitHub Milestone."
@@ -206,13 +206,15 @@ The release of vitess-operator v{{.VtopRelease}} is also planned
 
 ### Pre-Release
 
+{{- if not (or (gt .RC 1) (.GA)) }} 
 - [{{fmtStatus .CodeFreeze.Done}}] Code Freeze.
 {{- if .CodeFreeze.URL }}
   - {{ .CodeFreeze.URL }}
 {{- end }}
+{{- end }}
 {{- if eq .RC 1 }}
 - [{{fmtStatus .CopyBranchProtectionRules}}] Copy branch protection rules.
-- [{{fmtStatus .CreateBackportToLabel.Done}}] Create the Backport to label.
+- [{{fmtStatus .CreateBackportToLabel.Done}}] Create the Backport to labels.
 {{- if .CreateBackportToLabel.URL }}
   - {{ .CreateBackportToLabel.URL }}
 {{- end }}

@@ -37,6 +37,7 @@ func CopyBranchProtectionRules(state *releaser.State) (*logging.ProgressLogging,
 		}()
 
 		if state.VitessRelease.Repo != "vitessio/vitess" {
+			pl.TotalSteps--
 			pl.NewStepf("Skipping as we are not running on vitessio/vitess.")
 			return ""
 		}
