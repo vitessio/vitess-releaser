@@ -62,6 +62,6 @@ func createBackportToLabelUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, te
 func createBackportToLabelAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
 	pl, create := pre_release.CreateBackportToLabel(mi.State)
 	return mi, tea.Batch(func() tea.Msg {
-		return copyBranchProtectionUrl(create())
+		return createBackportToLabelUrl(create())
 	}, ui.PushDialog(ui.NewProgressDialog("Create Backport To label", pl)))
 }

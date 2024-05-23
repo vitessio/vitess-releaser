@@ -32,13 +32,22 @@ const (
 
 func CreateBackportToLabel(state *releaser.State) (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
-		TotalSteps: 4,
+		TotalSteps: 5,
 	}
 
 	return pl, func() string {
-		pl.NewStepf("Duplicating the branch protection rules")
-		github.CreateLabel(state.VitessRelease.Repo, backportToLabelName+state.VitessRelease.ReleaseBranch, backportToLabelColor, backportToLabelDesc+state.VitessRelease.ReleaseBranch)
-		labelURL := fmt.Sprintf("https://github.com/%s/labels?q=Backport+to%%3A+%s", state.VitessRelease.Repo, state.VitessRelease.ReleaseBranch)
+		// Create the label for the rc release branch i.e. "Backport to: release-20.0-rc"
+		labelRcBranch := backportToLabelName + state.VitessRelease.ReleaseBranch
+		pl.NewStepf("Creating '%s' label", labelRcBranch)
+		github.CreateLabel(state.VitessRelease.Repo, labelRcBranch, backportToLabelColor, backportToLabelDesc+state.VitessRelease.ReleaseBranch)
+
+		// Create the label for the base release branch i.e. "Backport to: release-20.0"
+		labelBaseBranch := backportToLabelName + state.VitessRelease.BaseReleaseBranch
+		pl.NewStepf("Creating '%s' label", labelBaseBranch)
+		github.CreateLabel(state.VitessRelease.Repo, labelBaseBranch, backportToLabelColor, backportToLabelDesc+state.VitessRelease.BaseReleaseBranch)
+
+		// Let's use the base branch for the link as that label will also match the label of the rc branch
+		labelURL := fmt.Sprintf("https://github.com/%s/labels?q=Backport+to%%3A+%s", state.VitessRelease.Repo, state.VitessRelease.BaseReleaseBranch)
 		pl.NewStepf("Label created, see: %s", labelURL)
 
 		pl.NewStepf("Update Issue %s on GitHub", state.IssueLink)

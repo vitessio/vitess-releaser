@@ -14,16 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package github
+package prerequisite
 
-func CreateLabel(repo, label, color, desc string) {
-	_ = execGh(
-		"label",
-		"create",
-		label,
-		"--repo", repo,
-		"--color", color,
-		"--description", desc,
-		"--force",
-	)
+func General() []string {
+	return []string{
+		"Please make sure you respect all the following items:",
+		"\t- Be part of the vitessio \"Release\" team: https://github.com/orgs/vitessio/teams/release",
+		"\t- Be an admin of the \"planetscale/vitess-operator\" repository",
+		"\t- Have access to Vitess' Java repository and have it working locally: https://github.com/vitessio/vitess/blob/main/doc/internal/release/java-packages.md",
+		"\t- Have \"vitessio/vitess\" and \"planetscale/vitess-operator\" cloned in the same parent directory",
+	}
 }

@@ -50,13 +50,13 @@ func releaseNotesOnMainUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.C
 		return mi, nil
 	}
 
-	mi.Info = mi.State.Issue.CodeFreeze.URL
-	mi.IsDone = mi.State.Issue.CodeFreeze.Done
+	mi.Info = mi.State.Issue.ReleaseNotesOnMain.URL
+	mi.IsDone = mi.State.Issue.ReleaseNotesOnMain.Done
 	return mi, nil
 }
 
 func releaseNotesOnMainAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
-	pl, fn := release.ReleaseNotesOnMain(mi.State)
+	pl, fn := release.CopyReleaseNotesToBranch(mi.State, &mi.State.Issue.ReleaseNotesOnMain, "main")
 	return mi, tea.Batch(func() tea.Msg {
 		return releaseNotesOnMainUrl(fn())
 	}, ui.PushDialog(ui.NewProgressDialog("Release Notes on Main", pl)))

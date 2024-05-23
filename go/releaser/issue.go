@@ -32,6 +32,7 @@ import (
 
 const (
 	stateReadingItem = iota
+	stateReadingGeneral
 	stateReadingBackport
 	stateReadingReleaseBlockerIssue
 	stateReadingCodeFreezeItem
@@ -42,7 +43,9 @@ const (
 	stateReadingMergedReleasePRItem
 	stateReadingTagReleaseItem
 	stateReadingReleaseNotesMainItem
+	stateReadingReleaseNotesReleaseBranchItem
 	stateReadingBackToDevModeItem
+	stateReadingBackToDevModeBaseBranchItem
 	stateReadingCloseMilestoneItem
 	stateReadingVtopUpdateGo
 	stateReadingVtopCreateReleasePR
@@ -53,9 +56,10 @@ const (
 	markdownItemDone = "- [x]"
 
 	// Divers
-	dateItem = "This release is scheduled for"
+	dateItem = "> This release is scheduled for"
 
 	// Prerequisites
+	generalPrerequisitesItem = "General prerequisites."
 	preSlackAnnouncementItem = "Notify the community on Slack."
 	checkSummaryItem         = "Make sure the release notes summary is prepared and clean."
 	backportItem             = "Make sure backport Pull Requests are merged, list below."
@@ -66,7 +70,7 @@ const (
 	// Pre-Release
 	codeFreezeItem                = "Code Freeze."
 	copyBranchProtectionRulesItem = "Copy branch protection rules."
-	createBackportToLabelItem     = "Create the Backport to label.."
+	createBackportToLabelItem     = "Create the Backport to labels."
 	updateSnapshotOnMainItem      = "Update the SNAPSHOT version on main."
 	createReleasePRItem           = "Create Release PR."
 	newMilestoneItem              = "Create new GitHub Milestone."
@@ -77,18 +81,20 @@ const (
 	createBlogPostPRItem          = "Open a Pull Request on the website repository for the blog post."
 
 	// Release
-	mergeReleasePRItem      = "Merge the Release PR."
-	tagReleaseItem          = "Tag the release."
-	javaRelease             = "Java release."
-	vtopCreateReleasePRItem = "Create vitess-operator Release PR."
-	vtopManualUpdateItem    = "Manual update of vitess-operator test code."
-	releaseNotesMainItem    = "Update release notes on main."
-	backToDevItem           = "Go back to dev mode on the release branch."
-	websiteDocItem          = "Update the website documentation."
-	benchmarkedItem         = "Make sure the release is benchmarked by arewefastyet."
-	dockerImagesItem        = "Docker Images available on DockerHub."
-	closeMilestoneItem      = "Close current GitHub Milestone."
-	mergeBlogPostItem       = "Merge the blog post Pull Request on the website repository."
+	mergeReleasePRItem            = "Merge the Release PR."
+	tagReleaseItem                = "Tag the release."
+	javaRelease                   = "Java release."
+	vtopCreateReleasePRItem       = "Create vitess-operator Release PR."
+	vtopManualUpdateItem          = "Manual update of vitess-operator test code."
+	releaseNotesMainItem          = "Update release notes on main."
+	releaseNotesReleaseBranchItem = "Update release notes on the release branch."
+	backToDevItem                 = "Go back to dev mode on the release branch."
+	backToDevBaseBranchItem       = "Go back to dev mode on the base of the release branch."
+	websiteDocItem                = "Update the website documentation."
+	benchmarkedItem               = "Make sure the release is benchmarked by arewefastyet."
+	dockerImagesItem              = "Docker Images available on DockerHub."
+	closeMilestoneItem            = "Close current GitHub Milestone."
+	mergeBlogPostItem             = "Merge the blog post Pull Request on the website repository."
 
 	// Post-Release
 	postSlackAnnouncementItem = "Notify the community on Slack for the new release."
@@ -123,6 +129,7 @@ type (
 		GA          bool
 
 		// Prerequisites
+		General                  ParentOfItems
 		SlackPreRequisite        bool
 		CheckSummary             bool
 		DraftBlogPost            bool
@@ -146,16 +153,18 @@ type (
 		CreateBlogPostPR             bool
 
 		// Release
-		MergeReleasePR       ItemWithLink
-		TagRelease           ItemWithLink
-		JavaRelease          bool
-		ReleaseNotesOnMain   ItemWithLink
-		BackToDevMode        ItemWithLink
-		MergeBlogPostPR      bool
-		WebsiteDocumentation bool
-		Benchmarked          bool
-		DockerImages         bool
-		CloseMilestone       ItemWithLink
+		MergeReleasePR              ItemWithLink
+		TagRelease                  ItemWithLink
+		JavaRelease                 bool
+		ReleaseNotesOnMain          ItemWithLink
+		ReleaseNotesOnReleaseBranch ItemWithLink
+		BackToDevMode               ItemWithLink
+		BackToDevModeBaseBranch     ItemWithLink
+		MergeBlogPostPR             bool
+		WebsiteDocumentation        bool
+		Benchmarked                 bool
+		DockerImages                bool
+		CloseMilestone              ItemWithLink
 
 		// Post-Release
 		SlackPostRelease bool
@@ -165,18 +174,23 @@ type (
 )
 
 const (
-	releaseIssueTemplate = `This release is scheduled for {{fmtDate .Date }}
-
+	releaseIssueTemplate = `> [!NOTE]  
+> This release is scheduled for {{fmtDate .Date }}.
 {{- if .DoVtOp }}
-The release of vitess-operator v{{.VtopRelease}} is also planned
+> The release of vitess-operator **v{{.VtopRelease}}** is also planned.
 {{- end }}
 
-<!--- ⚠️ Please do not edit the content of this Issue manually ⚠️ --->
-<!--- The vitess-releaser tool is managing and handling this issue. --->
-<!--- You can however click on the check boxes to mark them as done/not done. --->
+> [!IMPORTANT]  
+> Please **do not** edit the content of the Issue's body manually.
+> The **vitess-releaser** tool is managing and handling this issue.
+> You can however click on the check boxes to mark them as done/not done, and write comments.
 
-### Prerequisites for Release
+### Prerequisites
 
+- [{{fmtStatus .General.Done}}] General prerequisites.
+{{- range $item := .General.Items }}
+  - [{{fmtStatus $item.Done}}] {{$item.URL}}
+{{- end }}
 - [{{fmtStatus .SlackPreRequisite}}] Notify the community on Slack.
 - [{{fmtStatus .CheckSummary}}] Make sure the release notes summary is prepared and clean.
 {{- if eq .RC 0 }}
@@ -199,13 +213,15 @@ The release of vitess-operator v{{.VtopRelease}} is also planned
 
 ### Pre-Release
 
+{{- if not (or (gt .RC 1) (.GA)) }} 
 - [{{fmtStatus .CodeFreeze.Done}}] Code Freeze.
 {{- if .CodeFreeze.URL }}
   - {{ .CodeFreeze.URL }}
 {{- end }}
+{{- end }}
 {{- if eq .RC 1 }}
 - [{{fmtStatus .CopyBranchProtectionRules}}] Copy branch protection rules.
-- [{{fmtStatus .CreateBackportToLabel.Done}}] Create the Backport to label.
+- [{{fmtStatus .CreateBackportToLabel.Done}}] Create the Backport to labels.
 {{- if .CreateBackportToLabel.URL }}
   - {{ .CreateBackportToLabel.URL }}
 {{- end }}
@@ -268,11 +284,21 @@ The release of vitess-operator v{{.VtopRelease}} is also planned
 {{- if .ReleaseNotesOnMain.URL }}
   - {{ .ReleaseNotesOnMain.URL }}
 {{- end }}
+{{- if or (gt .RC 0) (.GA) }}
+- [{{fmtStatus .ReleaseNotesOnReleaseBranch.Done}}] Update release notes on the release branch.
+{{- if .ReleaseNotesOnReleaseBranch.URL }}
+  - {{ .ReleaseNotesOnReleaseBranch.URL }}
+{{- end }}
+{{- end }}
 - [{{fmtStatus .BackToDevMode.Done}}] Go back to dev mode on the release branch.
 {{- if .BackToDevMode.URL }}
   - {{ .BackToDevMode.URL }}
 {{- end }}
 {{- if .GA }}
+- [{{fmtStatus .BackToDevModeBaseBranch.Done}}] Go back to dev mode on the base of the release branch.
+{{- if .BackToDevModeBaseBranch.URL }}
+  - {{ .BackToDevModeBaseBranch.URL }}
+{{- end }}
 - [{{fmtStatus .MergeBlogPostPR}}] Merge the blog post Pull Request on the website repository.
 {{- end }}
 - [{{fmtStatus .WebsiteDocumentation}}] Update the website documentation.
@@ -293,7 +319,7 @@ The release of vitess-operator v{{.VtopRelease}} is also planned
 `
 )
 
-func (pi ParentOfItems) ItemsLeft() int {
+func (pi *ParentOfItems) ItemsLeft() int {
 	nb := 0
 	for _, item := range pi.Items {
 		if !item.Done {
@@ -303,7 +329,13 @@ func (pi ParentOfItems) ItemsLeft() int {
 	return nb
 }
 
-func (pi ParentOfItems) Done() bool {
+func (pi *ParentOfItems) InverseItemStatus() {
+	for i, _ := range pi.Items {
+		pi.Items[i].Done = !pi.Items[i].Done
+	}
+}
+
+func (pi *ParentOfItems) Done() bool {
 	for _, item := range pi.Items {
 		if !item.Done {
 			return false
@@ -346,7 +378,7 @@ func (s *State) LoadIssue() {
 		case stateReadingItem:
 			// divers
 			if strings.HasPrefix(line, dateItem) {
-				nline := strings.TrimSpace(line[len(dateItem):])
+				nline := strings.TrimSpace(line[len(dateItem) : len(line)-1])
 				parsedDate, err := time.Parse("Mon _2 Jan 2006", nline)
 				if err != nil {
 					utils.LogPanic(err, "failed to parse the date from the release issue body (%s)", nline)
@@ -355,6 +387,8 @@ func (s *State) LoadIssue() {
 			}
 
 			switch {
+			case strings.Contains(line, generalPrerequisitesItem) && isNextLineAList(lines, i):
+				st = stateReadingGeneral
 			case strings.Contains(line, draftBlogPostItem):
 				newIssue.DraftBlogPost = strings.HasPrefix(line, markdownItemDone)
 			case strings.Contains(line, crossBlogPostItem):
@@ -430,10 +464,20 @@ func (s *State) LoadIssue() {
 				if isNextLineAList(lines, i) {
 					st = stateReadingReleaseNotesMainItem
 				}
+			case strings.Contains(line, releaseNotesReleaseBranchItem):
+				newIssue.ReleaseNotesOnReleaseBranch.Done = strings.HasPrefix(line, markdownItemDone)
+				if isNextLineAList(lines, i) {
+					st = stateReadingReleaseNotesReleaseBranchItem
+				}
 			case strings.Contains(line, backToDevItem):
 				newIssue.BackToDevMode.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
 					st = stateReadingBackToDevModeItem
+				}
+			case strings.Contains(line, backToDevBaseBranchItem):
+				newIssue.BackToDevModeBaseBranch.Done = strings.HasPrefix(line, markdownItemDone)
+				if isNextLineAList(lines, i) {
+					st = stateReadingBackToDevModeBaseBranchItem
 				}
 			case strings.Contains(line, websiteDocItem):
 				newIssue.WebsiteDocumentation = strings.HasPrefix(line, markdownItemDone)
@@ -459,6 +503,8 @@ func (s *State) LoadIssue() {
 			case strings.Contains(line, javaRelease):
 				newIssue.JavaRelease = strings.HasPrefix(line, markdownItemDone)
 			}
+		case stateReadingGeneral:
+			newIssue.General.Items = append(newIssue.General.Items, handleNewListItem(lines, i, &st))
 		case stateReadingBackport:
 			newIssue.CheckBackport.Items = append(newIssue.CheckBackport.Items, handleNewListItem(lines, i, &st))
 		case stateReadingReleaseBlockerIssue:
@@ -479,8 +525,12 @@ func (s *State) LoadIssue() {
 			newIssue.TagRelease.URL = handleSingleTextItem(line, &st)
 		case stateReadingReleaseNotesMainItem:
 			newIssue.ReleaseNotesOnMain.URL = handleSingleTextItem(line, &st)
+		case stateReadingReleaseNotesReleaseBranchItem:
+			newIssue.ReleaseNotesOnReleaseBranch.URL = handleSingleTextItem(line, &st)
 		case stateReadingBackToDevModeItem:
 			newIssue.BackToDevMode.URL = handleSingleTextItem(line, &st)
+		case stateReadingBackToDevModeBaseBranchItem:
+			newIssue.BackToDevModeBaseBranch.URL = handleSingleTextItem(line, &st)
 		case stateReadingCloseMilestoneItem:
 			newIssue.CloseMilestone.URL = handleSingleTextItem(line, &st)
 		case stateReadingVtopUpdateGo:
@@ -554,6 +604,13 @@ func CreateReleaseIssue(state *State) (*logging.ProgressLogging, func() (int, st
 	}
 
 	return pl, func() (int, string) {
+		state.Issue.General.Items = append(state.Issue.General.Items,
+			ItemWithLink{URL: "Be part of the `Release` team in the `vitessio` GitHub organization, [here](https://github.com/orgs/vitessio/teams/release)."},
+			ItemWithLink{URL: "Be an admin of the `planetscale/vitess-operator` repository."},
+			ItemWithLink{URL: "Have access to Vitess' Java repository and have it working locally, [guide here](https://github.com/vitessio/vitess/blob/main/doc/internal/release/java-packages.md)."},
+			ItemWithLink{URL: "Have `vitessio/vitess` and `planetscale/vitess-operator` cloned in the same parent directory."},
+		)
+
 		pl.NewStepf("Create Release Issue on GitHub")
 		issueTitle := fmt.Sprintf("Release of `v%s`", state.VitessRelease.Release)
 		newIssue := github.Issue{

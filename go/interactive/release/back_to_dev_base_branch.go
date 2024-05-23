@@ -26,38 +26,41 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/steps"
 )
 
-func BackToDevModeItem(ctx context.Context) *ui.MenuItem {
+func BackToDevModeBaseBranchItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
-	act := backToDevModeAct
-	if state.Issue.BackToDevMode.Done {
+	act := backToDevModeBaseBranchAct
+	if state.Issue.BackToDevModeBaseBranch.Done {
 		act = nil
 	}
 	return &ui.MenuItem{
 		State:  state,
-		Name:   steps.BackToDev,
+		Name:   steps.BackToDevOnBaseBranch,
 		Act:    act,
-		Update: backToDevModeUpdate,
-		Info:   state.Issue.BackToDevMode.URL,
-		IsDone: state.Issue.BackToDevMode.Done,
+		Update: backToDevModeBaseBranchUpdate,
+		Info:   state.Issue.BackToDevModeBaseBranch.URL,
+		IsDone: state.Issue.BackToDevModeBaseBranch.Done,
+
+		// We only want to do this during the GA release
+		Ignore: !state.Issue.GA,
 	}
 }
 
-type backToDevModeUrl string
+type backToDevModeBaseBranchUrl string
 
-func backToDevModeUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
-	_, ok := msg.(backToDevModeUrl)
+func backToDevModeBaseBranchUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
+	_, ok := msg.(backToDevModeBaseBranchUrl)
 	if !ok {
 		return mi, nil
 	}
 
-	mi.Info = mi.State.Issue.BackToDevMode.URL
-	mi.IsDone = mi.State.Issue.BackToDevMode.Done
+	mi.Info = mi.State.Issue.BackToDevModeBaseBranch.URL
+	mi.IsDone = mi.State.Issue.BackToDevModeBaseBranch.Done
 	return mi, nil
 }
 
-func backToDevModeAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
-	pl, back := release.BackToDevModeOnBranch(mi.State, &mi.State.Issue.BackToDevMode, mi.State.VitessRelease.ReleaseBranch)
+func backToDevModeBaseBranchAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
+	pl, back := release.BackToDevModeOnBranch(mi.State, &mi.State.Issue.BackToDevModeBaseBranch, mi.State.VitessRelease.BaseReleaseBranch)
 	return mi, tea.Batch(func() tea.Msg {
-		return backToDevModeUrl(back())
-	}, ui.PushDialog(ui.NewProgressDialog("Back To Dev Mode", pl)))
+		return backToDevModeBaseBranchUrl(back())
+	}, ui.PushDialog(ui.NewProgressDialog("Back To Dev Mode on Base Branch", pl)))
 }

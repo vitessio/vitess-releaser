@@ -21,11 +21,12 @@ const (
 	ReleaseIssue       = "Release Issue"
 
 	// Prerequisite
-	SlackAnnouncement = "Slack Announcement"
-	CheckAndAdd       = "Pending PRs/Issues"
-	CheckSummary      = "Check Release Summary"
-	DraftBlogPost     = "Draft Blog Post"
-	CrossPostBlogPost = "Cross-post Blog Post"
+	GeneralPrerequisite = "General"
+	SlackAnnouncement   = "Slack Announcement"
+	CheckAndAdd         = "Pending PRs/Issues"
+	CheckSummary        = "Check Release Summary"
+	DraftBlogPost       = "Draft Blog Post"
+	CrossPostBlogPost   = "Cross-post Blog Post"
 
 	// Pre-Release
 	CodeFreeze                   = "Code Freeze"
@@ -40,18 +41,20 @@ const (
 	VtopUpdateCompatibilityTable = "Update compatibility table in vitess-operator"
 
 	// Release
-	MergeReleasePR       = "Merge Release PR"
-	TagRelease           = "Tag Release"
-	VtopCreateReleasePR  = "Create vitess-operator release PR"
-	VtopManualUpdate     = "Manual update of vitess-operator tests"
-	JavaRelease          = "Java Release"
-	ReleaseNotesOnMain   = "Release Notes on Main"
-	BackToDev            = "Back To Dev Mode"
-	MergeBlogPost        = "Merge Blog Post"
-	WebsiteDocumentation = "Website Documentation"
-	Benchmarked          = "Benchmarks"
-	DockerImages         = "Docker Images"
-	CloseMilestone       = "Close Milestone"
+	MergeReleasePR              = "Merge Release PR"
+	TagRelease                  = "Tag Release"
+	VtopCreateReleasePR         = "Create vitess-operator release PR"
+	VtopManualUpdate            = "Manual update of vitess-operator tests"
+	JavaRelease                 = "Java Release"
+	ReleaseNotesOnMain          = "Release Notes on main"
+	ReleaseNotesOnReleaseBranch = "Release Notes on release branch"
+	BackToDev                   = "Back To Dev Mode"
+	BackToDevOnBaseBranch       = "Back To Dev Mode on the base branch"
+	MergeBlogPost               = "Merge Blog Post"
+	WebsiteDocumentation        = "Website Documentation"
+	Benchmarked                 = "Benchmarks"
+	DockerImages                = "Docker Images"
+	CloseMilestone              = "Close Milestone"
 
 	// Post-Release
 	SlackAnnouncementPost = "Slack Announcement Post-Release"

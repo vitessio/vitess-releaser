@@ -40,6 +40,10 @@ func CodeFreezeMenuItem(ctx context.Context) *ui.MenuItem {
 		Update: codeFreezeUpdate,
 		Info:   state.Issue.CodeFreeze.URL,
 		IsDone: state.Issue.CodeFreeze.Done,
+
+		// We only want to do code freeze if we are doing a patch release or RC-1.
+		// See RFC https://github.com/vitessio/vitess/issues/15586 which document this process.
+		Ignore: state.VitessRelease.GA || state.Issue.RC > 1,
 	}
 }
 

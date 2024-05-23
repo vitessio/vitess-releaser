@@ -37,6 +37,7 @@ func MainScreen(ctx context.Context) {
 	prereqMenu := ui.NewMenu(
 		ctx,
 		"Prerequisites",
+		generalPrerequisiteMenuItem(ctx),
 		slackAnnouncementMenuItem(ctx, slackAnnouncementPreRequisite),
 		checkSummaryMenuItem(ctx),
 		draftBlogPostMenuItem(ctx),
@@ -68,7 +69,9 @@ func MainScreen(ctx context.Context) {
 		release.VtopCreateReleasePRMenuItem(ctx),
 		release.VtopManualUpdateItem(ctx),
 		release.ReleaseNotesOnMainItem(ctx),
+		release.ReleaseNotesOnReleaseBranchItem(ctx),
 		release.BackToDevModeItem(ctx),
+		release.BackToDevModeBaseBranchItem(ctx),
 		mergeBlogPostPRMenuItem(ctx),
 		websiteDocumentationItem(ctx),
 		benchmarkedItem(ctx),

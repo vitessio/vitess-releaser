@@ -66,7 +66,7 @@ func NewMenu(ctx context.Context, title string, items ...*MenuItem) *Menu {
 		if item.Ignore {
 			continue
 		}
-		if i > 0 {
+		if i > 0 && len(mi) > 0 {
 			item.previous = mi[len(mi)-1]
 		}
 		mi = append(mi, item)

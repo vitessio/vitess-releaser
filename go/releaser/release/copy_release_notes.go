@@ -26,7 +26,7 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/pre_release"
 )
 
-func ReleaseNotesOnMain(state *releaser.State) (*logging.ProgressLogging, func() string) {
+func CopyReleaseNotesToBranch(state *releaser.State, itemToUpdate *releaser.ItemWithLink, branch string) (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
 		TotalSteps: 9,
 	}
@@ -35,8 +35,8 @@ func ReleaseNotesOnMain(state *releaser.State) (*logging.ProgressLogging, func()
 	var url string
 	return pl, func() string {
 		defer func() {
-			state.Issue.ReleaseNotesOnMain.Done = done
-			state.Issue.ReleaseNotesOnMain.URL = url
+			itemToUpdate.Done = done
+			itemToUpdate.URL = url
 			pl.NewStepf("Update Issue %s on GitHub", state.IssueLink)
 			_, fn := state.UploadIssue()
 			issueLink := fn()
@@ -48,10 +48,10 @@ func ReleaseNotesOnMain(state *releaser.State) (*logging.ProgressLogging, func()
 		git.CorrectCleanRepo(state.VitessRelease.Repo)
 		git.ResetHard(state.VitessRelease.Remote, state.VitessRelease.ReleaseBranch)
 
-		git.Checkout("main")
-		git.ResetHard(state.VitessRelease.Remote, "main")
+		git.Checkout(branch)
+		git.ResetHard(state.VitessRelease.Remote, branch)
 
-		prName := fmt.Sprintf("Copy `v%s` release notes on `main`", state.VitessRelease.Release)
+		prName := fmt.Sprintf("[%s] Copy `v%s` release notes", branch, state.VitessRelease.Release)
 
 		pl.NewStepf("Look for an existing Pull Request named '%s'", prName)
 		if _, url = github.FindPR(state.VitessRelease.Repo, prName); url != "" {
@@ -61,15 +61,15 @@ func ReleaseNotesOnMain(state *releaser.State) (*logging.ProgressLogging, func()
 			return url
 		}
 
-		pl.NewStepf("Create new branch based on %s/main", state.VitessRelease.Remote)
-		newBranchName := git.FindNewGeneratedBranch(state.VitessRelease.Remote, "main", "release-notes-main")
+		pl.NewStepf("Create new branch based on %s/%s", state.VitessRelease.Remote, branch)
+		newBranchName := git.FindNewGeneratedBranch(state.VitessRelease.Remote, branch, fmt.Sprintf("release-notes-%s", branch))
 
 		pl.NewStepf("Copy release notes from %s/%s", state.VitessRelease.Remote, state.VitessRelease.ReleaseBranch)
 		releaseNotesPath := pre_release.GetReleaseNotesDirPathForMajor(releaser.RemoveRCFromReleaseTitle(state.VitessRelease.Release))
 		git.CheckoutPath(state.VitessRelease.Remote, state.VitessRelease.ReleaseBranch, releaseNotesPath)
 
 		pl.NewStepf("Commit and push to branch %s", newBranchName)
-		if git.CommitAll(fmt.Sprintf("Copy release notes from %s into main", state.VitessRelease.ReleaseBranch)) {
+		if git.CommitAll(fmt.Sprintf("Copy release notes from %s into %s", state.VitessRelease.ReleaseBranch, branch)) {
 			pl.TotalSteps = 8 // only 8 total steps in this situation
 			pl.NewStepf("Nothing to commit, seems like the release notes have already been copied")
 			done = true
@@ -82,7 +82,7 @@ func ReleaseNotesOnMain(state *releaser.State) (*logging.ProgressLogging, func()
 			Title:  prName,
 			Body:   fmt.Sprintf("This Pull Request copies the release notes found on `%s` to keep release notes up-to-date after the `v%s` release.", state.VitessRelease.ReleaseBranch, state.VitessRelease.Release),
 			Branch: newBranchName,
-			Base:   "main",
+			Base:   branch,
 			Labels: []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}},
 		}
 		_, url = pr.Create(state.VitessRelease.Repo)
