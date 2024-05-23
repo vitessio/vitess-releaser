@@ -71,6 +71,7 @@ func MainScreen(ctx context.Context) {
 		release.ReleaseNotesOnMainItem(ctx),
 		release.ReleaseNotesOnReleaseBranchItem(ctx),
 		release.BackToDevModeItem(ctx),
+		release.BackToDevModeBaseBranchItem(ctx),
 		mergeBlogPostPRMenuItem(ctx),
 		websiteDocumentationItem(ctx),
 		benchmarkedItem(ctx),

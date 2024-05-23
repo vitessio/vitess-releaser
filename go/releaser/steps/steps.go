@@ -49,6 +49,7 @@ const (
 	ReleaseNotesOnMain          = "Release Notes on main"
 	ReleaseNotesOnReleaseBranch = "Release Notes on release branch"
 	BackToDev                   = "Back To Dev Mode"
+	BackToDevOnBaseBranch       = "Back To Dev Mode on the base branch"
 	MergeBlogPost               = "Merge Blog Post"
 	WebsiteDocumentation        = "Website Documentation"
 	Benchmarked                 = "Benchmarks"

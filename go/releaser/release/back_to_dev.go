@@ -26,7 +26,7 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/pre_release"
 )
 
-func BackToDevMode(state *releaser.State) (*logging.ProgressLogging, func() string) {
+func BackToDevModeOnBranch(state *releaser.State, itemToUpdate *releaser.ItemWithLink, branch string) (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
 		TotalSteps: 10,
 	}
@@ -35,8 +35,8 @@ func BackToDevMode(state *releaser.State) (*logging.ProgressLogging, func() stri
 	var url string
 	return pl, func() string {
 		defer func() {
-			state.Issue.BackToDevMode.Done = done
-			state.Issue.BackToDevMode.URL = url
+			itemToUpdate.Done = done
+			itemToUpdate.URL = url
 			pl.NewStepf("Update Issue %s on GitHub", state.IssueLink)
 			_, fn := state.UploadIssue()
 			issueLink := fn()
@@ -46,7 +46,7 @@ func BackToDevMode(state *releaser.State) (*logging.ProgressLogging, func() stri
 
 		pl.NewStepf("Fetch from git remote")
 		git.CorrectCleanRepo(state.VitessRelease.Repo)
-		git.ResetHard(state.VitessRelease.Remote, state.VitessRelease.ReleaseBranch)
+		git.ResetHard(state.VitessRelease.Remote, branch)
 
 		// If we are releasing an RC release, the next SNAPSHOT version on the release branch
 		// will be the same release as the RC but without the RC tag.
@@ -59,7 +59,7 @@ func BackToDevMode(state *releaser.State) (*logging.ProgressLogging, func() stri
 
 		devModeRelease := fmt.Sprintf("%s-SNAPSHOT", nextNextRelease)
 
-		backToDevModePRName := fmt.Sprintf("[%s] Bump to `v%s` after the `v%s` release", state.VitessRelease.ReleaseBranch, devModeRelease, state.VitessRelease.Release)
+		backToDevModePRName := fmt.Sprintf("[%s] Bump to `v%s` after the `v%s` release", branch, devModeRelease, state.VitessRelease.Release)
 
 		// look for existing PRs
 		pl.NewStepf("Look for an existing Pull Request named '%s'", backToDevModePRName)
@@ -70,8 +70,8 @@ func BackToDevMode(state *releaser.State) (*logging.ProgressLogging, func() stri
 			return url
 		}
 
-		pl.NewStepf("Create new branch based on %s/%s", state.VitessRelease.Remote, state.VitessRelease.ReleaseBranch)
-		newBranchName := git.FindNewGeneratedBranch(state.VitessRelease.Remote, state.VitessRelease.ReleaseBranch, "back-to-dev-mode")
+		pl.NewStepf("Create new branch based on %s/%s", state.VitessRelease.Remote, branch)
+		newBranchName := git.FindNewGeneratedBranch(state.VitessRelease.Remote, branch, "back-to-dev-mode")
 
 		pl.NewStepf("Update version.go")
 		pre_release.UpdateVersionGoFile(devModeRelease)
@@ -93,7 +93,7 @@ func BackToDevMode(state *releaser.State) (*logging.ProgressLogging, func() stri
 			Title:  backToDevModePRName,
 			Body:   fmt.Sprintf("Includes the changes required to go back into dev mode (v%s) after the release of v%s.", devModeRelease, state.VitessRelease.Release),
 			Branch: newBranchName,
-			Base:   state.VitessRelease.ReleaseBranch,
+			Base:   branch,
 			Labels: []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}},
 		}
 		_, url = pr.Create(state.VitessRelease.Repo)

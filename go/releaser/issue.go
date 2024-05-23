@@ -45,6 +45,7 @@ const (
 	stateReadingReleaseNotesMainItem
 	stateReadingReleaseNotesReleaseBranchItem
 	stateReadingBackToDevModeItem
+	stateReadingBackToDevModeBaseBranchItem
 	stateReadingCloseMilestoneItem
 	stateReadingVtopUpdateGo
 	stateReadingVtopCreateReleasePR
@@ -88,6 +89,7 @@ const (
 	releaseNotesMainItem          = "Update release notes on main."
 	releaseNotesReleaseBranchItem = "Update release notes on the release branch."
 	backToDevItem                 = "Go back to dev mode on the release branch."
+	backToDevBaseBranchItem       = "Go back to dev mode on the base of the release branch."
 	websiteDocItem                = "Update the website documentation."
 	benchmarkedItem               = "Make sure the release is benchmarked by arewefastyet."
 	dockerImagesItem              = "Docker Images available on DockerHub."
@@ -157,6 +159,7 @@ type (
 		ReleaseNotesOnMain          ItemWithLink
 		ReleaseNotesOnReleaseBranch ItemWithLink
 		BackToDevMode               ItemWithLink
+		BackToDevModeBaseBranch     ItemWithLink
 		MergeBlogPostPR             bool
 		WebsiteDocumentation        bool
 		Benchmarked                 bool
@@ -291,6 +294,10 @@ The release of vitess-operator v{{.VtopRelease}} is also planned
   - {{ .BackToDevMode.URL }}
 {{- end }}
 {{- if .GA }}
+- [{{fmtStatus .BackToDevModeBaseBranch.Done}}] Go back to dev mode on the base of the release branch.
+{{- if .BackToDevModeBaseBranch.URL }}
+  - {{ .BackToDevModeBaseBranch.URL }}
+{{- end }}
 - [{{fmtStatus .MergeBlogPostPR}}] Merge the blog post Pull Request on the website repository.
 {{- end }}
 - [{{fmtStatus .WebsiteDocumentation}}] Update the website documentation.
@@ -466,6 +473,11 @@ func (s *State) LoadIssue() {
 				if isNextLineAList(lines, i) {
 					st = stateReadingBackToDevModeItem
 				}
+			case strings.Contains(line, backToDevBaseBranchItem):
+				newIssue.BackToDevModeBaseBranch.Done = strings.HasPrefix(line, markdownItemDone)
+				if isNextLineAList(lines, i) {
+					st = stateReadingBackToDevModeBaseBranchItem
+				}
 			case strings.Contains(line, websiteDocItem):
 				newIssue.WebsiteDocumentation = strings.HasPrefix(line, markdownItemDone)
 			case strings.Contains(line, benchmarkedItem):
@@ -516,6 +528,8 @@ func (s *State) LoadIssue() {
 			newIssue.ReleaseNotesOnReleaseBranch.URL = handleSingleTextItem(line, &st)
 		case stateReadingBackToDevModeItem:
 			newIssue.BackToDevMode.URL = handleSingleTextItem(line, &st)
+		case stateReadingBackToDevModeBaseBranchItem:
+			newIssue.BackToDevModeBaseBranch.URL = handleSingleTextItem(line, &st)
 		case stateReadingCloseMilestoneItem:
 			newIssue.CloseMilestone.URL = handleSingleTextItem(line, &st)
 		case stateReadingVtopUpdateGo:
