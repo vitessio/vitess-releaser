@@ -32,6 +32,7 @@ import (
 
 const (
 	stateReadingItem = iota
+	stateReadingGeneral
 	stateReadingBackport
 	stateReadingReleaseBlockerIssue
 	stateReadingCodeFreezeItem
@@ -56,6 +57,7 @@ const (
 	dateItem = "This release is scheduled for"
 
 	// Prerequisites
+	generalPrerequisitesItem = "General prerequisites."
 	preSlackAnnouncementItem = "Notify the community on Slack."
 	checkSummaryItem         = "Make sure the release notes summary is prepared and clean."
 	backportItem             = "Make sure backport Pull Requests are merged, list below."
@@ -123,6 +125,7 @@ type (
 		GA          bool
 
 		// Prerequisites
+		General                  ParentOfItems
 		SlackPreRequisite        bool
 		CheckSummary             bool
 		DraftBlogPost            bool
@@ -175,8 +178,12 @@ The release of vitess-operator v{{.VtopRelease}} is also planned
 <!--- The vitess-releaser tool is managing and handling this issue. --->
 <!--- You can however click on the check boxes to mark them as done/not done. --->
 
-### Prerequisites for Release
+### Prerequisites
 
+- [{{fmtStatus .General.Done}}] General prerequisites.
+{{- range $item := .General.Items }}
+  - [{{fmtStatus $item.Done}}] {{$item.URL}}
+{{- end }}
 - [{{fmtStatus .SlackPreRequisite}}] Notify the community on Slack.
 - [{{fmtStatus .CheckSummary}}] Make sure the release notes summary is prepared and clean.
 {{- if eq .RC 0 }}
@@ -355,6 +362,8 @@ func (s *State) LoadIssue() {
 			}
 
 			switch {
+			case strings.Contains(line, generalPrerequisitesItem) && isNextLineAList(lines, i):
+				st = stateReadingGeneral
 			case strings.Contains(line, draftBlogPostItem):
 				newIssue.DraftBlogPost = strings.HasPrefix(line, markdownItemDone)
 			case strings.Contains(line, crossBlogPostItem):
@@ -459,6 +468,8 @@ func (s *State) LoadIssue() {
 			case strings.Contains(line, javaRelease):
 				newIssue.JavaRelease = strings.HasPrefix(line, markdownItemDone)
 			}
+		case stateReadingGeneral:
+			newIssue.General.Items = append(newIssue.General.Items, handleNewListItem(lines, i, &st))
 		case stateReadingBackport:
 			newIssue.CheckBackport.Items = append(newIssue.CheckBackport.Items, handleNewListItem(lines, i, &st))
 		case stateReadingReleaseBlockerIssue:
@@ -554,6 +565,13 @@ func CreateReleaseIssue(state *State) (*logging.ProgressLogging, func() (int, st
 	}
 
 	return pl, func() (int, string) {
+		state.Issue.General.Items = append(state.Issue.General.Items,
+			ItemWithLink{URL: "Be part of the `Release` team in the `vitessio` GitHub organization, [here](https://github.com/orgs/vitessio/teams/release)."},
+			ItemWithLink{URL: "Be an admin of the `planetscale/vitess-operator` repository."},
+			ItemWithLink{URL: "Have access to Vitess' Java repository and have it working locally, [guide here](https://github.com/vitessio/vitess/blob/main/doc/internal/release/java-packages.md)."},
+			ItemWithLink{URL: "Have `vitessio/vitess` and `planetscale/vitess-operator` cloned in the same parent directory."},
+		)
+
 		pl.NewStepf("Create Release Issue on GitHub")
 		issueTitle := fmt.Sprintf("Release of `v%s`", state.VitessRelease.Release)
 		newIssue := github.Issue{
