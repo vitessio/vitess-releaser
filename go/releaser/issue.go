@@ -56,7 +56,7 @@ const (
 	markdownItemDone = "- [x]"
 
 	// Divers
-	dateItem = "This release is scheduled for"
+	dateItem = "> This release is scheduled for"
 
 	// Prerequisites
 	generalPrerequisitesItem = "General prerequisites."
@@ -174,15 +174,16 @@ type (
 )
 
 const (
-	releaseIssueTemplate = `This release is scheduled for {{fmtDate .Date }}
-
+	releaseIssueTemplate = `> [!NOTE]  
+> This release is scheduled for {{fmtDate .Date }}.
 {{- if .DoVtOp }}
-The release of vitess-operator v{{.VtopRelease}} is also planned
+> The release of vitess-operator **v{{.VtopRelease}}** is also planned.
 {{- end }}
 
-<!--- ⚠️ Please do not edit the content of this Issue manually ⚠️ --->
-<!--- The vitess-releaser tool is managing and handling this issue. --->
-<!--- You can however click on the check boxes to mark them as done/not done. --->
+> [!IMPORTANT]  
+> Please **do not** edit the content of the Issue's body manually.
+> The **vitess-releaser** tool is managing and handling this issue.
+> You can however click on the check boxes to mark them as done/not done, and write comments.
 
 ### Prerequisites
 
@@ -377,7 +378,7 @@ func (s *State) LoadIssue() {
 		case stateReadingItem:
 			// divers
 			if strings.HasPrefix(line, dateItem) {
-				nline := strings.TrimSpace(line[len(dateItem):])
+				nline := strings.TrimSpace(line[len(dateItem) : len(line)-1])
 				parsedDate, err := time.Parse("Mon _2 Jan 2006", nline)
 				if err != nil {
 					utils.LogPanic(err, "failed to parse the date from the release issue body (%s)", nline)
