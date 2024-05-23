@@ -300,7 +300,7 @@ The release of vitess-operator v{{.VtopRelease}} is also planned
 `
 )
 
-func (pi ParentOfItems) ItemsLeft() int {
+func (pi *ParentOfItems) ItemsLeft() int {
 	nb := 0
 	for _, item := range pi.Items {
 		if !item.Done {
@@ -310,7 +310,13 @@ func (pi ParentOfItems) ItemsLeft() int {
 	return nb
 }
 
-func (pi ParentOfItems) Done() bool {
+func (pi *ParentOfItems) InverseItemStatus() {
+	for i, _ := range pi.Items {
+		pi.Items[i].Done = !pi.Items[i].Done
+	}
+}
+
+func (pi *ParentOfItems) Done() bool {
 	for _, item := range pi.Items {
 		if !item.Done {
 			return false
