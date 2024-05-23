@@ -62,7 +62,7 @@ func CopyReleaseNotesToBranch(state *releaser.State, itemToUpdate *releaser.Item
 		}
 
 		pl.NewStepf("Create new branch based on %s/%s", state.VitessRelease.Remote, branch)
-		newBranchName := git.FindNewGeneratedBranch(state.VitessRelease.Remote, branch, "release-notes-main")
+		newBranchName := git.FindNewGeneratedBranch(state.VitessRelease.Remote, branch, fmt.Sprintf("release-notes-%s", branch))
 
 		pl.NewStepf("Copy release notes from %s/%s", state.VitessRelease.Remote, state.VitessRelease.ReleaseBranch)
 		releaseNotesPath := pre_release.GetReleaseNotesDirPathForMajor(releaser.RemoveRCFromReleaseTitle(state.VitessRelease.Release))

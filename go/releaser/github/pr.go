@@ -117,7 +117,7 @@ func CheckBackportToPRs(repo, majorRelease string) map[string]any {
 func FindPR(repo, prTitle string) (nb int, url string) {
 	stdOut := execGh(
 		"pr", "list",
-		"--json", "url",
+		"--json", "url,title",
 		"--repo", repo,
 		"--search", prTitle,
 		"--state", "open",
@@ -127,11 +127,12 @@ func FindPR(repo, prTitle string) (nb int, url string) {
 	if err != nil {
 		utils.LogPanic(err, "failed to parse PRs, got: %s", stdOut)
 	}
-	if len(prs) != 1 {
-		return 0, ""
+	for _, pr := range prs {
+		if pr.Title == prTitle {
+			return URLToNb(pr.URL), pr.URL
+		}
 	}
-	url = prs[0].URL
-	return URLToNb(url), url
+	return 0, ""
 }
 
 func GetMergedPRsAndAuthorsByMilestone(repo, milestone string) (prs []PR, authors []string) {

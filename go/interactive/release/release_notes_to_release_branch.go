@@ -61,6 +61,6 @@ func releaseNotesOnReleaseBranchUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuIt
 func releaseNotesOnReleaseBranchAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
 	pl, fn := release.CopyReleaseNotesToBranch(mi.State, &mi.State.Issue.ReleaseNotesOnReleaseBranch, mi.State.VitessRelease.BaseReleaseBranch)
 	return mi, tea.Batch(func() tea.Msg {
-		return releaseNotesOnMainUrl(fn())
-	}, ui.PushDialog(ui.NewProgressDialog("Release Notes on Main", pl)))
+		return releaseNotesOnReleaseBranchUrl(fn())
+	}, ui.PushDialog(ui.NewProgressDialog("Release Notes on release branch", pl)))
 }

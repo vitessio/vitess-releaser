@@ -42,7 +42,9 @@ func CreateRelease(repo, tag, notesFilePath string, latest, prerelease bool) (ur
 	}
 
 	if latest {
-		args = append(args, "--latest")
+		args = append(args, "--latest=true")
+	} else {
+		args = append(args, "--latest=false")
 	}
 
 	if prerelease {
