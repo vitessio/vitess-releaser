@@ -43,6 +43,7 @@ const (
 	stateReadingMergedReleasePRItem
 	stateReadingTagReleaseItem
 	stateReadingReleaseNotesMainItem
+	stateReadingReleaseNotesReleaseBranchItem
 	stateReadingBackToDevModeItem
 	stateReadingCloseMilestoneItem
 	stateReadingVtopUpdateGo
@@ -79,18 +80,19 @@ const (
 	createBlogPostPRItem          = "Open a Pull Request on the website repository for the blog post."
 
 	// Release
-	mergeReleasePRItem      = "Merge the Release PR."
-	tagReleaseItem          = "Tag the release."
-	javaRelease             = "Java release."
-	vtopCreateReleasePRItem = "Create vitess-operator Release PR."
-	vtopManualUpdateItem    = "Manual update of vitess-operator test code."
-	releaseNotesMainItem    = "Update release notes on main."
-	backToDevItem           = "Go back to dev mode on the release branch."
-	websiteDocItem          = "Update the website documentation."
-	benchmarkedItem         = "Make sure the release is benchmarked by arewefastyet."
-	dockerImagesItem        = "Docker Images available on DockerHub."
-	closeMilestoneItem      = "Close current GitHub Milestone."
-	mergeBlogPostItem       = "Merge the blog post Pull Request on the website repository."
+	mergeReleasePRItem            = "Merge the Release PR."
+	tagReleaseItem                = "Tag the release."
+	javaRelease                   = "Java release."
+	vtopCreateReleasePRItem       = "Create vitess-operator Release PR."
+	vtopManualUpdateItem          = "Manual update of vitess-operator test code."
+	releaseNotesMainItem          = "Update release notes on main."
+	releaseNotesReleaseBranchItem = "Update release notes on the release branch."
+	backToDevItem                 = "Go back to dev mode on the release branch."
+	websiteDocItem                = "Update the website documentation."
+	benchmarkedItem               = "Make sure the release is benchmarked by arewefastyet."
+	dockerImagesItem              = "Docker Images available on DockerHub."
+	closeMilestoneItem            = "Close current GitHub Milestone."
+	mergeBlogPostItem             = "Merge the blog post Pull Request on the website repository."
 
 	// Post-Release
 	postSlackAnnouncementItem = "Notify the community on Slack for the new release."
@@ -149,16 +151,17 @@ type (
 		CreateBlogPostPR             bool
 
 		// Release
-		MergeReleasePR       ItemWithLink
-		TagRelease           ItemWithLink
-		JavaRelease          bool
-		ReleaseNotesOnMain   ItemWithLink
-		BackToDevMode        ItemWithLink
-		MergeBlogPostPR      bool
-		WebsiteDocumentation bool
-		Benchmarked          bool
-		DockerImages         bool
-		CloseMilestone       ItemWithLink
+		MergeReleasePR              ItemWithLink
+		TagRelease                  ItemWithLink
+		JavaRelease                 bool
+		ReleaseNotesOnMain          ItemWithLink
+		ReleaseNotesOnReleaseBranch ItemWithLink
+		BackToDevMode               ItemWithLink
+		MergeBlogPostPR             bool
+		WebsiteDocumentation        bool
+		Benchmarked                 bool
+		DockerImages                bool
+		CloseMilestone              ItemWithLink
 
 		// Post-Release
 		SlackPostRelease bool
@@ -276,6 +279,12 @@ The release of vitess-operator v{{.VtopRelease}} is also planned
 - [{{fmtStatus .ReleaseNotesOnMain.Done}}] Update release notes on main.
 {{- if .ReleaseNotesOnMain.URL }}
   - {{ .ReleaseNotesOnMain.URL }}
+{{- end }}
+{{- if or (gt .RC 0) (.GA) }}
+- [{{fmtStatus .ReleaseNotesOnReleaseBranch.Done}}] Update release notes on the release branch.
+{{- if .ReleaseNotesOnReleaseBranch.URL }}
+  - {{ .ReleaseNotesOnReleaseBranch.URL }}
+{{- end }}
 {{- end }}
 - [{{fmtStatus .BackToDevMode.Done}}] Go back to dev mode on the release branch.
 {{- if .BackToDevMode.URL }}
@@ -447,6 +456,11 @@ func (s *State) LoadIssue() {
 				if isNextLineAList(lines, i) {
 					st = stateReadingReleaseNotesMainItem
 				}
+			case strings.Contains(line, releaseNotesReleaseBranchItem):
+				newIssue.ReleaseNotesOnReleaseBranch.Done = strings.HasPrefix(line, markdownItemDone)
+				if isNextLineAList(lines, i) {
+					st = stateReadingReleaseNotesReleaseBranchItem
+				}
 			case strings.Contains(line, backToDevItem):
 				newIssue.BackToDevMode.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
@@ -498,6 +512,8 @@ func (s *State) LoadIssue() {
 			newIssue.TagRelease.URL = handleSingleTextItem(line, &st)
 		case stateReadingReleaseNotesMainItem:
 			newIssue.ReleaseNotesOnMain.URL = handleSingleTextItem(line, &st)
+		case stateReadingReleaseNotesReleaseBranchItem:
+			newIssue.ReleaseNotesOnReleaseBranch.URL = handleSingleTextItem(line, &st)
 		case stateReadingBackToDevModeItem:
 			newIssue.BackToDevMode.URL = handleSingleTextItem(line, &st)
 		case stateReadingCloseMilestoneItem:

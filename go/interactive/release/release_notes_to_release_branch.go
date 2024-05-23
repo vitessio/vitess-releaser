@@ -26,37 +26,40 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/steps"
 )
 
-func ReleaseNotesOnMainItem(ctx context.Context) *ui.MenuItem {
+func ReleaseNotesOnReleaseBranchItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
-	act := releaseNotesOnMainAct
-	if state.Issue.ReleaseNotesOnMain.Done {
+	act := releaseNotesOnReleaseBranchAct
+	if state.Issue.ReleaseNotesOnReleaseBranch.Done {
 		act = nil
 	}
 	return &ui.MenuItem{
 		State:  state,
-		Name:   steps.ReleaseNotesOnMain,
+		Name:   steps.ReleaseNotesOnReleaseBranch,
 		Act:    act,
-		Update: releaseNotesOnMainUpdate,
-		Info:   state.Issue.ReleaseNotesOnMain.URL,
-		IsDone: state.Issue.ReleaseNotesOnMain.Done,
+		Update: releaseNotesOnReleaseBranchUpdate,
+		Info:   state.Issue.ReleaseNotesOnReleaseBranch.URL,
+		IsDone: state.Issue.ReleaseNotesOnReleaseBranch.Done,
+
+		// We want to ignore this step if we are doing a patch release.
+		Ignore: !state.Issue.GA && state.Issue.RC == 0,
 	}
 }
 
-type releaseNotesOnMainUrl string
+type releaseNotesOnReleaseBranchUrl string
 
-func releaseNotesOnMainUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
-	_, ok := msg.(releaseNotesOnMainUrl)
+func releaseNotesOnReleaseBranchUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
+	_, ok := msg.(releaseNotesOnReleaseBranchUrl)
 	if !ok {
 		return mi, nil
 	}
 
-	mi.Info = mi.State.Issue.ReleaseNotesOnMain.URL
-	mi.IsDone = mi.State.Issue.ReleaseNotesOnMain.Done
+	mi.Info = mi.State.Issue.ReleaseNotesOnReleaseBranch.URL
+	mi.IsDone = mi.State.Issue.ReleaseNotesOnReleaseBranch.Done
 	return mi, nil
 }
 
-func releaseNotesOnMainAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
-	pl, fn := release.CopyReleaseNotesToBranch(mi.State, &mi.State.Issue.ReleaseNotesOnMain, "main")
+func releaseNotesOnReleaseBranchAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
+	pl, fn := release.CopyReleaseNotesToBranch(mi.State, &mi.State.Issue.ReleaseNotesOnReleaseBranch, mi.State.VitessRelease.BaseReleaseBranch)
 	return mi, tea.Batch(func() tea.Msg {
 		return releaseNotesOnMainUrl(fn())
 	}, ui.PushDialog(ui.NewProgressDialog("Release Notes on Main", pl)))
