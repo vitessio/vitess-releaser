@@ -42,9 +42,14 @@ func WrapState(ctx context.Context, s *State) context.Context {
 }
 
 type ReleaseInformation struct {
-	Repo          string
-	Remote        string
-	ReleaseBranch string
+	Repo   string
+	Remote string
+
+	// BaseReleaseBranch is used to refer to the root release branch (i.e. "release-20.0") when doing
+	// an RC release or a GA. In this situation the ReleaseBranch will be set to something like "release-20.0-rc".
+	// For patch releases, the ReleaseBranch remains as usual i.e. "release-20.0" and BaseReleaseBranch will be empty.
+	ReleaseBranch     string
+	BaseReleaseBranch string
 
 	MajorRelease    string
 	Release         string

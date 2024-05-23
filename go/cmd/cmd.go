@@ -126,7 +126,9 @@ func setUpVitessReleaseInformation(s *releaser.State, repo string, rc int) (rele
 	// If we are doing an RC or a GA release we always want to use the rc release branch ("release-20.0-rc") instead of
 	// the normal release branch ("release-20.0")
 	// See RFC https://github.com/vitessio/vitess/issues/15586 for more information about this process.
+	var baseReleaseBranch string
 	if rc > 0 || ga {
+		baseReleaseBranch = releaseBranch
 		releaseBranch = fmt.Sprintf("%s-rc", releaseBranch)
 	}
 
@@ -137,13 +139,14 @@ func setUpVitessReleaseInformation(s *releaser.State, repo string, rc int) (rele
 	}
 
 	vitessRelease := releaser.ReleaseInformation{
-		Repo:            repo,
-		Remote:          remote,
-		ReleaseBranch:   releaseBranch,
-		MajorRelease:    releaseVersion,
-		IsLatestRelease: isLatestRelease,
-		Release:         releaseFromIssue,
-		GA:              ga,
+		Repo:              repo,
+		Remote:            remote,
+		ReleaseBranch:     releaseBranch,
+		BaseReleaseBranch: baseReleaseBranch,
+		MajorRelease:      releaseVersion,
+		IsLatestRelease:   isLatestRelease,
+		Release:           releaseFromIssue,
+		GA:                ga,
 	}
 	if vitessRelease.Release == "" {
 		vitessRelease.Release = releaser.AddRCToReleaseTitle(release, rcIncrement)

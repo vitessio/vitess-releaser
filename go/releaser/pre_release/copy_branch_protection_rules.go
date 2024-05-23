@@ -24,7 +24,7 @@ import (
 
 func CopyBranchProtectionRules(state *releaser.State) (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
-		TotalSteps: 3,
+		TotalSteps: 4,
 	}
 
 	return pl, func() string {
@@ -40,8 +40,11 @@ func CopyBranchProtectionRules(state *releaser.State) (*logging.ProgressLogging,
 			pl.NewStepf("Skipping as we are not running on vitessio/vitess.")
 			return ""
 		}
-		pl.NewStepf("Duplicating the branch protection rules")
+		pl.NewStepf("Duplicating the branch protection rules for %s", state.VitessRelease.ReleaseBranch)
 		github.CopyBranchProtectionRules(state.VitessRelease.Repo, state.VitessRelease.ReleaseBranch)
+
+		pl.NewStepf("Duplicating the branch protection rules for %s", state.VitessRelease.BaseReleaseBranch)
+		github.CopyBranchProtectionRules(state.VitessRelease.Repo, state.VitessRelease.BaseReleaseBranch)
 		return ""
 	}
 }
