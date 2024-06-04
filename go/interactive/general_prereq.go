@@ -60,7 +60,11 @@ func generalPrerequisiteUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.
 		if string(msg) != mi.Name {
 			return mi, nil
 		}
-		mi.State.Issue.General.InverseItemStatus()
+		if mi.IsDone {
+			mi.State.Issue.General.MarkAllAsNotDone()
+		} else {
+			mi.State.Issue.General.MarkAllAsDone()
+		}
 		mi.IsDone = !mi.IsDone
 		pl, fn := mi.State.UploadIssue()
 		return mi, tea.Batch(func() tea.Msg {

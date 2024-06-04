@@ -329,9 +329,15 @@ func (pi *ParentOfItems) ItemsLeft() int {
 	return nb
 }
 
-func (pi *ParentOfItems) InverseItemStatus() {
+func (pi *ParentOfItems) MarkAllAsDone() {
 	for i, _ := range pi.Items {
-		pi.Items[i].Done = !pi.Items[i].Done
+		pi.Items[i].Done = true
+	}
+}
+
+func (pi *ParentOfItems) MarkAllAsNotDone() {
+	for i, _ := range pi.Items {
+		pi.Items[i].Done = false
 	}
 }
 
