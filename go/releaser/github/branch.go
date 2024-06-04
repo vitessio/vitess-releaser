@@ -120,8 +120,8 @@ type updateRequiredStatusChecks struct {
 }
 
 type updateUsersTeamsApps struct {
-	Users []string `json:"users,omitempty"`
-	Teams []string `json:"teams,omitempty"`
+	Users []string `json:"users"`
+	Teams []string `json:"teams"`
 	Apps  []string `json:"apps"`
 }
 
