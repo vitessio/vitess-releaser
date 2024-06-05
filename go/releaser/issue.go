@@ -62,7 +62,7 @@ const (
 	generalPrerequisitesItem = "General prerequisites."
 	preSlackAnnouncementItem = "Notify the community on Slack."
 	checkSummaryItem         = "Make sure the release notes summary is prepared and clean."
-	backportItem             = "Make sure backport Pull Requests are merged, list below."
+	backportItem             = "Make sure important Pull Requests are merged, list below."
 	releaseBlockerItem       = "Make sure release blocker Issues are closed, list below."
 	draftBlogPostItem        = "Draft the release blog post."
 	crossBlogPostItem        = "Send requests to cross-post the blog post (CNCF, PlanetScale)."
@@ -193,11 +193,7 @@ const (
 {{- end }}
 - [{{fmtStatus .SlackPreRequisite}}] Notify the community on Slack.
 - [{{fmtStatus .CheckSummary}}] Make sure the release notes summary is prepared and clean.
-{{- if eq .RC 0 }}
-- Make sure backport Pull Requests are merged, list below.
-{{- else }}
 - Make sure important Pull Requests are merged, list below.
-{{- end }}
 {{- range $item := .CheckBackport.Items }}
   - [{{fmtStatus $item.Done}}] {{$item.URL}}
 {{- end }}
@@ -378,7 +374,7 @@ func (s *State) LoadIssue() {
 		case stateReadingItem:
 			// divers
 			if strings.HasPrefix(line, dateItem) {
-				nline := strings.TrimSpace(line[len(dateItem) : len(line)-1])
+				nline := strings.TrimSpace(line[len(dateItem) : len(line)-2])
 				parsedDate, err := time.Parse("Mon _2 Jan 2006", nline)
 				if err != nil {
 					utils.LogPanic(err, "failed to parse the date from the release issue body (%s)", nline)
