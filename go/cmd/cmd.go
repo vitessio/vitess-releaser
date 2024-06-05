@@ -52,7 +52,7 @@ var (
 			// is made here, perhaps there is a better way of doing it
 			state.LoadIssue()
 
-			interactive.MainScreen(ctx)
+			interactive.MainScreen(ctx, state)
 		},
 	}
 )

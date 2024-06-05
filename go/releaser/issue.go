@@ -179,6 +179,7 @@ const (
 {{- if .DoVtOp }}
 > The release of vitess-operator **v{{.VtopRelease}}** is also planned.
 {{- end }}
+> Release team: @vitessio/release
 
 > [!IMPORTANT]  
 > Please **do not** edit the content of the Issue's body manually.
@@ -210,12 +211,13 @@ const (
 - [{{fmtStatus .RequestCrossPostBlogPost}}] Send requests to cross-post the blog post (CNCF, PlanetScale).
 {{- end }}
 
-{{- if eq .RC 1}}
-### Code Freeze _(1 week before RC-1)_
+{{- if not (or (gt .RC 1) (.GA))}}
+### Code Freeze {{if eq .RC 1}}_(1 week before)_{{else}}_(~1-3 days before)_{{end}}
 - [{{fmtStatus .CodeFreeze.Done}}] Code Freeze.
 {{- if .CodeFreeze.URL }}
   - {{ .CodeFreeze.URL }}
 {{- end }}
+{{- if eq .RC 1 }}
 - [{{fmtStatus .CopyBranchProtectionRules}}] Copy branch protection rules.
 - [{{fmtStatus .CreateBackportToLabel.Done}}] Create the Backport to labels.
 {{- if .CreateBackportToLabel.URL }}
@@ -225,6 +227,7 @@ const (
 {{- if .UpdateSnapshotOnMain.URL }}
   - {{ .UpdateSnapshotOnMain.URL }}
 {{- end }}
+{{- end }}
 - [{{fmtStatus .NewGitHubMilestone.Done}}] Create new GitHub Milestone.
 {{- if .NewGitHubMilestone.URL }}
   - {{ .NewGitHubMilestone.URL }}
@@ -233,12 +236,6 @@ const (
 
 ### Pre-Release _(~1-3 days before)_
 
-{{- if not (or (gt .RC 0) (.GA)) }} 
-- [{{fmtStatus .CodeFreeze.Done}}] Code Freeze.
-{{- if .CodeFreeze.URL }}
-  - {{ .CodeFreeze.URL }}
-{{- end }}
-{{- end }}
 - [{{fmtStatus .CreateReleasePR.Done}}] Create Release PR.
 {{- if .CreateReleasePR.URL }}
   - {{ .CreateReleasePR.URL }}
@@ -263,7 +260,7 @@ const (
 - [{{fmtStatus .CreateBlogPostPR}}] Open a Pull Request on the website repository for the blog post.
 {{- end }}
 
-### Release _(day of)_
+### Release _({{fmtShortDate .Date }})_
 
 - [{{fmtStatus .MergeReleasePR.Done}}] Merge the Release PR.
 {{- if .MergeReleasePR.URL }}
@@ -315,7 +312,7 @@ const (
 {{- end }}
 
 
-### Post-Release
+### Post-Release _({{fmtShortDate .Date }})_
 - [{{fmtStatus .SlackPostRelease}}] Notify the community on Slack for the new release.
 - [{{fmtStatus .Twitter}}] Twitter announcement.
 - [{{fmtStatus .CloseIssue}}] Close this Issue.
@@ -638,6 +635,9 @@ func (i *Issue) toString() string {
 		"fmtStatus": state.FmtMd,
 		"fmtDate": func(d time.Time) string {
 			return d.Format("Mon _2 Jan 2006")
+		},
+		"fmtShortDate": func(d time.Time) string {
+			return d.Format("Mon _2 Jan")
 		},
 	})
 

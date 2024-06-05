@@ -41,6 +41,7 @@ func CreateMilestoneMenuItem(ctx context.Context) *ui.MenuItem {
 		Update: createMilestoneUpdate,
 		Info:   state.Issue.NewGitHubMilestone.URL,
 		IsDone: state.Issue.NewGitHubMilestone.Done,
+
 		// If we are releasing RC2 or above, we do not want to create a milestone again
 		Ignore: state.Issue.RC >= 2,
 	}
