@@ -14,38 +14,52 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pre_release
+package code_freeze
 
 import (
+	"fmt"
+
 	"vitess.io/vitess-releaser/go/releaser"
 	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/logging"
 )
 
-func CopyBranchProtectionRules(state *releaser.State) (*logging.ProgressLogging, func() string) {
+func NewMilestone(state *releaser.State) (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
-		TotalSteps: 4,
+		TotalSteps: 5,
 	}
 
 	return pl, func() string {
+		var link string
 		defer func() {
+			if link == "" {
+				return
+			}
+			state.Issue.NewGitHubMilestone.Done = true
+			state.Issue.NewGitHubMilestone.URL = link
+
 			pl.NewStepf("Update Issue %s on GitHub", state.IssueLink)
-			state.Issue.CopyBranchProtectionRules = true
 			_, fn := state.UploadIssue()
 			issueLink := fn()
+
 			pl.NewStepf("Issue updated, see: %s", issueLink)
 		}()
 
-		if state.VitessRelease.Repo != "vitessio/vitess" {
-			pl.TotalSteps--
-			pl.NewStepf("Skipping as we are not running on vitessio/vitess.")
-			return ""
-		}
-		pl.NewStepf("Duplicating the branch protection rules for %s", state.VitessRelease.ReleaseBranch)
-		github.CopyBranchProtectionRules(state.VitessRelease.Repo, state.VitessRelease.ReleaseBranch)
+		pl.NewStepf("Finding the next Milestone")
+		nextNextRelease := releaser.FindVersionAfterNextRelease(state)
+		newMilestone := fmt.Sprintf("v%s", nextNextRelease)
 
-		pl.NewStepf("Duplicating the branch protection rules for %s", state.VitessRelease.BaseReleaseBranch)
-		github.CopyBranchProtectionRules(state.VitessRelease.Repo, state.VitessRelease.BaseReleaseBranch)
-		return ""
+		ms := github.GetMilestonesByName(state.VitessRelease.Repo, newMilestone)
+		if len(ms) > 0 {
+			pl.SetTotalStep(4) // we do one lest step if the milestone already exist
+			link = ms[0].URL
+			pl.NewStepf("Found an existing Milestone: %s", link)
+			return link
+		}
+
+		pl.NewStepf("Creating Milestone %s on GitHub", newMilestone)
+		link = github.CreateNewMilestone(state.VitessRelease.Repo, newMilestone)
+		pl.NewStepf("New Milestone %s created: %s", newMilestone, link)
+		return link
 	}
 }

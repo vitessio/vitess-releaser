@@ -19,14 +19,11 @@ package pre_release
 import (
 	"fmt"
 	"io/fs"
-	"os"
-	"os/exec"
-	"path"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"vitess.io/vitess-releaser/go/releaser"
+	"vitess.io/vitess-releaser/go/releaser/code_freeze"
 	"vitess.io/vitess-releaser/go/releaser/git"
 	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/logging"
@@ -36,31 +33,6 @@ import (
 const (
 	examplesOperator = "./examples/operator"
 	examplesCompose  = "./examples/compose/"
-
-	versionGoFile = "./go/vt/servenv/version.go"
-	versionGo     = `/*
-Copyright %d The Vitess Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
-package servenv
-
-// DO NOT EDIT
-// THIS FILE IS AUTO-GENERATED DURING NEW RELEASES BY THE VITESS-RELEASER
-
-const versionName = "%s"
-`
 )
 
 func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() string) {
@@ -112,7 +84,7 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 		// deactivate code freeze
 		if unfreezeBranch {
 			pl.NewStepf("Deactivate code freeze on %s", state.VitessRelease.ReleaseBranch)
-			deactivateCodeFreeze()
+			code_freeze.DeactivateCodeFreeze()
 
 			pl.NewStepf("Commit unfreezing the branch %s", state.VitessRelease.ReleaseBranch)
 			if !git.CommitAll(fmt.Sprintf("Unfreeze branch %s", state.VitessRelease.ReleaseBranch)) {
@@ -135,10 +107,10 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 		updateExamples(lowerRelease, strings.ToLower(releaser.AddRCToReleaseTitle(state.VtOpRelease.Release, state.Issue.RC)))
 
 		pl.NewStepf("Update version.go")
-		UpdateVersionGoFile(lowerRelease)
+		releaser.UpdateVersionGoFile(lowerRelease)
 
 		pl.NewStepf("Update the Java directory")
-		UpdateJavaDir(lowerRelease)
+		releaser.UpdateJavaDir(lowerRelease)
 
 		pl.NewStepf("Commit the update to the codebase for the v%s release", state.VitessRelease.Release)
 		if !git.CommitAll(fmt.Sprintf("Update codebase for the v%s release", state.VitessRelease.Release)) {
@@ -224,26 +196,4 @@ func updateExamples(newVersion, vtopNewVersion string) {
 	}
 	args = append([]string{"-f"}, filesBackups...)
 	utils.Exec("rm", args...)
-}
-
-func UpdateVersionGoFile(newVersion string) {
-	err := os.WriteFile(versionGoFile, []byte(fmt.Sprintf(versionGo, time.Now().Year(), newVersion)), os.ModePerm)
-	if err != nil {
-		utils.LogPanic(err, "failed to write to file %s", versionGoFile)
-	}
-}
-
-func UpdateJavaDir(newVersion string) {
-	//  cd $ROOT/java || exit 1
-	//  mvn versions:set -DnewVersion=$1
-	cmd := exec.Command("mvn", "versions:set", fmt.Sprintf("-DnewVersion=%s", newVersion))
-	pwd, err := os.Getwd()
-	if err != nil {
-		utils.LogPanic(err, "failed to get current working directory")
-	}
-	cmd.Dir = path.Join(pwd, "/java")
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		utils.LogPanic(err, "failed to execute: %s, got: %s", cmd.String(), string(out))
-	}
 }

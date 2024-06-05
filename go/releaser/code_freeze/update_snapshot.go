@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pre_release
+package code_freeze
 
 import (
 	"fmt"
@@ -66,10 +66,10 @@ func UpdateSnapshotOnMain(state *releaser.State) (*logging.ProgressLogging, func
 		newBranchName := git.FindNewGeneratedBranch(state.VitessRelease.Remote, "main", "snapshot-update")
 
 		pl.NewStepf("Update version.go")
-		UpdateVersionGoFile(snapshotRelease)
+		releaser.UpdateVersionGoFile(snapshotRelease)
 
 		pl.NewStepf("Update the Java directory")
-		UpdateJavaDir(snapshotRelease)
+		releaser.UpdateJavaDir(snapshotRelease)
 
 		pl.NewStepf("Commit and push to branch %s", newBranchName)
 		if git.CommitAll(fmt.Sprintf("Snapshot update: %s", snapshotUpdatePRName)) {

@@ -18,11 +18,42 @@ package releaser
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
+	"path"
 	"strconv"
 	"strings"
+	"time"
 
 	"vitess.io/vitess-releaser/go/releaser/git"
 	"vitess.io/vitess-releaser/go/releaser/utils"
+)
+
+const (
+	versionGoFile = "./go/vt/servenv/version.go"
+	versionGo     = `/*
+Copyright %d The Vitess Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package servenv
+
+// DO NOT EDIT
+// THIS FILE IS AUTO-GENERATED DURING NEW RELEASES BY THE VITESS-RELEASER
+
+const versionName = "%s"
+`
 )
 
 // FindNextRelease finds the next release that needs to be released for the given
@@ -152,4 +183,26 @@ func releaseToMajorVtOp(release string) string {
 		utils.LogPanic(nil, "expected the vtop version to have format x.x.x but was %s", release)
 	}
 	return fmt.Sprintf("%s.%s", parts[0], parts[1])
+}
+
+func UpdateVersionGoFile(newVersion string) {
+	err := os.WriteFile(versionGoFile, []byte(fmt.Sprintf(versionGo, time.Now().Year(), newVersion)), os.ModePerm)
+	if err != nil {
+		utils.LogPanic(err, "failed to write to file %s", versionGoFile)
+	}
+}
+
+func UpdateJavaDir(newVersion string) {
+	//  cd $ROOT/java || exit 1
+	//  mvn versions:set -DnewVersion=$1
+	cmd := exec.Command("mvn", "versions:set", fmt.Sprintf("-DnewVersion=%s", newVersion))
+	pwd, err := os.Getwd()
+	if err != nil {
+		utils.LogPanic(err, "failed to get current working directory")
+	}
+	cmd.Dir = path.Join(pwd, "/java")
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		utils.LogPanic(err, "failed to execute: %s, got: %s", cmd.String(), string(out))
+	}
 }

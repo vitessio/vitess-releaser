@@ -22,6 +22,7 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"vitess.io/vitess-releaser/go/interactive/code_freeze"
 	"vitess.io/vitess-releaser/go/interactive/post_release"
 	"vitess.io/vitess-releaser/go/interactive/pre_release"
 	"vitess.io/vitess-releaser/go/interactive/release"
@@ -47,11 +48,11 @@ func MainScreen(ctx context.Context, state *releaser.State) {
 	codeFreezeMenu := ui.NewMenu(
 		ctx,
 		"Code Freeze",
-		pre_release.CodeFreezeMenuItem(ctx),
-		pre_release.CopyBranchProtectionMenuItem(ctx),
-		pre_release.CreateBackportToLabelMenuItem(ctx),
-		pre_release.UpdateSnapshotOnMainMenuItem(ctx),
-		pre_release.CreateMilestoneMenuItem(ctx),
+		code_freeze.CodeFreezeMenuItem(ctx),
+		code_freeze.CopyBranchProtectionMenuItem(ctx),
+		code_freeze.CreateBackportToLabelMenuItem(ctx),
+		code_freeze.UpdateSnapshotOnMainMenuItem(ctx),
+		code_freeze.CreateMilestoneMenuItem(ctx),
 	)
 
 	preReleaseMenu := ui.NewMenu(

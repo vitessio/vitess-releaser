@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pre_release
+package code_freeze
 
 import (
 	"context"
@@ -22,46 +22,43 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
+	"vitess.io/vitess-releaser/go/releaser/code_freeze"
 	"vitess.io/vitess-releaser/go/releaser/steps"
-
-	"vitess.io/vitess-releaser/go/releaser/pre_release"
 )
 
-func CreateBackportToLabelMenuItem(ctx context.Context) *ui.MenuItem {
+func CopyBranchProtectionMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
-	act := createBackportToLabelAct
-	if state.Issue.CreateBackportToLabel.Done {
+	act := copyBranchProtectionAct
+	if state.Issue.CopyBranchProtectionRules {
 		act = nil
 	}
 	return &ui.MenuItem{
 		State:  state,
-		Name:   steps.CreateBackportToLabel,
+		Name:   steps.CopyBranchProtectionRules,
 		Act:    act,
-		Update: createBackportToLabelUpdate,
-		IsDone: state.Issue.CreateBackportToLabel.Done,
-		Info:   state.Issue.CreateBackportToLabel.URL,
+		Update: copyBranchProtectionUpdate,
+		IsDone: state.Issue.CopyBranchProtectionRules,
 
 		// We only need to run this step when we are creating a new branch, aka doing RC-1
 		Ignore: state.Issue.RC != 1,
 	}
 }
 
-type createBackportToLabelUrl string
+type copyBranchProtectionUrl string
 
-func createBackportToLabelUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
-	_, ok := msg.(createBackportToLabelUrl)
+func copyBranchProtectionUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
+	_, ok := msg.(copyBranchProtectionUrl)
 	if !ok {
 		return mi, nil
 	}
 
-	mi.IsDone = mi.State.Issue.CreateBackportToLabel.Done
-	mi.Info = mi.State.Issue.CreateBackportToLabel.URL
+	mi.IsDone = mi.State.Issue.CopyBranchProtectionRules
 	return mi, nil
 }
 
-func createBackportToLabelAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
-	pl, create := pre_release.CreateBackportToLabel(mi.State)
+func copyBranchProtectionAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
+	pl, copyRules := code_freeze.CopyBranchProtectionRules(mi.State)
 	return mi, tea.Batch(func() tea.Msg {
-		return createBackportToLabelUrl(create())
-	}, ui.PushDialog(ui.NewProgressDialog("Create Backport To label", pl)))
+		return copyBranchProtectionUrl(copyRules())
+	}, ui.PushDialog(ui.NewProgressDialog("Copy Branch Protection Rule", pl)))
 }

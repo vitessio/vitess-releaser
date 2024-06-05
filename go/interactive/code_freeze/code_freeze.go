@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pre_release
+package code_freeze
 
 import (
 	"context"
@@ -22,9 +22,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
+	"vitess.io/vitess-releaser/go/releaser/code_freeze"
 	"vitess.io/vitess-releaser/go/releaser/steps"
-
-	"vitess.io/vitess-releaser/go/releaser/pre_release"
 )
 
 func CodeFreezeMenuItem(ctx context.Context) *ui.MenuItem {
@@ -61,7 +60,7 @@ func codeFreezeUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
 }
 
 func codeFreezeAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
-	pl, freeze := pre_release.CodeFreeze(mi.State)
+	pl, freeze := code_freeze.CodeFreeze(mi.State)
 	return mi, tea.Batch(func() tea.Msg {
 		return codeFreezeUrl(freeze())
 	}, ui.PushDialog(ui.NewProgressDialog("Code freeze", pl)))
