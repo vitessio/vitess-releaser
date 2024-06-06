@@ -81,7 +81,7 @@ func IsPRMerged(repo string, nb int) bool {
 	return !strings.Contains(stdOut, "null")
 }
 
-func CheckBackportToPRs(repo, majorRelease string) map[string]any {
+func CheckBackportToPRs(repo, branch string) map[string]any {
 	git.CorrectCleanRepo(repo)
 
 	stdOut := execGh("pr", "list", "--json", "title,baseRefName,url,labels", "--repo", repo)
@@ -93,13 +93,12 @@ func CheckBackportToPRs(repo, majorRelease string) map[string]any {
 
 	var mustClose []PR
 
-	branchName := fmt.Sprintf("release-%s.0", majorRelease)
 	for _, pr := range prs {
-		if pr.Base == branchName {
+		if pr.Base == branch {
 			mustClose = append(mustClose, pr)
 		}
 		for _, l := range pr.Labels {
-			if strings.HasPrefix(l.Name, "Backport to: ") && strings.Contains(l.Name, branchName) {
+			if strings.HasPrefix(l.Name, "Backport to: ") && strings.Contains(l.Name, branch) {
 				mustClose = append(mustClose, pr)
 			}
 		}
