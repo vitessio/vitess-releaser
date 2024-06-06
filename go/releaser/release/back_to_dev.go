@@ -23,7 +23,6 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/git"
 	"vitess.io/vitess-releaser/go/releaser/github"
 	"vitess.io/vitess-releaser/go/releaser/logging"
-	"vitess.io/vitess-releaser/go/releaser/pre_release"
 )
 
 func BackToDevModeOnBranch(state *releaser.State, itemToUpdate *releaser.ItemWithLink, branch string) (*logging.ProgressLogging, func() string) {
@@ -74,10 +73,10 @@ func BackToDevModeOnBranch(state *releaser.State, itemToUpdate *releaser.ItemWit
 		newBranchName := git.FindNewGeneratedBranch(state.VitessRelease.Remote, branch, "back-to-dev-mode")
 
 		pl.NewStepf("Update version.go")
-		pre_release.UpdateVersionGoFile(devModeRelease)
+		releaser.UpdateVersionGoFile(devModeRelease)
 
 		pl.NewStepf("Update the Java directory")
-		pre_release.UpdateJavaDir(devModeRelease)
+		releaser.UpdateJavaDir(devModeRelease)
 
 		pl.NewStepf("Commit and push to branch %s", newBranchName)
 		if git.CommitAll(fmt.Sprintf("Back to dev mode: %s", backToDevModePRName)) {

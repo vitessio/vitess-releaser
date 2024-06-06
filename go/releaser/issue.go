@@ -179,13 +179,14 @@ const (
 {{- if .DoVtOp }}
 > The release of vitess-operator **v{{.VtopRelease}}** is also planned.
 {{- end }}
+> Release team: @vitessio/release
 
 > [!IMPORTANT]  
 > Please **do not** edit the content of the Issue's body manually.
 > The **vitess-releaser** tool is managing and handling this issue.
 > You can however click on the check boxes to mark them as done/not done, and write comments.
 
-### Prerequisites
+### Prerequisites _(~2 weeks before)_
 
 - [{{fmtStatus .General.Done}}] General prerequisites.
 {{- range $item := .General.Items }}
@@ -206,14 +207,11 @@ const (
 - [{{fmtStatus .RequestCrossPostBlogPost}}] Send requests to cross-post the blog post (CNCF, PlanetScale).
 {{- end }}
 
-
-### Pre-Release
-
-{{- if not (or (gt .RC 1) (.GA)) }} 
+{{- if not (or (gt .RC 1) (.GA))}}
+### Code Freeze {{if eq .RC 1}}_(1 week before)_{{else}}_(~1-3 days before)_{{end}}
 - [{{fmtStatus .CodeFreeze.Done}}] Code Freeze.
 {{- if .CodeFreeze.URL }}
   - {{ .CodeFreeze.URL }}
-{{- end }}
 {{- end }}
 {{- if eq .RC 1 }}
 - [{{fmtStatus .CopyBranchProtectionRules}}] Copy branch protection rules.
@@ -226,15 +224,17 @@ const (
   - {{ .UpdateSnapshotOnMain.URL }}
 {{- end }}
 {{- end }}
-- [{{fmtStatus .CreateReleasePR.Done}}] Create Release PR.
-{{- if .CreateReleasePR.URL }}
-  - {{ .CreateReleasePR.URL }}
-{{- end }}
-{{- if lt .RC 2 }}
 - [{{fmtStatus .NewGitHubMilestone.Done}}] Create new GitHub Milestone.
 {{- if .NewGitHubMilestone.URL }}
   - {{ .NewGitHubMilestone.URL }}
 {{- end }}
+{{- end }}
+
+### Pre-Release _(~1-3 days before)_
+
+- [{{fmtStatus .CreateReleasePR.Done}}] Create Release PR.
+{{- if .CreateReleasePR.URL }}
+  - {{ .CreateReleasePR.URL }}
 {{- end }}
 {{- if .DoVtOp }}
 {{- if eq .RC 1 }}
@@ -256,7 +256,7 @@ const (
 - [{{fmtStatus .CreateBlogPostPR}}] Open a Pull Request on the website repository for the blog post.
 {{- end }}
 
-### Release
+### Release _({{fmtShortDate .Date }})_
 
 - [{{fmtStatus .MergeReleasePR.Done}}] Merge the Release PR.
 {{- if .MergeReleasePR.URL }}
@@ -308,7 +308,7 @@ const (
 {{- end }}
 
 
-### Post-Release
+### Post-Release _({{fmtShortDate .Date }})_
 - [{{fmtStatus .SlackPostRelease}}] Notify the community on Slack for the new release.
 - [{{fmtStatus .Twitter}}] Twitter announcement.
 - [{{fmtStatus .CloseIssue}}] Close this Issue.
@@ -637,6 +637,9 @@ func (i *Issue) toString() string {
 		"fmtStatus": state.FmtMd,
 		"fmtDate": func(d time.Time) string {
 			return d.Format("Mon _2 Jan 2006")
+		},
+		"fmtShortDate": func(d time.Time) string {
+			return d.Format("Mon _2 Jan")
 		},
 	})
 

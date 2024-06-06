@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pre_release
+package code_freeze
 
 import (
 	"context"
@@ -22,9 +22,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
+	"vitess.io/vitess-releaser/go/releaser/code_freeze"
 	"vitess.io/vitess-releaser/go/releaser/steps"
-
-	"vitess.io/vitess-releaser/go/releaser/pre_release"
 )
 
 func UpdateSnapshotOnMainMenuItem(ctx context.Context) *ui.MenuItem {
@@ -61,7 +60,7 @@ func updateSnapshotOnMainUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea
 }
 
 func updateSnapshotOnMainAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
-	pl, update := pre_release.UpdateSnapshotOnMain(mi.State)
+	pl, update := code_freeze.UpdateSnapshotOnMain(mi.State)
 	return mi, tea.Batch(func() tea.Msg {
 		return updateSnapshotOnMainUrl(update())
 	}, ui.PushDialog(ui.NewProgressDialog("Update SNAPSHOT on main", pl)))

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pre_release
+package code_freeze
 
 import (
 	"context"
@@ -22,7 +22,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/pre_release"
+	"vitess.io/vitess-releaser/go/releaser/code_freeze"
 	"vitess.io/vitess-releaser/go/releaser/steps"
 )
 
@@ -41,6 +41,7 @@ func CreateMilestoneMenuItem(ctx context.Context) *ui.MenuItem {
 		Update: createMilestoneUpdate,
 		Info:   state.Issue.NewGitHubMilestone.URL,
 		IsDone: state.Issue.NewGitHubMilestone.Done,
+
 		// If we are releasing RC2 or above, we do not want to create a milestone again
 		Ignore: state.Issue.RC >= 2,
 	}
@@ -59,7 +60,7 @@ func createMilestoneUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd)
 }
 
 func createMilestoneAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
-	pl, create := pre_release.NewMilestone(mi.State)
+	pl, create := code_freeze.NewMilestone(mi.State)
 	return mi, tea.Batch(func() tea.Msg {
 		return createMilestone(create())
 	}, ui.PushDialog(ui.NewProgressDialog("Creating new GitHub Milestone", pl)))
