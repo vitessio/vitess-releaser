@@ -380,7 +380,8 @@ func (s *State) LoadIssue() {
 		case stateReadingItem:
 			// divers
 			if strings.HasPrefix(line, dateItem) {
-				nline := strings.TrimSpace(line[len(dateItem) : len(line)-2])
+				nline := strings.TrimSpace(line[len(dateItem):])
+				nline = strings.ReplaceAll(nline, ".", "") // remove the period at the end of the line
 				parsedDate, err := time.Parse("Mon _2 Jan 2006", nline)
 				if err != nil {
 					utils.LogPanic(err, "failed to parse the date from the release issue body (%s)", nline)
