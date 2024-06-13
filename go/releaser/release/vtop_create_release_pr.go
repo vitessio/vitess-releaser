@@ -204,7 +204,7 @@ func updateVitessDeps(state *releaser.State) {
 		utils.LogPanic(nil, "could not parse the version.go in vitessio/vitess, output: %s", state.VitessRelease.Release)
 	}
 
-	utils.Exec("go", "get", "-u", fmt.Sprintf("vitess.io/vitess@v0.%s.%s", currentReleaseSlice[0], currentReleaseSlice[2]))
+	utils.Exec("go", "get", "-u", fmt.Sprintf("vitess.io/vitess@v0.%s.%s", currentReleaseSlice[0], strings.ToLower(currentReleaseSlice[2])))
 	utils.Exec("go", "mod", "tidy")
 }
 
