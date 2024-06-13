@@ -199,7 +199,12 @@ func updateVitessDeps(state *releaser.State) {
 		return
 	}
 
-	utils.Exec("go", "get", "-u", fmt.Sprintf("vitess.io/vitess@%s", strings.ToLower(state.VitessRelease.Release)))
+	currentReleaseSlice := strings.Split(state.VitessRelease.Release, ".")
+	if len(currentReleaseSlice) != 3 {
+		utils.LogPanic(nil, "could not parse the version.go in vitessio/vitess, output: %s", state.VitessRelease.Release)
+	}
+
+	utils.Exec("go", "get", "-u", fmt.Sprintf("vitess.io/vitess@v0.%s.%s", currentReleaseSlice[0], currentReleaseSlice[2]))
 	utils.Exec("go", "mod", "tidy")
 }
 
