@@ -113,6 +113,36 @@ func CheckBackportToPRs(repo, branch string) map[string]any {
 	return m
 }
 
+func CheckReleaseBlockerPRs(repo, majorRelease string) map[string]any {
+	git.CorrectCleanRepo(repo)
+
+	stdOut := execGh("pr", "list", "--json", "title,url,labels", "--repo", repo)
+	var prs []PR
+	err := json.Unmarshal([]byte(stdOut), &prs)
+	if err != nil {
+		utils.LogPanic(err, "failed to parse the release blocker PRs, got: %s", stdOut)
+	}
+
+	var mustClose []PR
+
+	branchName := fmt.Sprintf("release-%s.0", majorRelease)
+	for _, i := range prs {
+		for _, l := range i.Labels {
+			if strings.HasPrefix(l.Name, "Release Blocker: ") && strings.Contains(l.Name, branchName) {
+				mustClose = append(mustClose, i)
+			}
+		}
+	}
+
+	m := make(map[string]any, len(mustClose))
+	for _, pr := range mustClose {
+		nb := pr.URL[strings.LastIndex(pr.URL, "/")+1:]
+		markdownURL := fmt.Sprintf("#%s", nb)
+		m[markdownURL] = nil
+	}
+	return m
+}
+
 func FindPR(repo, prTitle string) (nb int, url string) {
 	stdOut := execGh(
 		"pr", "list",
