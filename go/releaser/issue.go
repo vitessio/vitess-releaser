@@ -63,7 +63,7 @@ const (
 	preSlackAnnouncementItem = "Notify the community on Slack."
 	checkSummaryItem         = "Make sure the release notes summary is prepared and clean."
 	backportItem             = "Make sure important Pull Requests are merged, list below."
-	releaseBlockerItem       = "Make sure release blocker Issues are closed, list below."
+	releaseBlockerItem       = "Make sure release blocker items are closed, list below."
 	draftBlogPostItem        = "Draft the release blog post."
 	crossBlogPostItem        = "Send requests to cross-post the blog post (CNCF, PlanetScale)."
 
@@ -198,7 +198,7 @@ const (
 {{- range $item := .CheckBackport.Items }}
   - [{{fmtStatus $item.Done}}] {{$item.URL}}
 {{- end }}
-- Make sure release blocker Issues are closed, list below.
+- Make sure release blocker items are closed, list below.
 {{- range $item := .ReleaseBlocker.Items }}
   - [{{fmtStatus $item.Done}}] {{$item.URL}}
 {{- end }}
