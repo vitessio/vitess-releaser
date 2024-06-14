@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -138,12 +139,18 @@ func setUpVitessReleaseInformation(s *releaser.State, repo string, rc int) (rele
 		utils.LogPanic(nil, "wanted: RC %d but release branch was %s, latest release was %v and is from main is %v", rcIncrement, releaseBranch, isLatestRelease, isFromMain)
 	}
 
+	majorReleaseNb, err := strconv.Atoi(releaseVersion)
+	if err != nil {
+		utils.LogPanic(err, "could not parse the release version")
+	}
+
 	vitessRelease := releaser.ReleaseInformation{
 		Repo:              repo,
 		Remote:            remote,
 		ReleaseBranch:     releaseBranch,
 		BaseReleaseBranch: baseReleaseBranch,
 		MajorRelease:      releaseVersion,
+		MajorReleaseNb:    majorReleaseNb,
 		IsLatestRelease:   isLatestRelease,
 		Release:           releaseFromIssue,
 		GA:                ga,
