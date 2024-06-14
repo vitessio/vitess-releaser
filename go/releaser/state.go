@@ -52,6 +52,7 @@ type ReleaseInformation struct {
 	BaseReleaseBranch string
 
 	MajorRelease    string
+	MajorReleaseNb  int
 	Release         string
 	IsLatestRelease bool
 	GA              bool
