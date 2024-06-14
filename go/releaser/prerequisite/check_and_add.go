@@ -26,7 +26,7 @@ import (
 
 func CheckAndAddPRsIssues(state *releaser.State) (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
-		TotalSteps: 5,
+		TotalSteps: 6,
 	}
 
 	return pl, func() string {
@@ -38,8 +38,19 @@ func CheckAndAddPRsIssues(state *releaser.State) (*logging.ProgressLogging, func
 		state.Issue.CheckBackport = addLinksToParentOfItems(state.Issue.CheckBackport, prsOnGH)
 
 		pl.NewStepf("Check and add Release Blocker Issues")
-		issuesOnGH := github.CheckReleaseBlockerIssues(state.VitessRelease.Repo, state.VitessRelease.MajorRelease)
-		state.Issue.ReleaseBlocker = addLinksToParentOfItems(state.Issue.ReleaseBlocker, issuesOnGH)
+		releaseBlockerIssuesOnGH := github.CheckReleaseBlockerIssues(state.VitessRelease.Repo, state.VitessRelease.MajorRelease)
+		pl.NewStepf("Check and add Release Blocker PRs")
+		releaseBlockerPRsOnGH := github.CheckReleaseBlockerPRs(state.VitessRelease.Repo, state.VitessRelease.MajorRelease)
+
+		// Merge the two maps together and add them to the issue
+		releaseBlockers := map[string]any{}
+		for key, _ := range releaseBlockerIssuesOnGH {
+			releaseBlockers[key] = nil
+		}
+		for key, _ := range releaseBlockerPRsOnGH {
+			releaseBlockers[key] = nil
+		}
+		state.Issue.ReleaseBlocker = addLinksToParentOfItems(state.Issue.ReleaseBlocker, releaseBlockers)
 
 		pl.NewStepf("Update Issue %s on GitHub", state.IssueLink)
 		_, fn := state.UploadIssue()
@@ -77,11 +88,11 @@ outerPR:
 }
 
 func GetCheckAndAddInfoMsg(state *releaser.State) string {
-	nbPRs, nbIssues := state.Issue.CheckBackport.ItemsLeft(), state.Issue.ReleaseBlocker.ItemsLeft()
+	nbPRs, releaseBlockerItems := state.Issue.CheckBackport.ItemsLeft(), state.Issue.ReleaseBlocker.ItemsLeft()
 
 	msg := ""
-	if nbPRs > 0 || nbIssues > 0 {
-		msg = fmt.Sprintf("Found %d PRs and %d issues", nbPRs, nbIssues)
+	if nbPRs > 0 || releaseBlockerItems > 0 {
+		msg = fmt.Sprintf("Found %d PRs and %d release blocker items", nbPRs, releaseBlockerItems)
 	}
 	return msg
 }
