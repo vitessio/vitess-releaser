@@ -29,8 +29,8 @@ func CheckDockerMessage(majorRelease int, repo string) []string {
 	// Hack: versions < v20 and versions >= v20 use different GitHub Actions workflows to build the Docker images.
 	if majorRelease < 20 {
 		msg = append(msg,
-			fmt.Sprintf("\t- https://github.com/%s/actions/workflows/docker_build_base.yml", repo),
-			fmt.Sprintf("\t- https://github.com/%s/actions/workflows/docker_build_lite.yml", repo),
+			fmt.Sprintf("\t- https://github.com/%s/actions/workflows/docker_build_old_base.yml", repo),
+			fmt.Sprintf("\t- https://github.com/%s/actions/workflows/docker_build_old_lite.yml", repo),
 		)
 	} else {
 		msg = append(msg, fmt.Sprintf("\t- https://github.com/%s/actions/workflows/docker_build_images.yml", repo))
