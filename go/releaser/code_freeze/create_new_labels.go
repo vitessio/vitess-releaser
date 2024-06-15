@@ -25,14 +25,18 @@ import (
 )
 
 const (
+	releaseBlockerLabelName  = "Release Blocker: "
+	releaseBlockerLabelColor = "B60205"
+	releaseBlockerLabelDesc  = "This item blocks the release on branch "
+
 	backportToLabelName  = "Backport to: "
 	backportToLabelColor = "D4C5F9"
 	backportToLabelDesc  = "Needs to be backport to "
 )
 
-func CreateBackportToLabel(state *releaser.State) (*logging.ProgressLogging, func() string) {
+func CreateNewLabels(state *releaser.State) (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
-		TotalSteps: 5,
+		TotalSteps: 6,
 	}
 
 	return pl, func() string {
@@ -46,13 +50,17 @@ func CreateBackportToLabel(state *releaser.State) (*logging.ProgressLogging, fun
 		pl.NewStepf("Creating '%s' label", labelBaseBranch)
 		github.CreateLabel(state.VitessRelease.Repo, labelBaseBranch, backportToLabelColor, backportToLabelDesc+state.VitessRelease.BaseReleaseBranch)
 
+		releaseBlockerLabel := releaseBlockerLabelName + state.VitessRelease.BaseReleaseBranch
+		pl.NewStepf("Creating '%s' label", releaseBlockerLabel)
+		github.CreateLabel(state.VitessRelease.Repo, releaseBlockerLabel, releaseBlockerLabelColor, releaseBlockerLabelDesc+state.VitessRelease.BaseReleaseBranch)
+
 		// Let's use the base branch for the link as that label will also match the label of the rc branch
-		labelURL := fmt.Sprintf("https://github.com/%s/labels?q=Backport+to%%3A+%s", state.VitessRelease.Repo, state.VitessRelease.BaseReleaseBranch)
+		labelURL := fmt.Sprintf("https://github.com/%s/labels?q=%s", state.VitessRelease.Repo, state.VitessRelease.BaseReleaseBranch)
 		pl.NewStepf("Label created, see: %s", labelURL)
 
 		pl.NewStepf("Update Issue %s on GitHub", state.IssueLink)
-		state.Issue.CreateBackportToLabel.Done = true
-		state.Issue.CreateBackportToLabel.URL = labelURL
+		state.Issue.CreateNewLabels.Done = true
+		state.Issue.CreateNewLabels.URL = labelURL
 		_, fn := state.UploadIssue()
 		issueLink := fn()
 		pl.NewStepf("Issue updated, see: %s", issueLink)

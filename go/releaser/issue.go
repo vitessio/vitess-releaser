@@ -36,7 +36,7 @@ const (
 	stateReadingBackport
 	stateReadingReleaseBlockerIssue
 	stateReadingCodeFreezeItem
-	stateReadingCreateBackportLabelItem
+	stateReadingCreateNewLabelsItem
 	stateReadingUpdateSnapshotOnMainItem
 	stateReadingCreateReleasePRItem
 	stateReadingNewMilestoneItem
@@ -70,7 +70,7 @@ const (
 	// Pre-Release
 	codeFreezeItem                = "Code Freeze."
 	copyBranchProtectionRulesItem = "Copy branch protection rules."
-	createBackportToLabelItem     = "Create the Backport to labels."
+	createNewLabelsItem           = "Create new labels."
 	updateSnapshotOnMainItem      = "Update the SNAPSHOT version on main."
 	createReleasePRItem           = "Create Release PR."
 	newMilestoneItem              = "Create new GitHub Milestone."
@@ -140,7 +140,7 @@ type (
 		// Pre-Release
 		CodeFreeze                   ItemWithLink
 		CopyBranchProtectionRules    bool
-		CreateBackportToLabel        ItemWithLink
+		CreateNewLabels              ItemWithLink
 		UpdateSnapshotOnMain         ItemWithLink
 		CreateReleasePR              ItemWithLink
 		NewGitHubMilestone           ItemWithLink
@@ -215,9 +215,9 @@ const (
 {{- end }}
 {{- if eq .RC 1 }}
 - [{{fmtStatus .CopyBranchProtectionRules}}] Copy branch protection rules.
-- [{{fmtStatus .CreateBackportToLabel.Done}}] Create the Backport to labels.
-{{- if .CreateBackportToLabel.URL }}
-  - {{ .CreateBackportToLabel.URL }}
+- [{{fmtStatus .CreateNewLabels.Done}}] Create new labels.
+{{- if .CreateNewLabels.URL }}
+  - {{ .CreateNewLabels.URL }}
 {{- end }}
 - [{{fmtStatus .UpdateSnapshotOnMain.Done}}] Update the SNAPSHOT version on main.
 {{- if .UpdateSnapshotOnMain.URL }}
@@ -411,10 +411,10 @@ func (s *State) LoadIssue() {
 				}
 			case strings.Contains(line, copyBranchProtectionRulesItem):
 				newIssue.CopyBranchProtectionRules = strings.HasPrefix(line, markdownItemDone)
-			case strings.Contains(line, createBackportToLabelItem):
-				newIssue.CreateBackportToLabel.Done = strings.HasPrefix(line, markdownItemDone)
+			case strings.Contains(line, createNewLabelsItem):
+				newIssue.CreateNewLabels.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
-					st = stateReadingCreateBackportLabelItem
+					st = stateReadingCreateNewLabelsItem
 				}
 			case strings.Contains(line, updateSnapshotOnMainItem):
 				newIssue.UpdateSnapshotOnMain.Done = strings.HasPrefix(line, markdownItemDone)
@@ -514,8 +514,8 @@ func (s *State) LoadIssue() {
 			newIssue.ReleaseBlocker.Items = append(newIssue.ReleaseBlocker.Items, handleNewListItem(lines, i, &st))
 		case stateReadingCodeFreezeItem:
 			newIssue.CodeFreeze.URL = handleSingleTextItem(line, &st)
-		case stateReadingCreateBackportLabelItem:
-			newIssue.CreateBackportToLabel.URL = handleSingleTextItem(line, &st)
+		case stateReadingCreateNewLabelsItem:
+			newIssue.CreateNewLabels.URL = handleSingleTextItem(line, &st)
 		case stateReadingUpdateSnapshotOnMainItem:
 			newIssue.UpdateSnapshotOnMain.URL = handleSingleTextItem(line, &st)
 		case stateReadingCreateReleasePRItem:
