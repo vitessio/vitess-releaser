@@ -26,41 +26,41 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/steps"
 )
 
-func CreateBackportToLabelMenuItem(ctx context.Context) *ui.MenuItem {
+func CreateNewLabelsMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
-	act := createBackportToLabelAct
-	if state.Issue.CreateBackportToLabel.Done {
+	act := createNewLabelsAct
+	if state.Issue.CreateNewLabels.Done {
 		act = nil
 	}
 	return &ui.MenuItem{
 		State:  state,
-		Name:   steps.CreateBackportToLabel,
+		Name:   steps.CreateNewLabels,
 		Act:    act,
-		Update: createBackportToLabelUpdate,
-		IsDone: state.Issue.CreateBackportToLabel.Done,
-		Info:   state.Issue.CreateBackportToLabel.URL,
+		Update: createNewLabelsUpdate,
+		IsDone: state.Issue.CreateNewLabels.Done,
+		Info:   state.Issue.CreateNewLabels.URL,
 
 		// We only need to run this step when we are creating a new branch, aka doing RC-1
 		Ignore: state.Issue.RC != 1,
 	}
 }
 
-type createBackportToLabelUrl string
+type createNewLabelsUrl string
 
-func createBackportToLabelUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
-	_, ok := msg.(createBackportToLabelUrl)
+func createNewLabelsUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
+	_, ok := msg.(createNewLabelsUrl)
 	if !ok {
 		return mi, nil
 	}
 
-	mi.IsDone = mi.State.Issue.CreateBackportToLabel.Done
-	mi.Info = mi.State.Issue.CreateBackportToLabel.URL
+	mi.IsDone = mi.State.Issue.CreateNewLabels.Done
+	mi.Info = mi.State.Issue.CreateNewLabels.URL
 	return mi, nil
 }
 
-func createBackportToLabelAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
-	pl, create := code_freeze.CreateBackportToLabel(mi.State)
+func createNewLabelsAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
+	pl, create := code_freeze.CreateNewLabels(mi.State)
 	return mi, tea.Batch(func() tea.Msg {
-		return createBackportToLabelUrl(create())
-	}, ui.PushDialog(ui.NewProgressDialog("Create Backport To label", pl)))
+		return createNewLabelsUrl(create())
+	}, ui.PushDialog(ui.NewProgressDialog("Create New Labels", pl)))
 }

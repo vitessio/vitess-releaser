@@ -50,7 +50,7 @@ func MainScreen(ctx context.Context, state *releaser.State) {
 		"Code Freeze",
 		code_freeze.CodeFreezeMenuItem(ctx),
 		code_freeze.CopyBranchProtectionMenuItem(ctx),
-		code_freeze.CreateBackportToLabelMenuItem(ctx),
+		code_freeze.CreateNewLabelsMenuItem(ctx),
 		code_freeze.UpdateSnapshotOnMainMenuItem(ctx),
 		code_freeze.CreateMilestoneMenuItem(ctx),
 	)

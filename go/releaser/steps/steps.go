@@ -31,7 +31,7 @@ const (
 	// Pre-Release
 	CodeFreeze                   = "Code Freeze"
 	CopyBranchProtectionRules    = "Copy branch protection rules"
-	CreateBackportToLabel        = "Create Backport To Label"
+	CreateNewLabels              = "Create new labels"
 	UpdateSnapshotOnMain         = "Update SNAPSHOT on main"
 	CreateReleasePR              = "Create Release PR"
 	CreateMilestone              = "Create Milestone"

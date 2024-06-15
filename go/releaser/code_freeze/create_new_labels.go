@@ -30,7 +30,7 @@ const (
 	backportToLabelDesc  = "Needs to be backport to "
 )
 
-func CreateBackportToLabel(state *releaser.State) (*logging.ProgressLogging, func() string) {
+func CreateNewLabels(state *releaser.State) (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
 		TotalSteps: 5,
 	}
@@ -47,12 +47,12 @@ func CreateBackportToLabel(state *releaser.State) (*logging.ProgressLogging, fun
 		github.CreateLabel(state.VitessRelease.Repo, labelBaseBranch, backportToLabelColor, backportToLabelDesc+state.VitessRelease.BaseReleaseBranch)
 
 		// Let's use the base branch for the link as that label will also match the label of the rc branch
-		labelURL := fmt.Sprintf("https://github.com/%s/labels?q=Backport+to%%3A+%s", state.VitessRelease.Repo, state.VitessRelease.BaseReleaseBranch)
+		labelURL := fmt.Sprintf("https://github.com/%s/labels?q=%s", state.VitessRelease.Repo, state.VitessRelease.BaseReleaseBranch)
 		pl.NewStepf("Label created, see: %s", labelURL)
 
 		pl.NewStepf("Update Issue %s on GitHub", state.IssueLink)
-		state.Issue.CreateBackportToLabel.Done = true
-		state.Issue.CreateBackportToLabel.URL = labelURL
+		state.Issue.CreateNewLabels.Done = true
+		state.Issue.CreateNewLabels.URL = labelURL
 		_, fn := state.UploadIssue()
 		issueLink := fn()
 		pl.NewStepf("Issue updated, see: %s", issueLink)
