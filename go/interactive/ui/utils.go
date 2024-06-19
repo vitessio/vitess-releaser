@@ -19,8 +19,9 @@ package ui
 import "github.com/charmbracelet/lipgloss"
 
 const (
-	COLOR_GREEN = "2"
-	COLOR_RED   = "9"
+	COLOR_GREEN        = "2"
+	COLOR_RED          = "9"
+	COLOR_GREEN_YELLOW = "154"
 )
 
 func statusColor(style lipgloss.Style, condition bool) lipgloss.Style {

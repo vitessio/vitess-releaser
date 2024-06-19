@@ -25,7 +25,8 @@ You need to chose a valid release: here there should be a tag `v20.0.0-RC3`.
 Just creating a fork is not enough. The tool expects the following to be setup on your fork, which you will need to do
 manually:
 ### Labels
-Create the following labels on your fork: `Component: General` and `Type: Release`. This is required because the 
+Create the following labels on your fork: `Component: General`, `Type: Release`, `Do Not Merge`. This is required 
+because the 
 Releaser tool uses these labels to create the Release issue. The issue URL is shown in the UI that comes up. To test 
 with the same 
 
