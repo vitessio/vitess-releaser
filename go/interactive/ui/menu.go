@@ -271,7 +271,7 @@ func (m *Menu) View() string {
 		Render()
 
 	return lipgloss.JoinVertical(lipgloss.Left,
-		m.title,
+		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(COLOR_GREEN)).Render(m.title),
 		list,
 	)
 }

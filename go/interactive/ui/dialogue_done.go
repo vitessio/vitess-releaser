@@ -74,16 +74,19 @@ func (c *DoneDialog) View() string {
 		rows = append(rows, []string{s})
 	}
 
+	style := lipgloss.NewStyle().Bold(true)
+	style = statusColor(style, c.IsDone)
+
 	lines := []string{
 		c.Title,
 		"",
-		fmt.Sprintf("Task status is: %s", state.Fmt(c.IsDone)),
+		fmt.Sprintf("Task status is: %s", style.Render(state.Fmt(c.IsDone))),
 	}
 	lines = append(lines, table.New().Data(table.NewStringData(rows...)).Width(c.width).Render())
 	lines = append(
 		lines,
 		"",
-		"Press 'x' to mark the item as Done/To do.",
+		"Press 'x' to toggle the item between Done and To do.",
 		"Press 'q' or 'enter' to quit.",
 	)
 
