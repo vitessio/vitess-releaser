@@ -20,7 +20,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -32,6 +34,8 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/utils"
 )
 
+const VERSION = "v1.0"
+
 var (
 	releaseVersion     string
 	vtopReleaseVersion string
@@ -39,11 +43,15 @@ var (
 	rcIncrement        int
 	live               = true
 	help               bool
+	version            bool
 
 	rootCmd = &cobra.Command{
 		Use:   "vitess-releaser",
 		Short: "Tooling used to release new versions of Vitess",
 		Run: func(cmd *cobra.Command, args []string) {
+			if version {
+				printVersionAndExit()
+			}
 			ctx := cmd.Context()
 			state := releaser.UnwrapState(ctx)
 			git.CorrectCleanRepo(state.VitessRelease.Repo)
@@ -65,6 +73,7 @@ func init() {
 	rootCmd.PersistentFlags().IntVarP(&rcIncrement, flags.RCIncrement, "", 0, "Define the release as an RC release, value is used to determine the number of the RC.")
 	rootCmd.PersistentFlags().StringVarP(&releaseVersion, flags.MajorRelease, "r", "", "Number of the major release on which we want to create a new release.")
 	rootCmd.PersistentFlags().StringVarP(&vtopReleaseVersion, flags.VtOpRelease, "", "", "Number of the major and minor release on which we want to create a new release, i.e. '2.11', leave empty for no vtop release.")
+	rootCmd.PersistentFlags().BoolVarP(&version, "version", "v", false, "Prints the version and git commit hash.")
 
 	err := cobra.MarkFlagRequired(rootCmd.PersistentFlags(), flags.MajorRelease)
 	if err != nil {
@@ -80,6 +89,10 @@ func Execute() {
 	}
 	if err != nil {
 		panic(err)
+	}
+
+	if version {
+		printVersionAndExit()
 	}
 
 	err = rootCmd.ValidateRequiredFlags()
@@ -212,4 +225,29 @@ func getGitRepos() (vitessRepo, vtopRepo string) {
 		vtopRepo = currentGitHubUser + "/vitess-operator"
 	}
 	return
+}
+
+func printVersionAndExit() {
+	commit, shortHash := getGitCommit()
+	fmt.Printf("Version: %s.%s\n", VERSION, shortHash)
+	fmt.Printf("Last Commit: %s\n", commit)
+	os.Exit(0)
+}
+
+func getGitCommit() (string, string) {
+	cmd := exec.Command("git", "show", "-s", "--format=%H%n%an%n%ae%n%ad%n%s", "HEAD")
+	out, err := cmd.Output()
+	if err != nil {
+		return "unknown", "unknown"
+	}
+	parts := strings.SplitN(string(out), "\n", 5)
+	if len(parts) < 5 {
+		return "unknown", "unknown"
+	}
+	commitHash := parts[0]
+	authorName := parts[1]
+	authorEmail := parts[2]
+	authorDate := parts[3]
+	commitMessage := parts[4]
+	return fmt.Sprintf("%s\nAuthor: %s <%s>\nDate: %s\n\n    %s", commitHash, authorName, authorEmail, authorDate, commitMessage), commitHash[:7]
 }

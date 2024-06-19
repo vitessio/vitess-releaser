@@ -14,3 +14,4 @@
 
 install:
 	go install ./go/vitess-releaser.go
+	vitess-releaser -v
