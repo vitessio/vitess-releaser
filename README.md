@@ -16,7 +16,7 @@ It streamlines various tasks, such as version bumping, changelog generation, iss
 
 # Install the binary
 > cd vitess-releaser
-> go install ./go/vitess-releaser.go
+> make
 ```
 
 ## Usage
