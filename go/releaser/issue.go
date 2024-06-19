@@ -232,7 +232,8 @@ const (
 
 ### Pre-Release _(~1-3 days before)_
 
-- [{{fmtStatus .CreateReleasePR.Done}}] Create Release PR.
+- [{{fmtStatus .CreateReleasePR.Done}}] Create Release PR. 
+<sub><sup>(We do this earlier to catch any issues in the tool and let CI run.)</sup></sub>
 {{- if .CreateReleasePR.URL }}
   - {{ .CreateReleasePR.URL }}
 {{- end }}
