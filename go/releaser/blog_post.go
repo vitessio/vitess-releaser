@@ -19,16 +19,31 @@ package releaser
 func DraftBlogPost() []string {
 	return []string{
 		"The release announcement blog post must be finished before the release day.",
-		"A highlight of the major changes must be included in the blog post, along with a link to the release notes.",
+		"You may take example on previous release announcement blog post.",
 		"",
-		"A Pull Request on the website repository of Vitess has to be created so we can easily publish the blog during the release day.",
+		"The blog post should at least have the following:",
+		"\t- Highlight of the major changes.",
+		"\t- A link to the release notes.",
+		"",
+		"During the pre-release, we will create a Pull Request on the website repository with the draft.",
 	}
 }
 
 func RequestCrossPostBlogPost() []string {
 	return []string{
-		"You must coordinate with the different organizations (CNCF and PlanetScale) for cross-posting the blog post.",
+		"You must coordinate with the different organizations (CNCF and PlanetScale) to cross-post the blog post.",
 		"Send out an email to both parties to request a cross-post a couple weeks before the GA release.",
+		"",
+		"CNCF:",
+		"\tThe title of the blog post Google Docs usually contains 'DRAFT', and we usually let CNCF know that until the title does not say 'FINAL',",
+		"\tthe blog post cannot be posted. We usually ask them to publish the cross-post on the same day as the release, morning time PST.",
+		"",
+		"PlanetScale:",
+		"\t Send a request to a Vitess maintainers working at PlanetScale to let them handle the cross-post request internally.",
+		"\t PlanetScale usually publish the cross-post the same days as the release, morning time PST.",
+		"",
+		"Important:",
+		"\tIf for whatever reason the GA release is delayed, all parties must be informed ASAP so they don't release the blog post before the release.",
 	}
 }
 
