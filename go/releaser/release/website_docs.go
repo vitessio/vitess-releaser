@@ -11,12 +11,15 @@ Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
-limitations under the License.
+limitations under the License.®
 */
 
 package release
 
 import (
+	"fmt"
+	"strings"
+
 	"vitess.io/vitess-releaser/go/releaser"
 )
 
@@ -26,8 +29,7 @@ func WebsiteDocs(state *releaser.State) []string {
 		"",
 		"There are several pages we want to update:",
 		"\t- https://vitess.io/docs/releases/: we must add the new release to the list with all its information and link.",
-		"\t- https://vitess.io/docs/get-started/local/: we must use the proper version increment for this guide and the proper SHA.",
-		"",
+		fmt.Sprintf("\t- https://vitess.io/docs/%s.0/get-started/local/#install-vitess: we must use '%s' for the 'version' variable, and the new SHA for the 'file' variable.", state.VitessRelease.MajorRelease, strings.ToLower(state.VitessRelease.Release)),
 		"",
 		"At the beginning of the following pages, we ask the user to clone Vitess. Please make sure we are doing a 'git checkout' to the proper branch after the 'git clone'.",
 		"For RC >= 2 and patch releases it's possible that no change is required if nothing was skipped in the previous releases.",
