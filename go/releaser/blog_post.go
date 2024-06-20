@@ -50,6 +50,8 @@ func RequestCrossPostBlogPost() []string {
 func CreateBlogPostPR() []string {
 	return []string{
 		"Open a Pull Request on the website repository that contains the new blog post.",
+		"",
+		"Doing this now is important, it allows other maintainers to review the PR before the release.",
 	}
 }
 
