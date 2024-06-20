@@ -23,16 +23,22 @@ import (
 func WebsiteDocs(state *releaser.State) []string {
 	msg := []string{
 		"We want to open a Pull Request to update the documentation.",
+		"",
 		"There are several pages we want to update:",
 		"\t- https://vitess.io/docs/releases/: we must add the new release to the list with all its information and link.",
 		"\t- https://vitess.io/docs/get-started/local/: we must use the proper version increment for this guide and the proper SHA.",
-		"We must do a git checkout to the proper release branch after cloning Vitess on the following pages:",
+		"",
+		"",
+		"At the beginning of the following pages, we ask the user to clone Vitess. Please make sure we are doing a 'git checkout' to the proper branch after the 'git clone'.",
+		"For RC >= 2 and patch releases it's possible that no change is required if nothing was skipped in the previous releases.",
+		"List of pages where we must do a 'git checkout':",
 		"\t- https://vitess.io/docs/get-started/operator/#install-the-operator",
 		"\t- https://vitess.io/docs/get-started/local-mac/#install-vitess",
 		"\t- https://vitess.io/docs/get-started/local-docker/#check-out-the-vitessiovitess-repository",
 		"\t- https://vitess.io/docs/get-started/vttestserver-docker-image/#check-out-the-vitessiovitess-repository",
 	}
-	if state.Issue.RC > 0 {
+
+	if state.Issue.RC == 1 {
 		msg = append(msg, []string{
 			"",
 			"Since we are doing an RC release, we must use the ./tools/rc_release.sh script in the website repository to update the documentation even further.",
