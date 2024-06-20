@@ -159,6 +159,14 @@ func FindPreviousRelease(remote, currentMajor string) string {
 	return fmt.Sprintf("%s.%s.%d", currentReleaseSlice[0], currentReleaseSlice[1], patchRelease-1)
 }
 
+func FindNextMajorRelease(currentMajor string) string {
+	majorNb, err := strconv.Atoi(currentMajor)
+	if err != nil {
+		utils.LogPanic(err, "failed to convert the CLI major release argument to an int (%s)", currentMajor)
+	}
+	return fmt.Sprintf("%d.0.0", majorNb+1)
+}
+
 func getCurrentReleaseVitess() string {
 	// Execute the following command to find the version from the `version.go` file:
 	// sed -n 's/.*versionName.*\"\([[:digit:]\.]*\).*\"/\1/p' ./go/vt/servenv/version.go
