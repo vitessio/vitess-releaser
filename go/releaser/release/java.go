@@ -42,8 +42,7 @@ func JavaRelease(state *releaser.State) (*logging.ProgressLogging, func() string
 
 		if strings.Contains(state.VitessRelease.Repo, "vitessio/vitess") {
 			pl.NewStepf("Do the Java release")
-			cmd := exec.Command("/bin/sh", "-c", "eval $(gpg-agent --daemon --no-grab --write-env-file $HOME/.gpg-agent-info); export GPG_TTY=$(tty); export GPG_AGENT_INFO; export MAVEN_OPTS=\"--add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.text=ALL-UNNAMED --add-opens=java.desktop/java.awt.font=ALL-UNNAMED\"; mvn clean deploy -P release -DskipTests;",
-			)
+			cmd := exec.Command("/bin/sh", "-c", "eval $(gpg-agent --daemon --no-grab --write-env-file $HOME/.gpg-agent-info); export GPG_TTY=$(tty); export GPG_AGENT_INFO; export MAVEN_OPTS=\"--add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.text=ALL-UNNAMED --add-opens=java.desktop/java.awt.font=ALL-UNNAMED\"; mvn clean deploy -P release -DskipTests;")
 			pwd, err := os.Getwd()
 			if err != nil {
 				utils.LogPanic(err, "failed to get current working directory")
