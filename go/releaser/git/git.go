@@ -66,7 +66,18 @@ func Push(remote, branch string) {
 func CommitAll(msg string) (empty bool) {
 	utils.Exec("git", "add", "--all")
 
-	out, err := utils.ExecWithError("git", "commit", "-n", "-s", "-m", msg)
+	out, err := utils.ExecWithError(
+		"git",
+		"commit",
+		"-n",
+		"-s",
+		"-m",
+		msg,
+		"-m",
+		"This commit was made automatically by the vitess-releaser tool.",
+		"-m",
+		"See https://github.com/vitessio/vitess-releaser",
+	)
 	if err != nil {
 		if strings.Contains(out, "nothing to commit, working tree clean") {
 			return true

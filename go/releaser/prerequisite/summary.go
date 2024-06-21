@@ -24,14 +24,15 @@ import (
 
 func CheckSummary(state *releaser.State) []string {
 	return []string{
-		"If the release does not contain significant changes (i.e. a small patch release) then this step can be skipped",
+		"It is common for small releases (i.e. patch releases) to not have a summary file, in this case this step can be marked as done and ignored.",
 		"",
-		"We must verify that the summary file makes sense: no grammar/english mistake, the content is well organized, that the links are not broken.",
+		"We must verify that the summary file makes sense: no grammar or english mistake, that the content is well organized and that the links are not broken.",
 		"We must treat this file as if it was a blog post, this is one of the main entrypoints for people wanting to learn more about the release.",
 		"",
-		"Over the release cycle, people add their bits to this file, but no one looks at the file as a whole, this is the time to do it.",
+		"Over the release cycle people add their bits to this file, but no one looks at the file as a whole, this is the time to do it!",
 		"",
-		fmt.Sprintf("The summary file is located in: ./changelog/%s.0/%s/summary.md.", state.VitessRelease.MajorRelease, releaser.RemoveRCFromReleaseTitle(state.VitessRelease.Release)),
-		"The summary file for a release candidate is the same as the one for the GA release.",
+		fmt.Sprintf("The summary file is located in: './changelog/%s.0/%s/summary.md'.", state.VitessRelease.MajorRelease, releaser.RemoveRCFromReleaseTitle(state.VitessRelease.Release)),
+		"",
+		"Note: the summary file for a release candidate is the same as the one for the GA release.",
 	}
 }
