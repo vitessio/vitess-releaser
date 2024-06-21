@@ -66,6 +66,6 @@ func vtopManualUpdateUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd
 
 func vtopManualUpdateAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
 	return mi, func() tea.Msg {
-		return vtopManualUpdateMsg(release.VtopManualUpdateMessage(mi.State.VtOpRelease.IsLatestRelease))
+		return vtopManualUpdateMsg(release.VtopManualUpdateMessage(mi.State))
 	}
 }
