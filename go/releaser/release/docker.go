@@ -23,17 +23,21 @@ func CheckDockerMessage(majorRelease int, repo string) []string {
 		"Make sure the Docker Images are being built by GitHub Actions.",
 		"This can be done by visiting the following links, our new release should appear in either green (done) or yellow (building / pending build):",
 		"",
-		fmt.Sprintf("\t- https://github.com/%s/actions/workflows/docker_build_vttestserver.yml", repo),
 	}
 
 	// Hack: versions < v20 and versions >= v20 use different GitHub Actions workflows to build the Docker images.
 	if majorRelease < 20 {
 		msg = append(msg,
+			fmt.Sprintf("\t- https://github.com/%s/actions/workflows/docker_build_vttestserver.yml", repo),
 			fmt.Sprintf("\t- https://github.com/%s/actions/workflows/docker_build_base.yml", repo),
 			fmt.Sprintf("\t- https://github.com/%s/actions/workflows/docker_build_lite.yml", repo),
 		)
-	} else {
+	} else if majorRelease == 20 {
+		msg = append(msg, fmt.Sprintf("\t- https://github.com/%s/actions/workflows/docker_build_vttestserver.yml", repo))
 		msg = append(msg, fmt.Sprintf("\t- https://github.com/%s/actions/workflows/docker_build_images.yml", repo))
+	} else {
+		// this links to the newer GitHub Actions workflow that was introduced in v21 by https://github.com/vitessio/vitess/pull/16339
+		msg = append(msg, fmt.Sprintf("\t- https://github.com/%s/vitess/actions/workflows/build_docker_images.yml", repo))
 	}
 
 	return msg
