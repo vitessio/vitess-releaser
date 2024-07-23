@@ -116,7 +116,7 @@ func VtopUpdateGolang(state *releaser.State) (*logging.ProgressLogging, func() s
 		pl.NewStepf("Create Pull Request")
 		pr := github.PR{
 			Title:  goUpdatePRName,
-			Body:   fmt.Sprintf("This Pull Request update the Golang version to %s.", vitessGoVersion.String()),
+			Body:   fmt.Sprintf("This Pull Request updates the Golang version to %s.", vitessGoVersion.String()),
 			Branch: newBranchName,
 			Base:   state.VtOpRelease.ReleaseBranch,
 		}
