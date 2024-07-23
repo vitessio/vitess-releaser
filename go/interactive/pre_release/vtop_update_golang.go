@@ -27,6 +27,10 @@ import (
 	"vitess.io/vitess-releaser/go/releaser/pre_release"
 )
 
+// This step prevents any mismatch of the Golang version between Vitess and Vitess-Operator.
+// Ideally the Golang upgrade should be done on Vitess-Operator at the same time as they are
+// done on Vitess, so this step is just a safeguard to ensure the release will build nicely.
+
 func VtopUpdateGolangMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
 	act := vtopUpdateGolangAct
