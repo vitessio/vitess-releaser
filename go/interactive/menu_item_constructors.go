@@ -98,7 +98,7 @@ func dockerImagesItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
 	return newBooleanMenu(
 		ctx,
-		release.CheckDockerMessage(state.VitessRelease.MajorReleaseNb, state.VitessRelease.Repo),
+		release.CheckDockerMessage(state.VitessRelease.MajorReleaseNb, state.VitessRelease.Repo, state.VtOpRelease.Repo),
 		steps.DockerImages,
 		func() { state.Issue.DockerImages = !state.Issue.DockerImages },
 		state.Issue.DockerImages,

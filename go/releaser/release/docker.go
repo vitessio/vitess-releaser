@@ -18,7 +18,7 @@ package release
 
 import "fmt"
 
-func CheckDockerMessage(majorRelease int, repo string) []string {
+func CheckDockerMessage(majorRelease int, repo string, vtopRepo string) []string {
 	msg := []string{
 		"Make sure the Docker Images are being built by GitHub Actions.",
 		"This can be done by visiting the following links, our new release should appear in either green (done) or yellow (building / pending build):",
@@ -38,6 +38,17 @@ func CheckDockerMessage(majorRelease int, repo string) []string {
 	} else {
 		// this links to the newer GitHub Actions workflow that was introduced in v21 by https://github.com/vitessio/vitess/pull/16339
 		msg = append(msg, fmt.Sprintf("\t- https://github.com/%s/vitess/actions/workflows/build_docker_images.yml", repo))
+	}
+
+	if vtopRepo != "" {
+		msg = append(msg, []string{
+			"",
+			"",
+			"Please also make sure that the vitess-operator image has been built by DockerHub.",
+			"",
+			fmt.Sprintf("\t- https://hub.docker.com/repository/docker/%s/builds", vtopRepo),
+			"",
+		}...)
 	}
 
 	return msg
