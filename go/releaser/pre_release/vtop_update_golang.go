@@ -80,7 +80,7 @@ func VtopUpdateGolang(state *releaser.State) (*logging.ProgressLogging, func() s
 			return ""
 		}
 
-		if vitessGoVersion.Segments()[1] <= vtopGoVersion.Segments()[1] {
+		if vitessGoVersion.Original() == vtopGoVersion.Original() {
 			pl.TotalSteps = 7
 			pl.NewStepf("Nothing to update, both Golang version share the same minor version: vitess=%s, vtop=%s", vitessGoVersion.String(), vtopGoVersion.String())
 			done = true
@@ -116,7 +116,7 @@ func VtopUpdateGolang(state *releaser.State) (*logging.ProgressLogging, func() s
 		pl.NewStepf("Create Pull Request")
 		pr := github.PR{
 			Title:  goUpdatePRName,
-			Body:   fmt.Sprintf("This Pull Request update the Golang version to %s", vitessGoVersion.String()),
+			Body:   fmt.Sprintf("This Pull Request update the Golang version to %s.", vitessGoVersion.String()),
 			Branch: newBranchName,
 			Base:   state.VtOpRelease.ReleaseBranch,
 		}
@@ -133,6 +133,9 @@ func updateGolangVersionForVtop(targetGoVersion *version.Version) {
 
 	utils.Exec("sed", "-i.bak", "-E", fmt.Sprintf("s/^FROM golang:(.*) AS build/FROM golang:%s AS build/g", targetGoVersion.String()), "build/Dockerfile.release")
 	utils.Exec("rm", "-f", "build/Dockerfile.release.bak")
+
+	utils.Exec("sed", "-i.bak", "-E", fmt.Sprintf("s/go(.*).linux-amd64.tar.gz/go%s.linux-amd64.tar.gz/g", targetGoVersion.String()), ".buildkite/pipeline.yml")
+	utils.Exec("rm", "-f", ".buildkite/pipeline.yml.bak")
 
 	workflowFiles := findVtopWorkflowFiles()
 	args := append([]string{"-i.bak", "-E", fmt.Sprintf("s/go-version: (.*)/go-version: %s/g", targetGoVersion.String())}, workflowFiles...)
