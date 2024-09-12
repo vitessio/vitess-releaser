@@ -33,6 +33,11 @@ func BailOut(err error, msg string, args ...interface{}) {
 	os.Exit(1)
 }
 
+func BailOutE(err error) {
+	log.Println(err, "\n", debug.Stack())
+	os.Exit(1)
+}
+
 func Exec(cmd string, args ...string) string {
 	command := exec.Command(cmd, args...)
 	out, err := command.CombinedOutput()

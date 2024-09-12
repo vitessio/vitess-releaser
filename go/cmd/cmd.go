@@ -77,7 +77,7 @@ func init() {
 
 	err := cobra.MarkFlagRequired(rootCmd.PersistentFlags(), flags.MajorRelease)
 	if err != nil {
-		panic(err)
+		utils.BailOutE(err)
 	}
 }
 
@@ -88,7 +88,7 @@ func Execute() {
 		os.Exit(0)
 	}
 	if err != nil {
-		panic(err)
+		utils.BailOutE(err)
 	}
 
 	if version {
@@ -210,7 +210,7 @@ func setUpIssueDate(s *releaser.State) {
 	}
 	parsedReleaseDate, err := time.Parse(time.DateOnly, releaseDate)
 	if err != nil {
-		panic(err)
+		utils.BailOutE(err)
 	}
 	s.Issue.Date = parsedReleaseDate
 }

@@ -18,8 +18,8 @@ package github
 
 import (
 	"fmt"
-	"log"
 	"strings"
+	"vitess.io/vitess-releaser/go/releaser/utils"
 
 	"vitess.io/vitess-releaser/go/releaser/git"
 )
@@ -57,7 +57,7 @@ func CreateRelease(repo, tag, notesFilePath string, latest, prerelease bool) (ur
 		if strings.Contains(err.Error(), "already exists") {
 			return fmt.Sprintf("https://github.com/%s/releases/tag/%s", repo, tag)
 		}
-		log.Panic(err)
+		utils.BailOutE(err)
 	}
 	return strings.ReplaceAll(stdOut, "\n", "")
 }
