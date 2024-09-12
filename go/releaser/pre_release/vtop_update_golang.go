@@ -158,7 +158,7 @@ func findVtopWorkflowFiles() []string {
 		return nil
 	})
 	if err != nil {
-		utils.LogPanic(err, "failed to walk the directory %s", root)
+		utils.BailOut(err, "failed to walk the directory %s", root)
 	}
 	return files
 }
@@ -167,18 +167,18 @@ func currentGolangVersionInVitess() *version.Version {
 	buildFile := "build.env"
 	contentRaw, err := os.ReadFile(buildFile)
 	if err != nil {
-		utils.LogPanic(err, "failed to read the file %s", buildFile)
+		utils.BailOut(err, "failed to read the file %s", buildFile)
 	}
 	content := string(contentRaw)
 
 	versre := regexp.MustCompile(regexpFindGolangVersionInVitess)
 	versionStr := versre.FindStringSubmatch(content)
 	if len(versionStr) != 2 {
-		utils.LogPanic(nil, "malformatted error, got: %v", versionStr)
+		utils.BailOut(nil, "malformatted error, got: %v", versionStr)
 	}
 	v, err := version.NewVersion(versionStr[1])
 	if err != nil {
-		utils.LogPanic(err, "failed to create new version with %s", versionStr[1])
+		utils.BailOut(err, "failed to create new version with %s", versionStr[1])
 	}
 	return v
 }
@@ -187,7 +187,7 @@ func currentGolangVersionInVtop() *version.Version {
 	gomodFile := "go.mod"
 	contentRaw, err := os.ReadFile(gomodFile)
 	if err != nil {
-		utils.LogPanic(err, "failed to read file %s", gomodFile)
+		utils.BailOut(err, "failed to read file %s", gomodFile)
 	}
 	content := string(contentRaw)
 
@@ -200,10 +200,10 @@ func currentGolangVersionInVtop() *version.Version {
 		}
 		v, err := version.NewVersion(versionStr[1])
 		if err != nil {
-			utils.LogPanic(err, "failed to create new version with %s", versionStr[1])
+			utils.BailOut(err, "failed to create new version with %s", versionStr[1])
 		}
 		return v
 	}
-	utils.LogPanic(nil, "could not parse the %s", gomodFile)
+	utils.BailOut(nil, "could not parse the %s", gomodFile)
 	return nil
 }

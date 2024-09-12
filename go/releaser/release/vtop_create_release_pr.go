@@ -201,7 +201,7 @@ func updateVitessDeps(state *releaser.State) {
 
 	currentReleaseSlice := strings.Split(state.VitessRelease.Release, ".")
 	if len(currentReleaseSlice) != 3 {
-		utils.LogPanic(nil, "could not parse the version.go in vitessio/vitess, output: %s", state.VitessRelease.Release)
+		utils.BailOut(nil, "could not parse the version.go in vitessio/vitess, output: %s", state.VitessRelease.Release)
 	}
 
 	utils.Exec("go", "get", "-u", fmt.Sprintf("vitess.io/vitess@v0.%s.%s", currentReleaseSlice[0], strings.ToLower(currentReleaseSlice[2])))
@@ -264,7 +264,7 @@ func vtopTestFiles() []string {
 		return nil
 	})
 	if err != nil {
-		utils.LogPanic(err, "failed to walk directory %s", root)
+		utils.BailOut(err, "failed to walk directory %s", root)
 	}
 	return files
 }
@@ -275,14 +275,14 @@ func findNextVtOpVersion(version string, rc int) string {
 	}
 	segments := strings.Split(version, ".")
 	if len(segments) != 3 {
-		utils.LogPanic(nil, "expected three segments when looking at the vtop version, got: %s", version)
+		utils.BailOut(nil, "expected three segments when looking at the vtop version, got: %s", version)
 	}
 
 	segmentInts := make([]int, 0, len(segments))
 	for _, segment := range segments {
 		v, err := strconv.Atoi(segment)
 		if err != nil {
-			utils.LogPanic(err, "failed to convert segment of the vtop version to an int: %s", segment)
+			utils.BailOut(err, "failed to convert segment of the vtop version to an int: %s", segment)
 		}
 		segmentInts = append(segmentInts, v)
 	}

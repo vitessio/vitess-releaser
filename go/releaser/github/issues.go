@@ -31,7 +31,7 @@ func execGh(args ...string) string {
 	stdOut, stdErr, err := gh.Exec(args...)
 	if err != nil {
 		cmd := append([]string{"gh"}, strings.Join(args, " "))
-		utils.LogPanic(err, "failed to execute: %s, got: %s", strings.Join(cmd, " "), stdOut.String()+stdErr.String())
+		utils.BailOut(err, "failed to execute: %s, got: %s", strings.Join(cmd, " "), stdOut.String()+stdErr.String())
 	}
 	return stdOut.String()
 }
@@ -101,7 +101,7 @@ func GetIssueTitleAndBody(repo string, nb int) (string, string) {
 	var i Issue
 	err := json.Unmarshal([]byte(stdOut), &i)
 	if err != nil {
-		utils.LogPanic(err, "failed to parse the issue number %d, got: %s", nb, stdOut)
+		utils.BailOut(err, "failed to parse the issue number %d, got: %s", nb, stdOut)
 	}
 	return i.Title, i.Body
 }
@@ -117,7 +117,7 @@ func GetReleaseIssue(repo, release string, rcIncrement int) (string, string) {
 	var issues []map[string]string
 	err := json.Unmarshal([]byte(stdOut), &issues)
 	if err != nil {
-		utils.LogPanic(err, "failed to parse the release issue, got: %s", stdOut)
+		utils.BailOut(err, "failed to parse the release issue, got: %s", stdOut)
 	}
 
 	for _, issue := range issues {
@@ -150,7 +150,7 @@ func URLToNb(url string) int {
 	issueNbStr := url[lastIdx+1:]
 	nb, err := strconv.Atoi(issueNbStr)
 	if err != nil {
-		utils.LogPanic(err, "failed to convert the end of the GitHub URL to a number, got: %s", issueNbStr)
+		utils.BailOut(err, "failed to convert the end of the GitHub URL to a number, got: %s", issueNbStr)
 	}
 	return nb
 }
@@ -170,7 +170,7 @@ func CheckReleaseBlockerIssues(repo, majorRelease string) map[string]any {
 	var issues []Issue
 	err := json.Unmarshal([]byte(stdOut), &issues)
 	if err != nil {
-		utils.LogPanic(err, "failed to parse the release blocker issue, got: %s", stdOut)
+		utils.BailOut(err, "failed to parse the release blocker issue, got: %s", stdOut)
 	}
 
 	var mustClose []Issue
@@ -206,7 +206,7 @@ func LoadKnownIssues(repo, majorRelease string) []Issue {
 	var knownIssues []Issue
 	err := json.Unmarshal([]byte(stdOut), &knownIssues)
 	if err != nil {
-		utils.LogPanic(err, "failed to parse known issues, got: %s", stdOut)
+		utils.BailOut(err, "failed to parse known issues, got: %s", stdOut)
 	}
 	return knownIssues
 }

@@ -149,12 +149,12 @@ func setUpVitessReleaseInformation(s *releaser.State, repo string, rc int) (rele
 	// if we want to do an RC-1 release and the branch is different from `main`, something is wrong
 	// and if we want to do an >= RC-2 release, the release as to be the latest AKA on the latest release branch
 	if rcIncrement >= 1 && !isLatestRelease {
-		utils.LogPanic(nil, "wanted: RC %d but release branch was %s, latest release was %v and is from main is %v", rcIncrement, releaseBranch, isLatestRelease, isFromMain)
+		utils.BailOut(nil, "wanted: RC %d but release branch was %s, latest release was %v and is from main is %v", rcIncrement, releaseBranch, isLatestRelease, isFromMain)
 	}
 
 	majorReleaseNb, err := strconv.Atoi(releaseVersion)
 	if err != nil {
-		utils.LogPanic(err, "could not parse the release version")
+		utils.BailOut(err, "could not parse the release version")
 	}
 
 	vitessRelease := releaser.ReleaseInformation{

@@ -158,7 +158,7 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 func isCurrentBranchFrozen() bool {
 	b, err := os.ReadFile(codeFreezeWorkflowFile)
 	if err != nil {
-		utils.LogPanic(err, "failed to read file %s", codeFreezeWorkflowFile)
+		utils.BailOut(err, "failed to read file %s", codeFreezeWorkflowFile)
 	}
 	str := string(b)
 	return strings.Contains(str, "exit 1")

@@ -28,7 +28,7 @@ func CurrentUser() string {
 
 	err := json.Unmarshal([]byte(exec), &x)
 	if err != nil {
-		utils.LogPanic(err, "failed to parse the current user, got: %s", exec)
+		utils.BailOut(err, "failed to parse the current user, got: %s", exec)
 	}
 
 	return x["login"].(string)
