@@ -28,8 +28,9 @@ func BailOut(err error, msg string, args ...interface{}) {
 	fullMsg := fmt.Sprintf(msg, args...)
 	if err == nil {
 		log.Println(fullMsg)
+	} else {
+		log.Println(err.Error(), "\n", fullMsg, "\n", string(debug.Stack()))
 	}
-	log.Println(err, "\n", fullMsg, "\n", debug.Stack())
 	os.Exit(1)
 }
 
