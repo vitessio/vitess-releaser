@@ -90,11 +90,11 @@ func (s *State) GoToVtOp() {
 func changeDir(p string) {
 	cwd, err := syscall.Getwd()
 	if err != nil {
-		utils.LogPanic(err, "failed to get current working directory")
+		utils.BailOut(err, "failed to get current working directory")
 	}
 	p = path.Join(cwd, p)
 	err = syscall.Chdir(p)
 	if err != nil {
-		utils.LogPanic(err, "failed to change directory to %s", p)
+		utils.BailOut(err, "failed to change directory to %s", p)
 	}
 }

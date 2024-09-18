@@ -43,7 +43,7 @@ func GetMilestonesByName(repo, name string) []Milestone {
 	var ms []Milestone
 	err := json.Unmarshal([]byte(str), &ms)
 	if err != nil {
-		utils.LogPanic(err, "failed to parse milestone, got: %s", str)
+		utils.BailOut(err, "failed to parse milestone, got: %s", str)
 	}
 	return ms
 }
@@ -62,7 +62,7 @@ func CreateNewMilestone(repo, name string) string {
 func CloseMilestone(repo, name string) string {
 	ms := GetMilestonesByName(repo, name)
 	if len(ms) != 1 {
-		utils.LogPanic(nil, "expected to find one milestone found %d", len(ms))
+		utils.BailOut(nil, "expected to find one milestone found %d", len(ms))
 	}
 
 	stdOut := execGh(

@@ -88,11 +88,11 @@ func FindNextRelease(remote, majorRelease string, isVtOp bool, rc int) (currentR
 		if len(mainMajorParts) == 2 && len(majorParts) == 2 {
 			mainMajorNb, err := strconv.Atoi(mainMajorParts[1])
 			if err != nil {
-				utils.LogPanic(err, "failed to convert main minor release increment to an int (%s)", mainMajorParts[1])
+				utils.BailOut(err, "failed to convert main minor release increment to an int (%s)", mainMajorParts[1])
 			}
 			majorNb, err := strconv.Atoi(majorParts[1])
 			if err != nil {
-				utils.LogPanic(err, "failed to convert CLI release argument's minor release increment to an int (%s)", majorParts[1])
+				utils.BailOut(err, "failed to convert CLI release argument's minor release increment to an int (%s)", majorParts[1])
 			}
 			if rc > 0 && mainMajorNb == majorNb || mainMajorNb+1 == majorNb {
 				return fmt.Sprintf("%s.%d.0", mainMajorParts[0], majorNb), releaseBranchName, true, true, ga
@@ -112,20 +112,20 @@ func FindNextRelease(remote, majorRelease string, isVtOp bool, rc int) (currentR
 	// if the current release and the wanted release are different, it means there is an
 	// error, we were not able to find the proper branch / corresponding release
 	if major != majorRelease {
-		utils.LogPanic(nil, "on branch '%s', could not find the corresponding major release '%s'", releaseBranchName, majorRelease)
+		utils.BailOut(nil, "on branch '%s', could not find the corresponding major release '%s'", releaseBranchName, majorRelease)
 	}
 
 	mainMajorNb, err := strconv.ParseFloat(mainMajor, 64)
 	if err != nil {
-		utils.LogPanic(err, "could not parse main branch major release number as a float (%s)", mainMajor)
+		utils.BailOut(err, "could not parse main branch major release number as a float (%s)", mainMajor)
 	}
 	majorNb, err := strconv.ParseFloat(major, 64)
 	if err != nil {
-		utils.LogPanic(err, "could not parse CLI major release argument as a float (%s)", major)
+		utils.BailOut(err, "could not parse CLI major release argument as a float (%s)", major)
 	}
 	releaseParts := strings.Split(currentRelease, ".")
 	if len(releaseParts) != 3 {
-		utils.LogPanic(nil, "could not parse the found release: %s", currentRelease)
+		utils.BailOut(nil, "could not parse the found release: %s", currentRelease)
 	}
 	isLatest := mainMajorNb-1 == majorNb
 	ga = rc == 0 && releaseParts[1] == "0" && releaseParts[2] == "0"
@@ -139,7 +139,7 @@ func FindNextRelease(remote, majorRelease string, isVtOp bool, rc int) (currentR
 func FindPreviousRelease(remote, currentMajor string) string {
 	majorNb, err := strconv.Atoi(currentMajor)
 	if err != nil {
-		utils.LogPanic(err, "failed to convert the CLI major release argument to an int (%s)", currentMajor)
+		utils.BailOut(err, "failed to convert the CLI major release argument to an int (%s)", currentMajor)
 	}
 
 	previousMajor := majorNb - 1
@@ -150,11 +150,11 @@ func FindPreviousRelease(remote, currentMajor string) string {
 	currentRelease := getCurrentReleaseVitess()
 	currentReleaseSlice := strings.Split(currentRelease, ".")
 	if len(currentReleaseSlice) != 3 {
-		utils.LogPanic(nil, "could not parse the version.go in vitessio/vitess, output: %s", currentRelease)
+		utils.BailOut(nil, "could not parse the version.go in vitessio/vitess, output: %s", currentRelease)
 	}
 	patchRelease, err := strconv.Atoi(currentReleaseSlice[2])
 	if err != nil {
-		utils.LogPanic(err, "could not parse the version.go in vitessio/vitess, output: %s", currentRelease)
+		utils.BailOut(err, "could not parse the version.go in vitessio/vitess, output: %s", currentRelease)
 	}
 	return fmt.Sprintf("%s.%s.%d", currentReleaseSlice[0], currentReleaseSlice[1], patchRelease-1)
 }
@@ -162,7 +162,7 @@ func FindPreviousRelease(remote, currentMajor string) string {
 func FindNextMajorRelease(currentMajor string) string {
 	majorNb, err := strconv.Atoi(currentMajor)
 	if err != nil {
-		utils.LogPanic(err, "failed to convert the CLI major release argument to an int (%s)", currentMajor)
+		utils.BailOut(err, "failed to convert the CLI major release argument to an int (%s)", currentMajor)
 	}
 	return fmt.Sprintf("%d.0.0", majorNb+1)
 }
@@ -188,7 +188,7 @@ func releaseToMajorVitess(release string) string {
 func releaseToMajorVtOp(release string) string {
 	parts := strings.Split(release, ".")
 	if len(parts) != 3 {
-		utils.LogPanic(nil, "expected the vtop version to have format x.x.x but was %s", release)
+		utils.BailOut(nil, "expected the vtop version to have format x.x.x but was %s", release)
 	}
 	return fmt.Sprintf("%s.%s", parts[0], parts[1])
 }
@@ -196,7 +196,7 @@ func releaseToMajorVtOp(release string) string {
 func UpdateVersionGoFile(newVersion string) {
 	err := os.WriteFile(versionGoFile, []byte(fmt.Sprintf(versionGo, time.Now().Year(), newVersion)), os.ModePerm)
 	if err != nil {
-		utils.LogPanic(err, "failed to write to file %s", versionGoFile)
+		utils.BailOut(err, "failed to write to file %s", versionGoFile)
 	}
 }
 
@@ -206,11 +206,11 @@ func UpdateJavaDir(newVersion string) {
 	cmd := exec.Command("mvn", "versions:set", fmt.Sprintf("-DnewVersion=%s", newVersion))
 	pwd, err := os.Getwd()
 	if err != nil {
-		utils.LogPanic(err, "failed to get current working directory")
+		utils.BailOut(err, "failed to get current working directory")
 	}
 	cmd.Dir = path.Join(pwd, "/java")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		utils.LogPanic(err, "failed to execute: %s, got: %s", cmd.String(), string(out))
+		utils.BailOut(err, "failed to execute: %s, got: %s", cmd.String(), string(out))
 	}
 }

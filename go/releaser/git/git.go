@@ -54,7 +54,7 @@ func CreateBranchAndCheckout(branch, base string) error {
 		if strings.Contains(out, fmt.Sprintf("a branch named '%s' already exists", branch)) {
 			return errBranchExists
 		}
-		utils.LogPanic(err, "got: %s", out)
+		utils.BailOut(err, "got: %s", out)
 	}
 	return nil
 }
@@ -82,7 +82,7 @@ func CommitAll(msg string) (empty bool) {
 		if strings.Contains(out, "nothing to commit, working tree clean") {
 			return true
 		}
-		utils.LogPanic(err, "got: %s", out)
+		utils.BailOut(err, "got: %s", out)
 	}
 	return false
 }
@@ -107,17 +107,17 @@ func FindRemoteName(repository string) string {
 
 func CorrectCleanRepo(repo string) {
 	if !checkCurrentRepo(repo + ".git") {
-		utils.LogPanic(nil, "failed to find remote %s in %s", repo, getWorkingDir())
+		utils.BailOut(nil, "failed to find remote %s in %s", repo, getWorkingDir())
 	}
 	if !cleanLocalState() {
-		utils.LogPanic(nil, "the %s repository should have a clean state", getWorkingDir())
+		utils.BailOut(nil, "the %s repository should have a clean state", getWorkingDir())
 	}
 }
 
 func getWorkingDir() string {
 	dir, err := os.Getwd()
 	if err != nil {
-		utils.LogPanic(err, "failed to find the current working dir")
+		utils.BailOut(err, "failed to find the current working dir")
 	}
 	return dir
 }
@@ -133,7 +133,7 @@ func FindNewGeneratedBranch(remote, baseBranch, branchName string) string {
 			if errors.Is(err, errBranchExists) {
 				continue
 			}
-			utils.LogPanic(err, "bug should not get here")
+			utils.BailOut(err, "bug should not get here")
 		}
 		break
 	}
@@ -146,7 +146,7 @@ func TagAndPush(remote, tag string) (exists bool) {
 		if strings.Contains(out, "already exists") {
 			return true
 		}
-		utils.LogPanic(err, "got: %s", out)
+		utils.BailOut(err, "got: %s", out)
 	}
 
 	utils.Exec("git", "push", remote, tag)

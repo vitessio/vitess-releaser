@@ -161,7 +161,7 @@ func findFilesRecursive() []string {
 			return nil
 		})
 		if err != nil {
-			utils.LogPanic(err, "failed to find files recursively")
+			utils.BailOut(err, "failed to find files recursively")
 		}
 	}
 	return files

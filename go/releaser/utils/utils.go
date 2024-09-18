@@ -19,22 +19,31 @@ package utils
 import (
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
+	"runtime/debug"
 )
 
-func LogPanic(err error, msg string, args ...interface{}) {
+func BailOut(err error, msg string, args ...interface{}) {
 	fullMsg := fmt.Sprintf(msg, args...)
 	if err == nil {
-		log.Panic(fullMsg)
+		log.Println(fullMsg)
+	} else {
+		log.Println(err.Error(), "\n", fullMsg, "\n", string(debug.Stack()))
 	}
-	log.Panicf("%v: %s", err, fullMsg)
+	os.Exit(1)
+}
+
+func BailOutE(err error) {
+	log.Println(err, "\n", debug.Stack())
+	os.Exit(1)
 }
 
 func Exec(cmd string, args ...string) string {
 	command := exec.Command(cmd, args...)
 	out, err := command.CombinedOutput()
 	if err != nil {
-		LogPanic(err, "failed to execute: %s, got: %s", command.String(), string(out))
+		BailOut(err, "failed to execute: %s, got: %s", command.String(), string(out))
 	}
 	return string(out)
 }

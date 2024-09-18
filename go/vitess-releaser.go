@@ -17,9 +17,31 @@ limitations under the License.
 package main
 
 import (
+	"fmt"
+	"os"
+	"os/exec"
+	"runtime/debug"
 	"vitess.io/vitess-releaser/go/cmd"
 )
 
+// On some shells the terminal is left in a bad state possibly because the debug output is large or
+// it contains control characters. This function restores the terminal to a sane state on a panic.
+func restoreTerminal() {
+	cmdSane := exec.Command("stty", "sane")
+	cmdSane.Stdin = os.Stdin
+	if err := cmdSane.Run(); err != nil {
+		fmt.Println("Failed to restore terminal to sane state:", err)
+	}
+}
+
 func main() {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Vitess Releaser Panic:\n", r)
+			debug.PrintStack()
+			restoreTerminal()
+		}
+	}()
+
 	cmd.Execute()
 }

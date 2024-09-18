@@ -365,7 +365,7 @@ func (s *State) LoadIssue() {
 	if idx := strings.Index(title, "-RC"); idx != -1 {
 		rc, err := strconv.Atoi(title[idx+len("-RC"):])
 		if err != nil {
-			utils.LogPanic(err, "failed to parse the RC number from the release issue title (%s)", title)
+			utils.BailOut(err, "failed to parse the RC number from the release issue title (%s)", title)
 		}
 		newIssue.RC = rc
 	}
@@ -384,7 +384,7 @@ func (s *State) LoadIssue() {
 				nline = strings.ReplaceAll(nline, ".", "") // remove the period at the end of the line
 				parsedDate, err := time.Parse("Mon _2 Jan 2006", nline)
 				if err != nil {
-					utils.LogPanic(err, "failed to parse the date from the release issue body (%s)", nline)
+					utils.BailOut(err, "failed to parse the date from the release issue body (%s)", nline)
 				}
 				newIssue.Date = parsedDate
 			}
@@ -646,12 +646,12 @@ func (i *Issue) toString() string {
 
 	parsed, err := tmpl.Parse(releaseIssueTemplate)
 	if err != nil {
-		utils.LogPanic(err, "failed to parse the release issue template")
+		utils.BailOut(err, "failed to parse the release issue template")
 	}
 	b := bytes.NewBufferString("")
 	err = parsed.Execute(b, i)
 	if err != nil {
-		utils.LogPanic(err, "failed to execute/write the release issue template")
+		utils.BailOut(err, "failed to execute/write the release issue template")
 	}
 	return b.String()
 }

@@ -144,7 +144,7 @@ func getBranchProtectionRules(repo string) fetchBranchProtectionRules {
 	var bpr fetchBranchProtectionRules
 	err := json.Unmarshal([]byte(stdOut), &bpr)
 	if err != nil {
-		utils.LogPanic(err, "failed to parse the branch protection rules")
+		utils.BailOut(err, "failed to parse the branch protection rules")
 	}
 	return bpr
 }
@@ -190,17 +190,17 @@ func transformBranchProtectionRules(bpr fetchBranchProtectionRules) updateUpdate
 func putBranchProtectionRules(ubpr updateUpdateBranchProtectionRulesPayload, repo, branch string) {
 	jsonUbpr, err := json.Marshal(ubpr)
 	if err != nil {
-		utils.LogPanic(err, "failed to marshal update branch protection rules")
+		utils.BailOut(err, "failed to marshal update branch protection rules")
 	}
 
 	f, err := os.CreateTemp("/tmp", "")
 	if err != nil {
-		utils.LogPanic(err, "failed to create a temporary file")
+		utils.BailOut(err, "failed to create a temporary file")
 	}
 
 	_, err = f.Write(jsonUbpr)
 	if err != nil {
-		utils.LogPanic(err, "failed to write update branch protection rules to the temporary file")
+		utils.BailOut(err, "failed to write update branch protection rules to the temporary file")
 	}
 
 	_ = execGh("api",

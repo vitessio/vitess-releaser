@@ -45,12 +45,12 @@ func JavaRelease(state *releaser.State) (*logging.ProgressLogging, func() string
 			cmd := exec.Command("/bin/sh", "-c", "eval $(gpg-agent --daemon --no-grab --write-env-file $HOME/.gpg-agent-info); export GPG_TTY=$(tty); export GPG_AGENT_INFO; export MAVEN_OPTS=\"--add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.text=ALL-UNNAMED --add-opens=java.desktop/java.awt.font=ALL-UNNAMED\"; mvn clean deploy -P release -DskipTests;")
 			pwd, err := os.Getwd()
 			if err != nil {
-				utils.LogPanic(err, "failed to get current working directory")
+				utils.BailOut(err, "failed to get current working directory")
 			}
 			cmd.Dir = path.Join(pwd, "/java")
 			out, err := cmd.CombinedOutput()
 			if err != nil {
-				utils.LogPanic(err, "failed to execute: %s, got: %s", cmd.String(), string(out))
+				utils.BailOut(err, "failed to execute: %s, got: %s", cmd.String(), string(out))
 			}
 		} else {
 			pl.NewStepf("Running in non-live mode, skipping the actual Java release.")

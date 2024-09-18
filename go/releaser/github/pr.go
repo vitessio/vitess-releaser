@@ -88,7 +88,7 @@ func CheckBackportToPRs(repo, branch string) map[string]any {
 	var prs []PR
 	err := json.Unmarshal([]byte(stdOut), &prs)
 	if err != nil {
-		utils.LogPanic(err, "failed to parse backport PRs, got: %s", stdOut)
+		utils.BailOut(err, "failed to parse backport PRs, got: %s", stdOut)
 	}
 
 	var mustClose []PR
@@ -120,7 +120,7 @@ func CheckReleaseBlockerPRs(repo, majorRelease string) map[string]any {
 	var prs []PR
 	err := json.Unmarshal([]byte(stdOut), &prs)
 	if err != nil {
-		utils.LogPanic(err, "failed to parse the release blocker PRs, got: %s", stdOut)
+		utils.BailOut(err, "failed to parse the release blocker PRs, got: %s", stdOut)
 	}
 
 	var mustClose []PR
@@ -154,7 +154,7 @@ func FindPR(repo, prTitle string) (nb int, url string) {
 	var prs []PR
 	err := json.Unmarshal([]byte(stdOut), &prs)
 	if err != nil {
-		utils.LogPanic(err, "failed to parse PRs, got: %s", stdOut)
+		utils.BailOut(err, "failed to parse PRs, got: %s", stdOut)
 	}
 	for _, pr := range prs {
 		if pr.Title == prTitle {
@@ -176,7 +176,7 @@ func GetMergedPRsAndAuthorsByMilestone(repo, milestone string) (prs []PR, author
 
 	err := json.Unmarshal([]byte(stdOut), &prs)
 	if err != nil {
-		utils.LogPanic(err, "failed to parse PRs, got: %s", stdOut)
+		utils.BailOut(err, "failed to parse PRs, got: %s", stdOut)
 	}
 
 	// Get the full list of distinct PRs authors and sort them
@@ -207,7 +207,7 @@ func GetOpenedPRsByMilestone(repo, milestone string) []PR {
 	var prs []PR
 	err := json.Unmarshal([]byte(stdOut), &prs)
 	if err != nil {
-		utils.LogPanic(err, "failed to parse PRs, got: %s", stdOut)
+		utils.BailOut(err, "failed to parse PRs, got: %s", stdOut)
 	}
 	return prs
 }

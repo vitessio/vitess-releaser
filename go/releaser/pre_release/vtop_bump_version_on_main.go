@@ -121,6 +121,6 @@ func VtopBumpMainVersion(state *releaser.State) (*logging.ProgressLogging, func(
 func UpdateVtOpVersionGoFile(newVersion string) {
 	err := os.WriteFile(vtopVersionGoFile, []byte(fmt.Sprintf(vtopVersionGo, time.Now().Year(), newVersion)), os.ModePerm)
 	if err != nil {
-		utils.LogPanic(err, "failed to write to file %s", vtopVersionGoFile)
+		utils.BailOut(err, "failed to write to file %s", vtopVersionGoFile)
 	}
 }
