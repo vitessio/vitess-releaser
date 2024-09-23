@@ -137,15 +137,6 @@ func setUpVitessReleaseInformation(s *releaser.State, repo string, rc int) (rele
 	release, releaseBranch, isLatestRelease, isFromMain, ga := releaser.FindNextRelease(remote, releaseVersion, false, rc)
 	issueNb, issueLink, releaseFromIssue := github.GetReleaseIssueInfo(repo, releaseVersion, rcIncrement)
 
-	// If we are doing an RC or a GA release we always want to use the rc release branch ("release-20.0-rc") instead of
-	// the normal release branch ("release-20.0")
-	// See RFC https://github.com/vitessio/vitess/issues/15586 for more information about this process.
-	var baseReleaseBranch string
-	if rc > 0 || ga {
-		baseReleaseBranch = releaseBranch
-		releaseBranch = fmt.Sprintf("%s-rc", releaseBranch)
-	}
-
 	// if we want to do an RC-1 release and the branch is different from `main`, something is wrong
 	// and if we want to do an >= RC-2 release, the release as to be the latest AKA on the latest release branch
 	if rcIncrement >= 1 && !isLatestRelease {
@@ -158,10 +149,11 @@ func setUpVitessReleaseInformation(s *releaser.State, repo string, rc int) (rele
 	}
 
 	vitessRelease := releaser.ReleaseInformation{
-		Repo:              repo,
-		Remote:            remote,
-		ReleaseBranch:     releaseBranch,
-		BaseReleaseBranch: baseReleaseBranch,
+		Repo:          repo,
+		Remote:        remote,
+		ReleaseBranch: releaseBranch,
+		// BaseReleaseBranch is the same as ReleaseBranch for Vitess post v21, maybe we can merge these two at a later date
+		BaseReleaseBranch: releaseBranch,
 		MajorRelease:      releaseVersion,
 		MajorReleaseNb:    majorReleaseNb,
 		IsLatestRelease:   isLatestRelease,
