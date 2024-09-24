@@ -17,23 +17,14 @@ limitations under the License.®
 package release
 
 import (
-	"fmt"
-	"strconv"
-	"strings"
-
 	"vitess.io/vitess-releaser/go/releaser"
 )
 
 func WebsiteDocs(state *releaser.State) []string {
-	majorVersion, _ := strconv.Atoi(strings.Split(state.VitessRelease.MajorRelease, ".")[0])
-	prevVersion := majorVersion - 1
 	msg := []string{
 		"We want to open a Pull Request to update the documentation.",
 		"",
 		"There are several pages we want to update:",
-		"\t- https://vitess.io/docs/releases/: we must add the new release to the list with all its information and link.",
-		fmt.Sprintf("\t- Set https://vitess.io/docs/%d.0/get-started/local/#install-vitess: Set version='v%d.0' ", prevVersion, prevVersion),
-		"",
 		"At the beginning of the following pages, we ask the user to clone Vitess. Please make sure we are doing a 'git checkout' to the proper branch after the 'git clone'.",
 		"For RC >= 2 and patch releases it's possible that no change is required if nothing was skipped in the previous releases.",
 		"List of pages where we must do a 'git checkout':",

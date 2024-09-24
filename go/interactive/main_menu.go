@@ -19,16 +19,15 @@ package interactive
 import (
 	"context"
 	"fmt"
-	"os"
-	"vitess.io/vitess-releaser/go/releaser/github"
-
 	tea "github.com/charmbracelet/bubbletea"
+	"os"
 	"vitess.io/vitess-releaser/go/interactive/code_freeze"
 	"vitess.io/vitess-releaser/go/interactive/post_release"
 	"vitess.io/vitess-releaser/go/interactive/pre_release"
 	"vitess.io/vitess-releaser/go/interactive/release"
 	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
+	"vitess.io/vitess-releaser/go/releaser/github"
 )
 
 func blankLineMenu() *ui.MenuItem {
@@ -36,6 +35,7 @@ func blankLineMenu() *ui.MenuItem {
 }
 
 func MainScreen(ctx context.Context, state *releaser.State) {
+
 	prereqMenu := ui.NewMenu(
 		ctx,
 		"Prerequisites",
