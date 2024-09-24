@@ -102,6 +102,9 @@ func Execute() {
 		os.Exit(1)
 	}
 
+	resetGHUser := utils.SetGHUser()
+	defer resetGHUser()
+
 	s := &releaser.State{}
 
 	vitessRepo, vtopRepo := getGitRepos()

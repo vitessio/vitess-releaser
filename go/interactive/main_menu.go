@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"vitess.io/vitess-releaser/go/releaser/github"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/code_freeze"
@@ -94,7 +95,8 @@ func MainScreen(ctx context.Context, state *releaser.State) {
 		post_release.CloseIssueItem(ctx),
 	)
 
-	m := ui.NewMenu(ctx, "Main Menu",
+	menuTitle := fmt.Sprintf("Main Menu (%s)", github.CurrentUser())
+	m := ui.NewMenu(ctx, menuTitle,
 		createIssueMenuItem(ctx),
 		checkAndAddMenuItem(ctx),
 		blankLineMenu(),
