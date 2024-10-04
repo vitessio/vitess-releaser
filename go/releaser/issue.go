@@ -280,21 +280,11 @@ const (
 {{- if .ReleaseNotesOnMain.URL }}
   - {{ .ReleaseNotesOnMain.URL }}
 {{- end }}
-{{- if or (gt .RC 0) (.GA) }}
-- [{{fmtStatus .ReleaseNotesOnReleaseBranch.Done}}] Update release notes on the release branch.
-{{- if .ReleaseNotesOnReleaseBranch.URL }}
-  - {{ .ReleaseNotesOnReleaseBranch.URL }}
-{{- end }}
-{{- end }}
 - [{{fmtStatus .BackToDevMode.Done}}] Go back to dev mode on the release branch.
 {{- if .BackToDevMode.URL }}
   - {{ .BackToDevMode.URL }}
 {{- end }}
 {{- if .GA }}
-- [{{fmtStatus .BackToDevModeBaseBranch.Done}}] Go back to dev mode on the base of the release branch.
-{{- if .BackToDevModeBaseBranch.URL }}
-  - {{ .BackToDevModeBaseBranch.URL }}
-{{- end }}
 - [{{fmtStatus .MergeBlogPostPR}}] Merge the blog post Pull Request on the website repository.
 {{- end }}
 - [{{fmtStatus .WebsiteDocumentation}}] Update the website documentation.

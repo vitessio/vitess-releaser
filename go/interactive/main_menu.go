@@ -19,15 +19,15 @@ package interactive
 import (
 	"context"
 	"fmt"
-	"os"
-
 	tea "github.com/charmbracelet/bubbletea"
+	"os"
 	"vitess.io/vitess-releaser/go/interactive/code_freeze"
 	"vitess.io/vitess-releaser/go/interactive/post_release"
 	"vitess.io/vitess-releaser/go/interactive/pre_release"
 	"vitess.io/vitess-releaser/go/interactive/release"
 	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
+	"vitess.io/vitess-releaser/go/releaser/github"
 )
 
 func blankLineMenu() *ui.MenuItem {
@@ -35,6 +35,7 @@ func blankLineMenu() *ui.MenuItem {
 }
 
 func MainScreen(ctx context.Context, state *releaser.State) {
+
 	prereqMenu := ui.NewMenu(
 		ctx,
 		"Prerequisites",
@@ -75,9 +76,7 @@ func MainScreen(ctx context.Context, state *releaser.State) {
 		release.VtopCreateReleasePRMenuItem(ctx),
 		release.VtopManualUpdateItem(ctx),
 		release.ReleaseNotesOnMainItem(ctx),
-		release.ReleaseNotesOnReleaseBranchItem(ctx),
 		release.BackToDevModeItem(ctx),
-		release.BackToDevModeBaseBranchItem(ctx),
 		mergeBlogPostPRMenuItem(ctx),
 		websiteDocumentationItem(ctx),
 		benchmarkedItem(ctx),
@@ -94,7 +93,8 @@ func MainScreen(ctx context.Context, state *releaser.State) {
 		post_release.CloseIssueItem(ctx),
 	)
 
-	m := ui.NewMenu(ctx, "Main Menu",
+	menuTitle := fmt.Sprintf("Main Menu (%s)", github.CurrentUser())
+	m := ui.NewMenu(ctx, menuTitle,
 		createIssueMenuItem(ctx),
 		checkAndAddMenuItem(ctx),
 		blankLineMenu(),

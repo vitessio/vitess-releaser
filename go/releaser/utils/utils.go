@@ -56,3 +56,16 @@ func ExecWithError(cmd string, args ...string) (string, error) {
 	}
 	return string(out), nil
 }
+
+func SetGHUser() func() {
+	ghToken := os.Getenv("VITESS_RELEASER_GH_TOKEN")
+	if ghToken != "" {
+		currentGHToken := os.Getenv("GH_TOKEN")
+		os.Setenv("GH_TOKEN", ghToken)
+		fmt.Println("Setting GH_TOKEN to VITESS_RELEASER_GH_TOKEN")
+		return func() {
+			os.Setenv("GH_TOKEN", currentGHToken)
+		}
+	}
+	return func() {}
+}
