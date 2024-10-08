@@ -36,7 +36,7 @@ const (
 
 func CreateNewLabels(state *releaser.State) (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
-		TotalSteps: 6,
+		TotalSteps: 5,
 	}
 
 	return pl, func() string {

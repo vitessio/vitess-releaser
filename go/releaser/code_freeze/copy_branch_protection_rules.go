@@ -24,7 +24,7 @@ import (
 
 func CopyBranchProtectionRules(state *releaser.State) (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
-		TotalSteps: 4,
+		TotalSteps: 3,
 	}
 
 	return pl, func() string {
