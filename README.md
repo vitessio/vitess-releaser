@@ -35,6 +35,16 @@ Flags:
       --vtop-release string   Number of the major and minor release on which we want to create a new release, i.e. '2.11', leave empty for no vtop release.
 ```
 
+## Authenticate with GH
+
+Each Pull Request either on `vitessio/vitess` or `planetscale/vitess-operator` require at least two approvals before getting merged.
+When doing a release, the release team is either composed of two or three people depending on availability.
+If the team is composed of two people, there can be a bottleneck around PR reviews. While one of the team member is the PR author, they
+cannot review their own PR, and thus the flow is slowed down.
+
+To counter this problem, one can set the environment variable `VITESS_RELEASER_GH_TOKEN` to a GitHub Personal Access Token with the `repo` and `org:read` permissions.
+We usually use the `@vitess-bot` account to author our PRs, but any other account can be used.
+
 ## Examples on how to run a release
 
 ### RC release
