@@ -40,11 +40,6 @@ func CreateNewLabels(state *releaser.State) (*logging.ProgressLogging, func() st
 	}
 
 	return pl, func() string {
-		// Create the label for the rc release branch i.e. "Backport to: release-20.0-rc"
-		labelRcBranch := backportToLabelName + state.VitessRelease.ReleaseBranch
-		pl.NewStepf("Creating '%s' label", labelRcBranch)
-		github.CreateLabel(state.VitessRelease.Repo, labelRcBranch, backportToLabelColor, backportToLabelDesc+state.VitessRelease.ReleaseBranch)
-
 		// Create the label for the base release branch i.e. "Backport to: release-20.0"
 		labelBaseBranch := backportToLabelName + state.VitessRelease.BaseReleaseBranch
 		pl.NewStepf("Creating '%s' label", labelBaseBranch)
