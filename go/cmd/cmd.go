@@ -217,6 +217,8 @@ func getGitRepos() (vitessRepo, vtopRepo string) {
 	} else {
 		currentGitHubUser := github.CurrentUser()
 		vitessRepo = currentGitHubUser + "/vitess"
+		vitessRepo = "planetscale/vitess-private"
+		fmt.Printf(">>>>>>>>>>> vitess repo is %s\n", vitessRepo)
 		vtopRepo = currentGitHubUser + "/vitess-operator"
 	}
 	return

@@ -132,14 +132,14 @@ type updateRequiredPullRequestReviews struct {
 	RequireLastPushApproval      bool `json:"require_last_push_approval"`
 }
 
-func CopyBranchProtectionRules(repo, branch string) {
-	originBranchProtectionRules := getBranchProtectionRules(repo)
+func CopyBranchProtectionRules(org, repo, fromBranch, toBranch string) {
+	originBranchProtectionRules := getBranchProtectionRules(repo, fromBranch)
 	destinationBranchProtectionRules := transformBranchProtectionRules(originBranchProtectionRules)
-	putBranchProtectionRules(destinationBranchProtectionRules, repo, branch)
+	putBranchProtectionRules(destinationBranchProtectionRules, org, repo, toBranch)
 }
 
-func getBranchProtectionRules(repo string) fetchBranchProtectionRules {
-	stdOut := execGh("api", fmt.Sprintf("repos/%s/branches/main/protection", repo))
+func getBranchProtectionRules(repo, branch string) fetchBranchProtectionRules {
+	stdOut := execGh("api", fmt.Sprintf("repos/planetscale/%s/branches/%s/protection", repo, branch))
 
 	var bpr fetchBranchProtectionRules
 	err := json.Unmarshal([]byte(stdOut), &bpr)
@@ -187,7 +187,7 @@ func transformBranchProtectionRules(bpr fetchBranchProtectionRules) updateUpdate
 	return ubpr
 }
 
-func putBranchProtectionRules(ubpr updateUpdateBranchProtectionRulesPayload, repo, branch string) {
+func putBranchProtectionRules(ubpr updateUpdateBranchProtectionRulesPayload, org, repo, branch string) {
 	jsonUbpr, err := json.Marshal(ubpr)
 	if err != nil {
 		utils.BailOut(err, "failed to marshal update branch protection rules")
@@ -208,6 +208,6 @@ func putBranchProtectionRules(ubpr updateUpdateBranchProtectionRulesPayload, rep
 		"-H", "Accept: application/vnd.github+json",
 		"-H", "X-GitHub-Api-Version: 2022-11-28",
 		"--input", f.Name(),
-		fmt.Sprintf("repos/%s/branches/%s/protection", repo, branch),
+		fmt.Sprintf("repos/%s/%s/branches/%s/protection", org, repo, branch),
 	)
 }

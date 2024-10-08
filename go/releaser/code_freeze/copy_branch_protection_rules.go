@@ -42,10 +42,10 @@ func CopyBranchProtectionRules(state *releaser.State) (*logging.ProgressLogging,
 			return ""
 		}
 		pl.NewStepf("Duplicating the branch protection rules for %s", state.VitessRelease.ReleaseBranch)
-		github.CopyBranchProtectionRules(state.VitessRelease.Repo, state.VitessRelease.ReleaseBranch)
+		github.CopyBranchProtectionRules(state.VitessRelease.Repo, "vitessio", "main", state.VitessRelease.ReleaseBranch)
 
 		pl.NewStepf("Duplicating the branch protection rules for %s", state.VitessRelease.BaseReleaseBranch)
-		github.CopyBranchProtectionRules(state.VitessRelease.Repo, state.VitessRelease.BaseReleaseBranch)
+		github.CopyBranchProtectionRules(state.VitessRelease.Repo, "vitessio", "main", state.VitessRelease.BaseReleaseBranch)
 		return ""
 	}
 }
