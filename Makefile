@@ -13,5 +13,5 @@
 # limitations under the License.
 
 install:
-	go install ./go/vitess-releaser.go
-	vitess-releaser -v
+	go build ./go/vitess-releaser.go
+	./vitess-releaser -v

@@ -87,17 +87,10 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 		if state.Issue.RC == 1 {
 			git.ResetHard(state.VitessRelease.Remote, "main")
 
-			// create the release branch ("release-20.0")
-			baseReleaseBranch := state.VitessRelease.ReleaseBranch[:len(state.VitessRelease.ReleaseBranch)-len("-rc")]
-			if err := git.CreateBranchAndCheckout(baseReleaseBranch, fmt.Sprintf("%s/main", state.VitessRelease.Remote)); err == nil {
-				git.Push(state.VitessRelease.Remote, baseReleaseBranch)
-			}
-
-			// create the rc release branch ("release-20.0-rc")
-			if err := git.CreateBranchAndCheckout(state.VitessRelease.ReleaseBranch, fmt.Sprintf("%s/%s", state.VitessRelease.Remote, baseReleaseBranch)); err != nil {
-				git.Checkout(state.VitessRelease.ReleaseBranch)
+			if err := git.CreateBranchAndCheckout(state.VitessRelease.BaseReleaseBranch, fmt.Sprintf("%s/main", state.VitessRelease.Remote)); err != nil {
+				git.Checkout(state.VitessRelease.BaseReleaseBranch)
 			} else {
-				git.Push(state.VitessRelease.Remote, state.VitessRelease.ReleaseBranch)
+				git.Push(state.VitessRelease.Remote, state.VitessRelease.BaseReleaseBranch)
 			}
 		} else {
 			git.ResetHard(state.VitessRelease.Remote, state.VitessRelease.ReleaseBranch)
