@@ -12,6 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-install:
-	go build ./go/vitess-releaser.go
+build:
+	go build -o vitess-releaser ./main.go
 	./vitess-releaser -v
