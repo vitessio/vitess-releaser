@@ -22,7 +22,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
-	"vitess.io/vitess-releaser/go/interactive/state"
+	"github.com/vitessio/vitess-releaser/go/interactive/state"
 )
 
 type DoneDialogAction string

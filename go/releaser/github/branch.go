@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"os"
 
-	"vitess.io/vitess-releaser/go/releaser/utils"
+	"github.com/vitessio/vitess-releaser/go/releaser/utils"
 )
 
 // Types to match what we receive from GitHub when fetching the branch protection rules.

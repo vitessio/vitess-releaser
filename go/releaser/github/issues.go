@@ -23,8 +23,8 @@ import (
 	"strings"
 
 	gh "github.com/cli/go-gh"
-	"vitess.io/vitess-releaser/go/releaser/git"
-	"vitess.io/vitess-releaser/go/releaser/utils"
+	"github.com/vitessio/vitess-releaser/go/releaser/git"
+	"github.com/vitessio/vitess-releaser/go/releaser/utils"
 )
 
 func execGh(args ...string) string {

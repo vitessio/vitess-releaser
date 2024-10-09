@@ -19,9 +19,9 @@ package prerequisite
 import (
 	"fmt"
 
-	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/github"
-	"vitess.io/vitess-releaser/go/releaser/logging"
+	"github.com/vitessio/vitess-releaser/go/releaser"
+	"github.com/vitessio/vitess-releaser/go/releaser/github"
+	"github.com/vitessio/vitess-releaser/go/releaser/logging"
 )
 
 func CheckAndAddPRsIssues(state *releaser.State) (*logging.ProgressLogging, func() string) {

@@ -26,12 +26,12 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"vitess.io/vitess-releaser/go/cmd/flags"
-	"vitess.io/vitess-releaser/go/interactive"
-	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/git"
-	"vitess.io/vitess-releaser/go/releaser/github"
-	"vitess.io/vitess-releaser/go/releaser/utils"
+	"github.com/vitessio/vitess-releaser/go/cmd/flags"
+	"github.com/vitessio/vitess-releaser/go/interactive"
+	"github.com/vitessio/vitess-releaser/go/releaser"
+	"github.com/vitessio/vitess-releaser/go/releaser/git"
+	"github.com/vitessio/vitess-releaser/go/releaser/github"
+	"github.com/vitessio/vitess-releaser/go/releaser/utils"
 )
 
 const VERSION = "v1.0"

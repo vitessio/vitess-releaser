@@ -18,10 +18,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/vitessio/vitess-releaser/go/cmd"
 	"os"
 	"os/exec"
 	"runtime/debug"
-	"vitess.io/vitess-releaser/go/cmd"
 )
 
 // On some shells the terminal is left in a bad state possibly because the debug output is large or

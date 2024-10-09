@@ -18,10 +18,10 @@ package github
 
 import (
 	"fmt"
+	"github.com/vitessio/vitess-releaser/go/releaser/utils"
 	"strings"
-	"vitess.io/vitess-releaser/go/releaser/utils"
 
-	"vitess.io/vitess-releaser/go/releaser/git"
+	"github.com/vitessio/vitess-releaser/go/releaser/git"
 )
 
 func CreateRelease(repo, tag, notesFilePath string, latest, prerelease bool) (url string) {

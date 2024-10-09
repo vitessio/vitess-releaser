@@ -22,13 +22,13 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"vitess.io/vitess-releaser/go/interactive/code_freeze"
-	"vitess.io/vitess-releaser/go/interactive/post_release"
-	"vitess.io/vitess-releaser/go/interactive/pre_release"
-	"vitess.io/vitess-releaser/go/interactive/release"
-	"vitess.io/vitess-releaser/go/interactive/ui"
-	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/github"
+	"github.com/vitessio/vitess-releaser/go/interactive/code_freeze"
+	"github.com/vitessio/vitess-releaser/go/interactive/post_release"
+	"github.com/vitessio/vitess-releaser/go/interactive/pre_release"
+	"github.com/vitessio/vitess-releaser/go/interactive/release"
+	"github.com/vitessio/vitess-releaser/go/interactive/ui"
+	"github.com/vitessio/vitess-releaser/go/releaser"
+	"github.com/vitessio/vitess-releaser/go/releaser/github"
 )
 
 func blankLineMenu() *ui.MenuItem {

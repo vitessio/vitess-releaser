@@ -21,11 +21,11 @@ import (
 	"os"
 	"time"
 
-	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/git"
-	"vitess.io/vitess-releaser/go/releaser/github"
-	"vitess.io/vitess-releaser/go/releaser/logging"
-	"vitess.io/vitess-releaser/go/releaser/utils"
+	"github.com/vitessio/vitess-releaser/go/releaser"
+	"github.com/vitessio/vitess-releaser/go/releaser/git"
+	"github.com/vitessio/vitess-releaser/go/releaser/github"
+	"github.com/vitessio/vitess-releaser/go/releaser/logging"
+	"github.com/vitessio/vitess-releaser/go/releaser/utils"
 )
 
 const (

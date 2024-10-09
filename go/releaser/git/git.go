@@ -22,7 +22,7 @@ import (
 	"os"
 	"strings"
 
-	"vitess.io/vitess-releaser/go/releaser/utils"
+	"github.com/vitessio/vitess-releaser/go/releaser/utils"
 )
 
 var (

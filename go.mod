@@ -1,4 +1,4 @@
-module vitess.io/vitess-releaser
+module github.com/vitessio/vitess-releaser
 
 go 1.21.0
 
