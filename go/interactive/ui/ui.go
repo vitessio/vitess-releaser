@@ -22,7 +22,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"vitess.io/vitess-releaser/go/releaser"
+	"github.com/vitessio/vitess-releaser/go/releaser"
 )
 
 type (

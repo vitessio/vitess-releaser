@@ -17,9 +17,9 @@ limitations under the License.
 package code_freeze
 
 import (
-	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/github"
-	"vitess.io/vitess-releaser/go/releaser/logging"
+	"github.com/vitessio/vitess-releaser/go/releaser"
+	"github.com/vitessio/vitess-releaser/go/releaser/github"
+	"github.com/vitessio/vitess-releaser/go/releaser/logging"
 )
 
 func CopyBranchProtectionRules(state *releaser.State) (*logging.ProgressLogging, func() string) {

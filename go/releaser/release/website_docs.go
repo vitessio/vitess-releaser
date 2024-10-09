@@ -17,7 +17,7 @@ limitations under the License.®
 package release
 
 import (
-	"vitess.io/vitess-releaser/go/releaser"
+	"github.com/vitessio/vitess-releaser/go/releaser"
 )
 
 func WebsiteDocs(state *releaser.State) []string {

@@ -19,7 +19,7 @@ package github
 import (
 	"encoding/json"
 
-	"vitess.io/vitess-releaser/go/releaser/utils"
+	"github.com/vitessio/vitess-releaser/go/releaser/utils"
 )
 
 func CurrentUser() string {

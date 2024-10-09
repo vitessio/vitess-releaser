@@ -20,19 +20,19 @@ import (
 	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"vitess.io/vitess-releaser/go/interactive/ui"
-	"vitess.io/vitess-releaser/go/releaser"
+	"github.com/vitessio/vitess-releaser/go/interactive/ui"
+	"github.com/vitessio/vitess-releaser/go/releaser"
 )
 
 type boolMsg struct {
 	name string
-	msg []string
+	msg  []string
 }
 
 func newBooleanMenu(ctx context.Context, rawMsg []string, stepName string, setInverse func(), isDone, ignore bool) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
 
-	act := func(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd ) {
+	act := func(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
 		return mi, func() tea.Msg {
 			return boolMsg{name: stepName, msg: rawMsg}
 		}

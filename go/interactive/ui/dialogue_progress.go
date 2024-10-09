@@ -23,7 +23,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
-	"vitess.io/vitess-releaser/go/releaser/logging"
+	"github.com/vitessio/vitess-releaser/go/releaser/logging"
 )
 
 type ProgressDialog struct {

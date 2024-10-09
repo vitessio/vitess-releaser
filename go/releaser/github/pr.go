@@ -23,8 +23,8 @@ import (
 	"strconv"
 	"strings"
 
-	"vitess.io/vitess-releaser/go/releaser/git"
-	"vitess.io/vitess-releaser/go/releaser/utils"
+	"github.com/vitessio/vitess-releaser/go/releaser/git"
+	"github.com/vitessio/vitess-releaser/go/releaser/utils"
 )
 
 type Label struct {
