@@ -34,7 +34,7 @@ import (
 	"github.com/vitessio/vitess-releaser/go/releaser/utils"
 )
 
-const VERSION = "v1.0"
+const VERSION = "v1.0.2"
 
 var (
 	releaseVersion     string
@@ -73,7 +73,7 @@ func init() {
 	rootCmd.PersistentFlags().IntVarP(&rcIncrement, flags.RCIncrement, "", 0, "Define the release as an RC release, value is used to determine the number of the RC.")
 	rootCmd.PersistentFlags().StringVarP(&releaseVersion, flags.MajorRelease, "r", "", "Number of the major release on which we want to create a new release.")
 	rootCmd.PersistentFlags().StringVarP(&vtopReleaseVersion, flags.VtOpRelease, "", "", "Number of the major and minor release on which we want to create a new release, i.e. '2.11', leave empty for no vtop release.")
-	rootCmd.PersistentFlags().BoolVarP(&version, "version", "v", false, "Prints the version and git commit hash.")
+	rootCmd.PersistentFlags().BoolVarP(&version, "version", "v", false, "Prints the version.")
 
 	err := cobra.MarkFlagRequired(rootCmd.PersistentFlags(), flags.MajorRelease)
 	if err != nil {
@@ -223,9 +223,7 @@ func getGitRepos() (vitessRepo, vtopRepo string) {
 }
 
 func printVersionAndExit() {
-	commit, shortHash := getGitCommit()
-	fmt.Printf("Version: %s.%s\n", VERSION, shortHash)
-	fmt.Printf("Last Commit: %s\n", commit)
+	fmt.Printf("Version: %s\n", VERSION)
 	os.Exit(0)
 }
 
