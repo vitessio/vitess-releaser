@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pre_release
+package code_freeze
 
 import (
 	"context"
@@ -22,43 +22,44 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/ui"
 	"vitess.io/vitess-releaser/go/releaser"
+	"vitess.io/vitess-releaser/go/releaser/code_freeze"
 	"vitess.io/vitess-releaser/go/releaser/steps"
-
-	"vitess.io/vitess-releaser/go/releaser/pre_release"
 )
 
-func VtopCreateBranchMenuItem(ctx context.Context) *ui.MenuItem {
+func VtopBumpMainVersionMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
-	act := vtopCreateBranchAct
-	if state.Issue.VtopCreateBranch {
+	act := vtopBumpMainVersionAct
+	if state.Issue.VtopBumpMainVersion.Done {
 		act = nil
 	}
 	return &ui.MenuItem{
 		State:  state,
-		Name:   steps.VtopCreateBranch,
+		Name:   steps.VtopBumpMainVersion,
 		Act:    act,
-		Update: vtopCreateBranchUpdate,
-		IsDone: state.Issue.VtopCreateBranch,
+		Update: vtopBumpMainVersionUpdate,
+		Info:   state.Issue.VtopBumpMainVersion.URL,
+		IsDone: state.Issue.VtopBumpMainVersion.Done,
 
 		Ignore: state.VtOpRelease.Release == "" || state.Issue.RC != 1,
 	}
 }
 
-type vtopCreateBranchUrl string
+type vtopBumpMainVersionUrl string
 
-func vtopCreateBranchUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
-	_, ok := msg.(vtopCreateBranchUrl)
+func vtopBumpMainVersionUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
+	_, ok := msg.(vtopBumpMainVersionUrl)
 	if !ok {
 		return mi, nil
 	}
 
-	mi.IsDone = mi.State.Issue.VtopCreateBranch
+	mi.IsDone = mi.State.Issue.VtopBumpMainVersion.Done
+	mi.Info = mi.State.Issue.VtopBumpMainVersion.URL
 	return mi, nil
 }
 
-func vtopCreateBranchAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
-	pl, freeze := pre_release.VtopCreateBranch(mi.State)
+func vtopBumpMainVersionAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
+	pl, fn := code_freeze.VtopBumpMainVersion(mi.State)
 	return mi, tea.Batch(func() tea.Msg {
-		return vtopCreateBranchUrl(freeze())
-	}, ui.PushDialog(ui.NewProgressDialog(steps.VtopCreateBranch, pl)))
+		return vtopBumpMainVersionUrl(fn())
+	}, ui.PushDialog(ui.NewProgressDialog(steps.VtopBumpMainVersion, pl)))
 }

@@ -19,8 +19,9 @@ package interactive
 import (
 	"context"
 	"fmt"
-	tea "github.com/charmbracelet/bubbletea"
 	"os"
+
+	tea "github.com/charmbracelet/bubbletea"
 	"vitess.io/vitess-releaser/go/interactive/code_freeze"
 	"vitess.io/vitess-releaser/go/interactive/post_release"
 	"vitess.io/vitess-releaser/go/interactive/pre_release"
@@ -54,16 +55,16 @@ func MainScreen(ctx context.Context, state *releaser.State) {
 		code_freeze.CreateNewLabelsMenuItem(ctx),
 		code_freeze.UpdateSnapshotOnMainMenuItem(ctx),
 		code_freeze.CreateMilestoneMenuItem(ctx),
+		code_freeze.VtopCreateBranchMenuItem(ctx),
+		code_freeze.VtopBumpMainVersionMenuItem(ctx),
+		vtopUpdateCompatibilityTableMenuItem(ctx),
 	)
 
 	preReleaseMenu := ui.NewMenu(
 		ctx,
 		"Pre Release",
 		pre_release.CreateReleasePRMenuItem(ctx),
-		pre_release.VtopCreateBranchMenuItem(ctx),
-		pre_release.VtopBumpMainVersionMenuItem(ctx),
 		pre_release.VtopUpdateGolangMenuItem(ctx),
-		vtopUpdateCompatibilityTableMenuItem(ctx),
 		createBlogPostPRMenuItem(ctx),
 	)
 
