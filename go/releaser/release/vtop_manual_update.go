@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"strings"
 
-	"vitess.io/vitess-releaser/go/releaser"
+	"github.com/vitessio/vitess-releaser/go/releaser"
 )
 
 func VtopManualUpdateMessage(state *releaser.State) []string {

@@ -19,7 +19,7 @@ package pre_release
 import (
 	"fmt"
 
-	"vitess.io/vitess-releaser/go/releaser"
+	"github.com/vitessio/vitess-releaser/go/releaser"
 )
 
 func VtopUpdateCompatibilityTable(state *releaser.State) []string {

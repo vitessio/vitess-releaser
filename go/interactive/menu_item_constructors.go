@@ -19,13 +19,13 @@ package interactive
 import (
 	"context"
 
-	"vitess.io/vitess-releaser/go/interactive/ui"
-	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/post_release"
-	"vitess.io/vitess-releaser/go/releaser/pre_release"
-	"vitess.io/vitess-releaser/go/releaser/prerequisite"
-	"vitess.io/vitess-releaser/go/releaser/release"
-	"vitess.io/vitess-releaser/go/releaser/steps"
+	"github.com/vitessio/vitess-releaser/go/interactive/ui"
+	"github.com/vitessio/vitess-releaser/go/releaser"
+	"github.com/vitessio/vitess-releaser/go/releaser/post_release"
+	"github.com/vitessio/vitess-releaser/go/releaser/pre_release"
+	"github.com/vitessio/vitess-releaser/go/releaser/prerequisite"
+	"github.com/vitessio/vitess-releaser/go/releaser/release"
+	"github.com/vitessio/vitess-releaser/go/releaser/steps"
 )
 
 func checkSummaryMenuItem(ctx context.Context) *ui.MenuItem {

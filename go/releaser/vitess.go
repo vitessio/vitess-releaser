@@ -25,8 +25,8 @@ import (
 	"strings"
 	"time"
 
-	"vitess.io/vitess-releaser/go/releaser/git"
-	"vitess.io/vitess-releaser/go/releaser/utils"
+	"github.com/vitessio/vitess-releaser/go/releaser/git"
+	"github.com/vitessio/vitess-releaser/go/releaser/utils"
 )
 
 const (

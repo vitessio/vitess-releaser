@@ -26,9 +26,9 @@ import (
 	"strings"
 	"text/template"
 
-	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/github"
-	"vitess.io/vitess-releaser/go/releaser/utils"
+	"github.com/vitessio/vitess-releaser/go/releaser"
+	"github.com/vitessio/vitess-releaser/go/releaser/github"
+	"github.com/vitessio/vitess-releaser/go/releaser/utils"
 )
 
 type (

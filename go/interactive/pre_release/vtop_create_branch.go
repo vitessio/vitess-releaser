@@ -20,11 +20,11 @@ import (
 	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"vitess.io/vitess-releaser/go/interactive/ui"
-	"vitess.io/vitess-releaser/go/releaser"
-	"vitess.io/vitess-releaser/go/releaser/steps"
+	"github.com/vitessio/vitess-releaser/go/interactive/ui"
+	"github.com/vitessio/vitess-releaser/go/releaser"
+	"github.com/vitessio/vitess-releaser/go/releaser/steps"
 
-	"vitess.io/vitess-releaser/go/releaser/pre_release"
+	"github.com/vitessio/vitess-releaser/go/releaser/pre_release"
 )
 
 func VtopCreateBranchMenuItem(ctx context.Context) *ui.MenuItem {
