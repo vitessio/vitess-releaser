@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pre_release
+package code_freeze
 
 import (
 	"context"
@@ -22,9 +22,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/vitessio/vitess-releaser/go/interactive/ui"
 	"github.com/vitessio/vitess-releaser/go/releaser"
+	"github.com/vitessio/vitess-releaser/go/releaser/code_freeze"
 	"github.com/vitessio/vitess-releaser/go/releaser/steps"
-
-	"github.com/vitessio/vitess-releaser/go/releaser/pre_release"
 )
 
 func VtopCreateBranchMenuItem(ctx context.Context) *ui.MenuItem {
@@ -57,7 +56,7 @@ func vtopCreateBranchUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd
 }
 
 func vtopCreateBranchAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
-	pl, freeze := pre_release.VtopCreateBranch(mi.State)
+	pl, freeze := code_freeze.VtopCreateBranch(mi.State)
 	return mi, tea.Batch(func() tea.Msg {
 		return vtopCreateBranchUrl(freeze())
 	}, ui.PushDialog(ui.NewProgressDialog(steps.VtopCreateBranch, pl)))

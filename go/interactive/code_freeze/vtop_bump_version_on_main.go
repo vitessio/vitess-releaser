@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pre_release
+package code_freeze
 
 import (
 	"context"
@@ -22,9 +22,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/vitessio/vitess-releaser/go/interactive/ui"
 	"github.com/vitessio/vitess-releaser/go/releaser"
+	"github.com/vitessio/vitess-releaser/go/releaser/code_freeze"
 	"github.com/vitessio/vitess-releaser/go/releaser/steps"
-
-	"github.com/vitessio/vitess-releaser/go/releaser/pre_release"
 )
 
 func VtopBumpMainVersionMenuItem(ctx context.Context) *ui.MenuItem {
@@ -59,7 +58,7 @@ func vtopBumpMainVersionUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.
 }
 
 func vtopBumpMainVersionAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
-	pl, fn := pre_release.VtopBumpMainVersion(mi.State)
+	pl, fn := code_freeze.VtopBumpMainVersion(mi.State)
 	return mi, tea.Batch(func() tea.Msg {
 		return vtopBumpMainVersionUrl(fn())
 	}, ui.PushDialog(ui.NewProgressDialog(steps.VtopBumpMainVersion, pl)))

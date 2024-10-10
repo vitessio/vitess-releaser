@@ -21,8 +21,8 @@ import (
 
 	"github.com/vitessio/vitess-releaser/go/interactive/ui"
 	"github.com/vitessio/vitess-releaser/go/releaser"
+	"github.com/vitessio/vitess-releaser/go/releaser/code_freeze"
 	"github.com/vitessio/vitess-releaser/go/releaser/post_release"
-	"github.com/vitessio/vitess-releaser/go/releaser/pre_release"
 	"github.com/vitessio/vitess-releaser/go/releaser/prerequisite"
 	"github.com/vitessio/vitess-releaser/go/releaser/release"
 	"github.com/vitessio/vitess-releaser/go/releaser/steps"
@@ -65,7 +65,7 @@ func vtopUpdateCompatibilityTableMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
 	return newBooleanMenu(
 		ctx,
-		pre_release.VtopUpdateCompatibilityTable(state),
+		code_freeze.VtopUpdateCompatibilityTable(state),
 		steps.VtopUpdateCompatibilityTable,
 		func() { state.Issue.VtopUpdateCompatibilityTable = !state.Issue.VtopUpdateCompatibilityTable },
 		state.Issue.VtopUpdateCompatibilityTable,

@@ -25,10 +25,10 @@ import (
 	"time"
 
 	"github.com/vitessio/vitess-releaser/go/releaser"
+	"github.com/vitessio/vitess-releaser/go/releaser/code_freeze"
 	"github.com/vitessio/vitess-releaser/go/releaser/git"
 	"github.com/vitessio/vitess-releaser/go/releaser/github"
 	"github.com/vitessio/vitess-releaser/go/releaser/logging"
-	"github.com/vitessio/vitess-releaser/go/releaser/pre_release"
 	"github.com/vitessio/vitess-releaser/go/releaser/utils"
 )
 
@@ -129,7 +129,7 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 
 		// 7. Update the version file of vtop
 		pl.NewStepf("Update version file to %s", lowerReleaseName)
-		pre_release.UpdateVtOpVersionGoFile(lowerReleaseName)
+		code_freeze.UpdateVtOpVersionGoFile(lowerReleaseName)
 		if !git.CommitAll(fmt.Sprintf("Update the version file to %s", lowerReleaseName)) {
 			commitCount++
 			git.Push(state.VtOpRelease.Remote, newBranchName)
@@ -157,7 +157,7 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 		// 11. Figure out what is the next vtop release for this branch
 		nextRelease := findNextVtOpVersion(state.VtOpRelease.Release, state.Issue.RC)
 		pl.NewStepf("Go back to dev mode with version = %s", nextRelease)
-		pre_release.UpdateVtOpVersionGoFile(nextRelease)
+		code_freeze.UpdateVtOpVersionGoFile(nextRelease)
 		if !git.CommitAll(fmt.Sprintf("Go back to dev mode")) {
 			commitCount++
 			git.Push(state.VtOpRelease.Remote, newBranchName)

@@ -21,24 +21,24 @@ const (
 	ReleaseIssue       = "Release Issue"
 
 	// Prerequisite
-	GeneralPrerequisite = "General"
-	SlackAnnouncement   = "Slack Announcement"
-	CheckAndAdd         = "Pending PRs/Issues"
-	CheckSummary        = "Check Release Summary"
-	DraftBlogPost       = "Draft Blog Post"
-	CrossPostBlogPost   = "Cross-post Blog Post"
-
-	// Pre-Release
-	CodeFreeze                   = "Code Freeze"
-	CopyBranchProtectionRules    = "Copy branch protection rules"
-	CreateNewLabels              = "Create new labels"
-	UpdateSnapshotOnMain         = "Update SNAPSHOT on main"
-	CreateReleasePR              = "Create Release PR"
-	CreateMilestone              = "Create Milestone"
+	GeneralPrerequisite          = "General"
+	SlackAnnouncement            = "Slack Announcement"
+	CheckAndAdd                  = "Pending PRs/Issues"
+	CheckSummary                 = "Check Release Summary"
+	DraftBlogPost                = "Draft Blog Post"
 	VtopCreateBranch             = "Create vitess-operator release branch"
 	VtopBumpMainVersion          = "Bump version of vitess-operator on main"
-	VtopUpdateGolang             = "Update Go version in vitess-operator"
 	VtopUpdateCompatibilityTable = "Update compatibility table in vitess-operator"
+	CrossPostBlogPost            = "Cross-post Blog Post"
+
+	// Pre-Release
+	CodeFreeze                = "Code Freeze"
+	CopyBranchProtectionRules = "Copy branch protection rules"
+	CreateNewLabels           = "Create new labels"
+	UpdateSnapshotOnMain      = "Update SNAPSHOT on main"
+	CreateReleasePR           = "Create Release PR"
+	CreateMilestone           = "Create Milestone"
+	VtopUpdateGolang          = "Update Go version in vitess-operator"
 
 	// Release
 	MergeReleasePR              = "Merge Release PR"

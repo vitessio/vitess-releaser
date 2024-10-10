@@ -228,6 +228,18 @@ const (
 {{- if .NewGitHubMilestone.URL }}
   - {{ .NewGitHubMilestone.URL }}
 {{- end }}
+{{- if .DoVtOp }}
+{{- if eq .RC 1 }}
+- [{{fmtStatus .VtopCreateBranch}}] Create vitess-operator release branch.
+- [{{fmtStatus .VtopBumpMainVersion.Done}}] Bump the version vitess-operator main.
+{{- if .VtopBumpMainVersion.URL }}
+  - {{ .VtopBumpMainVersion.URL }}
+{{- end }}
+{{- end }}
+{{- if eq .RC 1 }}
+- [{{fmtStatus .VtopUpdateCompatibilityTable}}] Update vitess-operator compatibility table.
+{{- end }}
+{{- end }}
 {{- end }}
 
 ### Pre-Release _(~1-3 days before)_
@@ -237,19 +249,9 @@ const (
   - {{ .CreateReleasePR.URL }}
 {{- end }}
 {{- if .DoVtOp }}
-{{- if eq .RC 1 }}
-- [{{fmtStatus .VtopCreateBranch}}] Create vitess-operator release branch.
-- [{{fmtStatus .VtopBumpMainVersion.Done}}] Bump the version vitess-operator main.
-{{- if .VtopBumpMainVersion.URL }}
-  - {{ .VtopBumpMainVersion.URL }}
-{{- end }}
-{{- end }}
 - [{{fmtStatus .VtopUpdateGolang.Done}}] Update vitess-operator Golang version.
 {{- if .VtopUpdateGolang.URL }}
   - {{ .VtopUpdateGolang.URL }}
-{{- end }}
-{{- if eq .RC 1 }}
-- [{{fmtStatus .VtopUpdateCompatibilityTable}}] Update vitess-operator compatibility table.
 {{- end }}
 {{- end }}
 {{- if .GA }}
