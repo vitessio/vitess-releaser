@@ -21,6 +21,7 @@ func General() []string {
 		"Please make sure you respect all the following items:",
 		"\t- Be part of the vitessio \"Release\" team: https://github.com/orgs/vitessio/teams/release",
 		"\t- Be an admin of the \"planetscale/vitess-operator\" repository",
+		"\t- Be an admin of the \"vitess\" organization on DockerHub",
 		"\t- Have access to Vitess' Java repository and have it working locally: https://github.com/vitessio/vitess/blob/main/doc/internal/release/java-packages.md",
 		"\t- Have \"vitessio/vitess\" and \"planetscale/vitess-operator\" cloned in the same parent directory",
 	}
