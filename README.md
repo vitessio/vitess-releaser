@@ -8,15 +8,11 @@ It streamlines various tasks, such as version bumping, changelog generation, iss
 ## Install
 
 ```bash
-# Clone the repo
-> gh repo clone vitessio/vitess-releaser
-
 # Install dependencies
 > gh extension install valeriobelli/gh-milestone
 
 # Install the binary
-> cd vitess-releaser
-> make
+> go install github.com/vitessio/vitess-releaser@latest
 ```
 
 ## Usage
