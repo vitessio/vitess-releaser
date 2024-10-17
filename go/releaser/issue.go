@@ -79,6 +79,7 @@ const (
 	vtopUpdateGoItem              = "Update vitess-operator Golang version."
 	vtopUpdateCompTableItem       = "Update vitess-operator compatibility table."
 	createBlogPostPRItem          = "Open a Pull Request on the website repository for the blog post."
+	UpdateCobraDocsItem           = "Update Cobra Docs"
 
 	// Release
 	mergeReleasePRItem            = "Merge the Release PR."
@@ -95,12 +96,17 @@ const (
 	dockerImagesItem              = "Docker Images available on DockerHub."
 	closeMilestoneItem            = "Close current GitHub Milestone."
 	mergeBlogPostItem             = "Merge the blog post Pull Request on the website repository."
+	VttestServerItem              = "Check vttestserver image is pushed"
+	ReleaseArtifactsItem          = "Check that release artifacts were generated"
 
 	// Post-Release
 	postSlackAnnouncementItem = "Notify the community on Slack for the new release."
 	twitterItem               = "Twitter announcement."
 	closeReleaseItem          = "Close this Issue."
+	RemoveBypassProtection    = "Remove bypass protection for release branch"
 )
+
+var simpleItems = []string{UpdateCobraDocsItem, VttestServerItem}
 
 type (
 	ItemWithLink struct {
@@ -151,6 +157,7 @@ type (
 		VtopCreateReleasePR          ItemWithLinks
 		VtopManualUpdate             bool
 		CreateBlogPostPR             bool
+		UpdateCobraDocs              bool
 
 		// Release
 		MergeReleasePR              ItemWithLink
@@ -165,11 +172,13 @@ type (
 		Benchmarked                 bool
 		DockerImages                bool
 		CloseMilestone              ItemWithLink
-
+		VtTestServer                bool
+		ReleaseArtifacts            bool
 		// Post-Release
-		SlackPostRelease bool
-		Twitter          bool
-		CloseIssue       bool
+		SlackPostRelease       bool
+		Twitter                bool
+		CloseIssue             bool
+		RemoveBypassProtection bool
 	}
 )
 
@@ -257,6 +266,7 @@ const (
 {{- if .GA }}
 - [{{fmtStatus .CreateBlogPostPR}}] Open a Pull Request on the website repository for the blog post.
 {{- end }}
+- [{{fmtStatus .UpdateCobraDocs}}] Update Cobra Docs
 
 ### Release _({{fmtShortDate .Date }})_
 
@@ -298,12 +308,15 @@ const (
   - {{ .CloseMilestone.URL }}
 {{- end }}
 {{- end }}
-
+- [{{fmtStatus .VtTestServer}}] Check vttestserver image is pushed.
+- [{{fmtStatus .ReleaseArtifacts}}] Check that release artifacts were generated.
 
 ### Post-Release _({{fmtShortDate .Date }})_
 - [{{fmtStatus .SlackPostRelease}}] Notify the community on Slack for the new release.
 - [{{fmtStatus .Twitter}}] Twitter announcement.
+- [{{fmtStatus .RemoveBypassProtection}}] Remove bypass protection for release branch.
 - [{{fmtStatus .CloseIssue}}] Close this Issue.
+
 `
 )
 
@@ -497,6 +510,14 @@ func (s *State) LoadIssue() {
 				newIssue.MergeBlogPostPR = strings.HasPrefix(line, markdownItemDone)
 			case strings.Contains(line, javaRelease):
 				newIssue.JavaRelease = strings.HasPrefix(line, markdownItemDone)
+			case strings.Contains(line, UpdateCobraDocsItem):
+				newIssue.UpdateCobraDocs = strings.HasPrefix(line, markdownItemDone)
+			case strings.Contains(line, VttestServerItem):
+				newIssue.VtTestServer = strings.HasPrefix(line, markdownItemDone)
+			case strings.Contains(line, ReleaseArtifactsItem):
+				newIssue.ReleaseArtifacts = strings.HasPrefix(line, markdownItemDone)
+			case strings.Contains(line, RemoveBypassProtection):
+				newIssue.RemoveBypassProtection = strings.HasPrefix(line, markdownItemDone)
 			}
 		case stateReadingGeneral:
 			newIssue.General.Items = append(newIssue.General.Items, handleNewListItem(lines, i, &st))
