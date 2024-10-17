@@ -29,6 +29,7 @@ import (
 	"github.com/vitessio/vitess-releaser/go/interactive/ui"
 	"github.com/vitessio/vitess-releaser/go/releaser"
 	"github.com/vitessio/vitess-releaser/go/releaser/github"
+	"github.com/vitessio/vitess-releaser/go/releaser/steps"
 )
 
 func blankLineMenu() *ui.MenuItem {
@@ -66,6 +67,7 @@ func MainScreen(ctx context.Context, state *releaser.State) {
 		pre_release.CreateReleasePRMenuItem(ctx),
 		pre_release.VtopUpdateGolangMenuItem(ctx),
 		createBlogPostPRMenuItem(ctx),
+		simpleMenuItem(ctx, "UpdateCobraDocs", []string{releaser.UpdateCobraDocsItem}, steps.UpdateCobraDocs, false),
 	)
 
 	releaseMenu := ui.NewMenu(
@@ -83,6 +85,8 @@ func MainScreen(ctx context.Context, state *releaser.State) {
 		benchmarkedItem(ctx),
 		dockerImagesItem(ctx),
 		release.CloseMilestoneItem(ctx),
+		simpleMenuItem(ctx, "VtTestServer", []string{releaser.VttestServerItem}, steps.VtTestServer, false),
+		simpleMenuItem(ctx, "ReleaseArtifacts", []string{releaser.ReleaseArtifactsItem}, steps.ReleaseArtifacts, false),
 	)
 	releaseMenu.Sequential = true
 
@@ -92,6 +96,7 @@ func MainScreen(ctx context.Context, state *releaser.State) {
 		slackAnnouncementMenuItem(ctx, slackAnnouncementPostRelease),
 		twitterMenuItem(ctx),
 		post_release.CloseIssueItem(ctx),
+		simpleMenuItem(ctx, "RemoveBypassProtection", []string{releaser.RemoveBypassProtection}, steps.RemoveBypassProtection, false),
 	)
 
 	menuTitle := fmt.Sprintf("Main Menu (%s)", github.CurrentUser())
