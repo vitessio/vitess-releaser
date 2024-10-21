@@ -96,7 +96,6 @@ const (
 	dockerImagesItem              = "Docker Images available on DockerHub."
 	closeMilestoneItem            = "Close current GitHub Milestone."
 	mergeBlogPostItem             = "Merge the blog post Pull Request on the website repository."
-	VttestServerItem              = "Check vttestserver image is pushed"
 	ReleaseArtifactsItem          = "Check that release artifacts were generated"
 
 	// Post-Release
@@ -105,8 +104,6 @@ const (
 	closeReleaseItem          = "Close this Issue."
 	RemoveBypassProtection    = "Remove bypass protection for release branch"
 )
-
-var simpleItems = []string{UpdateCobraDocsItem, VttestServerItem}
 
 type (
 	ItemWithLink struct {
@@ -512,8 +509,6 @@ func (s *State) LoadIssue() {
 				newIssue.JavaRelease = strings.HasPrefix(line, markdownItemDone)
 			case strings.Contains(line, UpdateCobraDocsItem):
 				newIssue.UpdateCobraDocs = strings.HasPrefix(line, markdownItemDone)
-			case strings.Contains(line, VttestServerItem):
-				newIssue.VtTestServer = strings.HasPrefix(line, markdownItemDone)
 			case strings.Contains(line, ReleaseArtifactsItem):
 				newIssue.ReleaseArtifacts = strings.HasPrefix(line, markdownItemDone)
 			case strings.Contains(line, RemoveBypassProtection):

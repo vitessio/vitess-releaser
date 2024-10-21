@@ -85,7 +85,6 @@ func MainScreen(ctx context.Context, state *releaser.State) {
 		benchmarkedItem(ctx),
 		dockerImagesItem(ctx),
 		release.CloseMilestoneItem(ctx),
-		simpleMenuItem(ctx, "VtTestServer", []string{releaser.VttestServerItem}, steps.VtTestServer, false),
 		simpleMenuItem(ctx, "ReleaseArtifacts", []string{releaser.ReleaseArtifactsItem}, steps.ReleaseArtifacts, false),
 	)
 	releaseMenu.Sequential = true

@@ -16,12 +16,20 @@ limitations under the License.
 
 package release
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/vitessio/vitess-releaser/go/releaser"
+)
 
-func CheckDockerMessage(majorRelease int, repo string, vtopRepo string) []string {
+func CheckDockerMessage(state *releaser.State) []string {
+	majorRelease := state.VitessRelease.MajorReleaseNb
+	repo := state.VitessRelease.Repo
+	vtopRepo := state.VtOpRelease.Repo
+	release := state.VitessRelease.Release
 	msg := []string{
 		"Make sure the Docker Images are being built by GitHub Actions.",
 		"This can be done by visiting the following links, our new release should appear in either green (done) or yellow (building / pending build):",
+		fmt.Sprintf("Check vttestserver image is pushed at https://hub.docker.com/r/vitess/vttestserver/tags?name=%s.", release),
 		"",
 	}
 

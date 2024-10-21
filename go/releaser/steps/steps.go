@@ -56,7 +56,6 @@ const (
 	Benchmarked                 = "Benchmarks"
 	DockerImages                = "Docker Images"
 	CloseMilestone              = "Close Milestone"
-	VtTestServer                = "VtTestServer"
 	ReleaseArtifacts            = "Release Artifacts"
 
 	// Post-Release
