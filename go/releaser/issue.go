@@ -96,13 +96,13 @@ const (
 	dockerImagesItem              = "Docker Images available on DockerHub."
 	closeMilestoneItem            = "Close current GitHub Milestone."
 	mergeBlogPostItem             = "Merge the blog post Pull Request on the website repository."
-	ReleaseArtifactsItem          = "Check that release artifacts were generated"
+	ReleaseArtifactsItem          = "Check that release artifacts were generated."
 
 	// Post-Release
 	postSlackAnnouncementItem = "Notify the community on Slack for the new release."
 	twitterItem               = "Twitter announcement."
+	RemoveBypassProtection    = "Remove bypass branch protection rules, if required."
 	closeReleaseItem          = "Close this Issue."
-	RemoveBypassProtection    = "In branch protection for current branch, confirm 'Do not allow bypassing the above settings' is chacked."
 )
 
 type (
@@ -169,8 +169,8 @@ type (
 		Benchmarked                 bool
 		DockerImages                bool
 		CloseMilestone              ItemWithLink
-		VtTestServer                bool
 		ReleaseArtifacts            bool
+
 		// Post-Release
 		SlackPostRelease       bool
 		Twitter                bool
@@ -305,13 +305,12 @@ const (
   - {{ .CloseMilestone.URL }}
 {{- end }}
 {{- end }}
-- [{{fmtStatus .VtTestServer}}] Check that the vttestserver image is pushed.
 - [{{fmtStatus .ReleaseArtifacts}}] Check that release artifacts were generated.
 
 ### Post-Release _({{fmtShortDate .Date }})_
 - [{{fmtStatus .SlackPostRelease}}] Notify the community on Slack for the new release.
 - [{{fmtStatus .Twitter}}] Twitter announcement.
-- [{{fmtStatus .RemoveBypassProtection}}] Remove bypass protection for release branch, if required.
+- [{{fmtStatus .RemoveBypassProtection}}] Remove bypass branch protection rules, if required.
 - [{{fmtStatus .CloseIssue}}] Close this Issue.
 
 `

@@ -19,6 +19,8 @@ package interactive
 import (
 	"context"
 	"fmt"
+	"os"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/vitessio/vitess-releaser/go/interactive/code_freeze"
 	"github.com/vitessio/vitess-releaser/go/interactive/post_release"
@@ -27,30 +29,16 @@ import (
 	"github.com/vitessio/vitess-releaser/go/interactive/ui"
 	"github.com/vitessio/vitess-releaser/go/releaser"
 	"github.com/vitessio/vitess-releaser/go/releaser/github"
+	postreleaselogic "github.com/vitessio/vitess-releaser/go/releaser/post_release"
+	prereleaselogic "github.com/vitessio/vitess-releaser/go/releaser/pre_release"
+	releaselogic "github.com/vitessio/vitess-releaser/go/releaser/release"
 	"github.com/vitessio/vitess-releaser/go/releaser/steps"
-	"os"
 )
 
 func blankLineMenu() *ui.MenuItem {
 	return &ui.MenuItem{}
 }
 
-func getCobraDocsItemContent(state *releaser.State) []string {
-	return []string{
-		"Regenerate cobra cli docs by running the following in the root of the website repo:\n",
-		fmt.Sprintf("$> export COBRADOC_VERSION_PAIRS=\"v%s:%s.0\"",
-			releaser.RemoveRCFromReleaseTitle(state.VitessRelease.Release), state.VitessRelease.MajorRelease),
-		fmt.Sprintf("$> make generated-docs"),
-		"",
-	}
-}
-
-func getReleaseArtifactsItemContent(state *releaser.State) []string {
-	return []string{
-		fmt.Sprintf("Check that release artifacts were generated: at bottom of https://github.com/vitessio/vitess/releases/tag/%s.", state.GetTag()),
-		"",
-	}
-}
 func MainScreen(ctx context.Context, state *releaser.State) {
 
 	prereqMenu := ui.NewMenu(
@@ -82,7 +70,7 @@ func MainScreen(ctx context.Context, state *releaser.State) {
 		pre_release.CreateReleasePRMenuItem(ctx),
 		pre_release.VtopUpdateGolangMenuItem(ctx),
 		createBlogPostPRMenuItem(ctx),
-		simpleMenuItem(ctx, "UpdateCobraDocs", getCobraDocsItemContent(state), steps.UpdateCobraDocs, false),
+		simpleMenuItem(ctx, "UpdateCobraDocs", prereleaselogic.CobraDocs(state), steps.UpdateCobraDocs, false),
 	)
 
 	releaseMenu := ui.NewMenu(
@@ -100,7 +88,7 @@ func MainScreen(ctx context.Context, state *releaser.State) {
 		benchmarkedItem(ctx),
 		dockerImagesItem(ctx),
 		release.CloseMilestoneItem(ctx),
-		simpleMenuItem(ctx, "ReleaseArtifacts", getReleaseArtifactsItemContent(state), steps.ReleaseArtifacts, false),
+		simpleMenuItem(ctx, "ReleaseArtifacts", releaselogic.CheckArtifacts(state), steps.ReleaseArtifacts, false),
 	)
 	releaseMenu.Sequential = true
 
@@ -109,7 +97,7 @@ func MainScreen(ctx context.Context, state *releaser.State) {
 		"Post Release",
 		slackAnnouncementMenuItem(ctx, slackAnnouncementPostRelease),
 		twitterMenuItem(ctx),
-		simpleMenuItem(ctx, "RemoveBypassProtection", []string{releaser.RemoveBypassProtection}, steps.RemoveBypassProtection, false),
+		simpleMenuItem(ctx, "RemoveBypassProtection", postreleaselogic.RemoveByPassProtectionRules(), steps.RemoveBypassProtection, false),
 		post_release.CloseIssueItem(ctx),
 	)
 
