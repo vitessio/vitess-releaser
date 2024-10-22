@@ -29,6 +29,10 @@ import (
 	"github.com/vitessio/vitess-releaser/go/interactive/ui"
 	"github.com/vitessio/vitess-releaser/go/releaser"
 	"github.com/vitessio/vitess-releaser/go/releaser/github"
+	postreleaselogic "github.com/vitessio/vitess-releaser/go/releaser/post_release"
+	prereleaselogic "github.com/vitessio/vitess-releaser/go/releaser/pre_release"
+	releaselogic "github.com/vitessio/vitess-releaser/go/releaser/release"
+	"github.com/vitessio/vitess-releaser/go/releaser/steps"
 )
 
 func blankLineMenu() *ui.MenuItem {
@@ -66,6 +70,7 @@ func MainScreen(ctx context.Context, state *releaser.State) {
 		pre_release.CreateReleasePRMenuItem(ctx),
 		pre_release.VtopUpdateGolangMenuItem(ctx),
 		createBlogPostPRMenuItem(ctx),
+		simpleMenuItem(ctx, "UpdateCobraDocs", prereleaselogic.CobraDocs(state), steps.UpdateCobraDocs, false),
 	)
 
 	releaseMenu := ui.NewMenu(
@@ -83,6 +88,7 @@ func MainScreen(ctx context.Context, state *releaser.State) {
 		benchmarkedItem(ctx),
 		dockerImagesItem(ctx),
 		release.CloseMilestoneItem(ctx),
+		simpleMenuItem(ctx, "ReleaseArtifacts", releaselogic.CheckArtifacts(state), steps.ReleaseArtifacts, false),
 	)
 	releaseMenu.Sequential = true
 
@@ -91,6 +97,7 @@ func MainScreen(ctx context.Context, state *releaser.State) {
 		"Post Release",
 		slackAnnouncementMenuItem(ctx, slackAnnouncementPostRelease),
 		twitterMenuItem(ctx),
+		simpleMenuItem(ctx, "RemoveBypassProtection", postreleaselogic.RemoveByPassProtectionRules(), steps.RemoveBypassProtection, false),
 		post_release.CloseIssueItem(ctx),
 	)
 

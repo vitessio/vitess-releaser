@@ -34,7 +34,7 @@ import (
 	"github.com/vitessio/vitess-releaser/go/releaser/utils"
 )
 
-const VERSION = "v1.0.2"
+const VERSION = "v1.0.3"
 
 var (
 	releaseVersion     string
@@ -223,7 +223,9 @@ func getGitRepos() (vitessRepo, vtopRepo string) {
 }
 
 func printVersionAndExit() {
-	fmt.Printf("Version: %s\n", VERSION)
+	fmt.Printf("\nvitess-releaser Version: %s\n", VERSION)
+	msg, _ := getGitCommit()
+	fmt.Printf("\nLast Commit: %s\n", msg)
 	os.Exit(0)
 }
 

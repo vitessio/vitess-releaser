@@ -18,7 +18,7 @@ package interactive
 
 import (
 	"context"
-
+	"fmt"
 	"github.com/vitessio/vitess-releaser/go/interactive/ui"
 	"github.com/vitessio/vitess-releaser/go/releaser"
 	"github.com/vitessio/vitess-releaser/go/releaser/code_freeze"
@@ -26,6 +26,8 @@ import (
 	"github.com/vitessio/vitess-releaser/go/releaser/prerequisite"
 	"github.com/vitessio/vitess-releaser/go/releaser/release"
 	"github.com/vitessio/vitess-releaser/go/releaser/steps"
+	"github.com/vitessio/vitess-releaser/go/releaser/utils"
+	"reflect"
 )
 
 func checkSummaryMenuItem(ctx context.Context) *ui.MenuItem {
@@ -98,7 +100,7 @@ func dockerImagesItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
 	return newBooleanMenu(
 		ctx,
-		release.CheckDockerMessage(state.VitessRelease.MajorReleaseNb, state.VitessRelease.Repo, state.VtOpRelease.Repo),
+		release.CheckDockerMessage(state),
 		steps.DockerImages,
 		func() { state.Issue.DockerImages = !state.Issue.DockerImages },
 		state.Issue.DockerImages,
@@ -136,4 +138,43 @@ func mergeBlogPostPRMenuItem(ctx context.Context) *ui.MenuItem {
 		func() { state.Issue.MergeBlogPostPR = !state.Issue.MergeBlogPostPR },
 		state.Issue.MergeBlogPostPR,
 		!state.Issue.GA)
+}
+
+func simpleMenuItem(ctx context.Context, issueFieldName string, msgs []string, stepName string, onlyGA bool) *ui.MenuItem {
+	state := releaser.UnwrapState(ctx)
+	logMsg := fmt.Sprintf("Menu item %s", stepName)
+
+	fieldVal := getFieldVal(&state.Issue, issueFieldName, logMsg)
+
+	ignore := false
+	if onlyGA {
+		ignore = !state.Issue.GA
+	}
+
+	return newBooleanMenu(
+		ctx,
+		msgs,
+		stepName,
+		func() {
+			fieldVal.SetBool(!fieldVal.Bool())
+		},
+		fieldVal.Bool(),
+		ignore,
+	)
+}
+
+func getFieldVal(issue *releaser.Issue, issueFieldName string, logMsg string) reflect.Value {
+	v := reflect.ValueOf(issue).Elem()
+	fieldVal := v.FieldByName(issueFieldName)
+	if !fieldVal.IsValid() {
+		utils.BailOut(fmt.Errorf("no such field: %s", issueFieldName), logMsg)
+	}
+	if fieldVal.Kind() != reflect.Bool {
+		utils.BailOut(fmt.Errorf("field %s is not of type bool", issueFieldName), logMsg)
+	}
+
+	if !fieldVal.CanSet() {
+		utils.BailOut(fmt.Errorf("cannot set field: %s", issueFieldName), logMsg)
+	}
+	return fieldVal
 }

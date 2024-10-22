@@ -39,6 +39,7 @@ const (
 	CreateReleasePR           = "Create Release PR"
 	CreateMilestone           = "Create Milestone"
 	VtopUpdateGolang          = "Update Go version in vitess-operator"
+	UpdateCobraDocs           = "Update Cobra Docs"
 
 	// Release
 	MergeReleasePR              = "Merge Release PR"
@@ -55,9 +56,11 @@ const (
 	Benchmarked                 = "Benchmarks"
 	DockerImages                = "Docker Images"
 	CloseMilestone              = "Close Milestone"
+	ReleaseArtifacts            = "Release Artifacts"
 
 	// Post-Release
-	SlackAnnouncementPost = "Slack Announcement Post-Release"
-	Twitter               = "Twitter"
-	CloseIssue            = "Close Issue"
+	SlackAnnouncementPost  = "Slack Announcement Post-Release"
+	Twitter                = "Twitter"
+	CloseIssue             = "Close Issue"
+	RemoveBypassProtection = "Remove Bypass Protection"
 )

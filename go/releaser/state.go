@@ -18,7 +18,9 @@ package releaser
 
 import (
 	"context"
+	"fmt"
 	"path"
+	"strings"
 	"syscall"
 
 	"github.com/vitessio/vitess-releaser/go/releaser/utils"
@@ -85,6 +87,10 @@ func (s *State) GoToVtOp() {
 	}
 	s.currentPath = pathVitessOperator
 	changeDir(p)
+}
+
+func (s *State) GetTag() string {
+	return fmt.Sprintf("v%s", strings.ToLower(s.VitessRelease.Release))
 }
 
 func changeDir(p string) {
