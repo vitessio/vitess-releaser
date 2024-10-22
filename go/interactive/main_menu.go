@@ -36,6 +36,20 @@ func blankLineMenu() *ui.MenuItem {
 	return &ui.MenuItem{}
 }
 
+func getCobraDocsItemContent(state *releaser.State) []string {
+	return []string{
+		"Regenerate vtctldclient docs by running the following script in the website directory",
+		fmt.Sprintf("go run ./tools/cobradocs/ --vitess-dir \"<vitess_dir>\" --version-pairs \"%s:%s\" vtctldclient", state.VitessRelease.Release, state.VitessRelease.MajorRelease),
+		"",
+	}
+}
+
+func getReleaseArtifactsItemContent(state *releaser.State) []string {
+	return []string{
+		fmt.Sprintf("Check that release artifacts were generated at https://github.com/vitessio/vitess/tree/%s.", state.VitessRelease.Release),
+		"",
+	}
+}
 func MainScreen(ctx context.Context, state *releaser.State) {
 
 	prereqMenu := ui.NewMenu(
@@ -67,7 +81,7 @@ func MainScreen(ctx context.Context, state *releaser.State) {
 		pre_release.CreateReleasePRMenuItem(ctx),
 		pre_release.VtopUpdateGolangMenuItem(ctx),
 		createBlogPostPRMenuItem(ctx),
-		simpleMenuItem(ctx, "UpdateCobraDocs", []string{releaser.UpdateCobraDocsItem}, steps.UpdateCobraDocs, false),
+		simpleMenuItem(ctx, "UpdateCobraDocs", getCobraDocsItemContent(state), steps.UpdateCobraDocs, false),
 	)
 
 	releaseMenu := ui.NewMenu(
@@ -85,7 +99,7 @@ func MainScreen(ctx context.Context, state *releaser.State) {
 		benchmarkedItem(ctx),
 		dockerImagesItem(ctx),
 		release.CloseMilestoneItem(ctx),
-		simpleMenuItem(ctx, "ReleaseArtifacts", []string{releaser.ReleaseArtifactsItem}, steps.ReleaseArtifacts, false),
+		simpleMenuItem(ctx, "ReleaseArtifacts", getReleaseArtifactsItemContent(state), steps.ReleaseArtifacts, false),
 	)
 	releaseMenu.Sequential = true
 
@@ -94,8 +108,8 @@ func MainScreen(ctx context.Context, state *releaser.State) {
 		"Post Release",
 		slackAnnouncementMenuItem(ctx, slackAnnouncementPostRelease),
 		twitterMenuItem(ctx),
-		post_release.CloseIssueItem(ctx),
 		simpleMenuItem(ctx, "RemoveBypassProtection", []string{releaser.RemoveBypassProtection}, steps.RemoveBypassProtection, false),
+		post_release.CloseIssueItem(ctx),
 	)
 
 	menuTitle := fmt.Sprintf("Main Menu (%s)", github.CurrentUser())

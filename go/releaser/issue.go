@@ -79,7 +79,7 @@ const (
 	vtopUpdateGoItem              = "Update vitess-operator Golang version."
 	vtopUpdateCompTableItem       = "Update vitess-operator compatibility table."
 	createBlogPostPRItem          = "Open a Pull Request on the website repository for the blog post."
-	UpdateCobraDocsItem           = "Update Cobra Docs"
+	UpdateCobraDocs               = "Update Cobra Docs."
 
 	// Release
 	mergeReleasePRItem            = "Merge the Release PR."
@@ -102,7 +102,7 @@ const (
 	postSlackAnnouncementItem = "Notify the community on Slack for the new release."
 	twitterItem               = "Twitter announcement."
 	closeReleaseItem          = "Close this Issue."
-	RemoveBypassProtection    = "Remove bypass protection for release branch"
+	RemoveBypassProtection    = "Remove bypass protection for release branch, if required."
 )
 
 type (
@@ -263,7 +263,7 @@ const (
 {{- if .GA }}
 - [{{fmtStatus .CreateBlogPostPR}}] Open a Pull Request on the website repository for the blog post.
 {{- end }}
-- [{{fmtStatus .UpdateCobraDocs}}] Update Cobra Docs
+- [{{fmtStatus .UpdateCobraDocs}}] Update Cobra Docs.
 
 ### Release _({{fmtShortDate .Date }})_
 
@@ -311,7 +311,7 @@ const (
 ### Post-Release _({{fmtShortDate .Date }})_
 - [{{fmtStatus .SlackPostRelease}}] Notify the community on Slack for the new release.
 - [{{fmtStatus .Twitter}}] Twitter announcement.
-- [{{fmtStatus .RemoveBypassProtection}}] Remove bypass protection for release branch.
+- [{{fmtStatus .RemoveBypassProtection}}] Remove bypass protection for release branch, if required.
 - [{{fmtStatus .CloseIssue}}] Close this Issue.
 
 `
@@ -507,7 +507,7 @@ func (s *State) LoadIssue() {
 				newIssue.MergeBlogPostPR = strings.HasPrefix(line, markdownItemDone)
 			case strings.Contains(line, javaRelease):
 				newIssue.JavaRelease = strings.HasPrefix(line, markdownItemDone)
-			case strings.Contains(line, UpdateCobraDocsItem):
+			case strings.Contains(line, UpdateCobraDocs):
 				newIssue.UpdateCobraDocs = strings.HasPrefix(line, markdownItemDone)
 			case strings.Contains(line, ReleaseArtifactsItem):
 				newIssue.ReleaseArtifacts = strings.HasPrefix(line, markdownItemDone)
