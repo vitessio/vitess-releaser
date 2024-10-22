@@ -34,7 +34,7 @@ import (
 	"github.com/vitessio/vitess-releaser/go/releaser/utils"
 )
 
-const VERSION = "v1.0.3"
+const VERSION = "v1.0.4"
 
 var (
 	releaseVersion     string
