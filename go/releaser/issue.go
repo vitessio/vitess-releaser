@@ -102,7 +102,7 @@ const (
 	postSlackAnnouncementItem = "Notify the community on Slack for the new release."
 	twitterItem               = "Twitter announcement."
 	closeReleaseItem          = "Close this Issue."
-	RemoveBypassProtection    = "Remove bypass protection for release branch, if required."
+	RemoveBypassProtection    = "In branch protection for current branch, confirm 'Do not allow bypassing the above settings' is chacked."
 )
 
 type (
@@ -305,7 +305,7 @@ const (
   - {{ .CloseMilestone.URL }}
 {{- end }}
 {{- end }}
-- [{{fmtStatus .VtTestServer}}] Check vttestserver image is pushed.
+- [{{fmtStatus .VtTestServer}}] Check that the vttestserver image is pushed.
 - [{{fmtStatus .ReleaseArtifacts}}] Check that release artifacts were generated.
 
 ### Post-Release _({{fmtShortDate .Date }})_

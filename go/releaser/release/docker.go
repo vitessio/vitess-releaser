@@ -19,17 +19,17 @@ package release
 import (
 	"fmt"
 	"github.com/vitessio/vitess-releaser/go/releaser"
+	"strings"
 )
 
 func CheckDockerMessage(state *releaser.State) []string {
 	majorRelease := state.VitessRelease.MajorReleaseNb
 	repo := state.VitessRelease.Repo
 	vtopRepo := state.VtOpRelease.Repo
-	release := state.VitessRelease.Release
+	release := strings.ToLower(state.VitessRelease.Release)
 	msg := []string{
 		"Make sure the Docker Images are being built by GitHub Actions.",
 		"This can be done by visiting the following links, our new release should appear in either green (done) or yellow (building / pending build):",
-		fmt.Sprintf("Check vttestserver image is pushed at https://hub.docker.com/r/vitess/vttestserver/tags?name=%s.", release),
 		"",
 	}
 
@@ -46,6 +46,7 @@ func CheckDockerMessage(state *releaser.State) []string {
 	} else {
 		// this links to the newer GitHub Actions workflow that was introduced in v21 by https://github.com/vitessio/vitess/pull/16339
 		msg = append(msg, fmt.Sprintf("\t- https://github.com/%s/vitess/actions/workflows/build_docker_images.yml", repo))
+		msg = append(msg, fmt.Sprintf("\nCheck that the vttestserver image is pushed at https://hub.docker.com/r/vitess/vttestserver/tags?name=%s.", release))
 	}
 
 	if vtopRepo != "" {

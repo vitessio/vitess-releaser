@@ -223,7 +223,9 @@ func getGitRepos() (vitessRepo, vtopRepo string) {
 }
 
 func printVersionAndExit() {
-	fmt.Printf("Version: %s\n", VERSION)
+	fmt.Printf("\nvitess-releaser Version: %s\n", VERSION)
+	msg, _ := getGitCommit()
+	fmt.Printf("\nLast Commit: %s\n", msg)
 	os.Exit(0)
 }
 

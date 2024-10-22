@@ -19,8 +19,6 @@ package interactive
 import (
 	"context"
 	"fmt"
-	"os"
-
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/vitessio/vitess-releaser/go/interactive/code_freeze"
 	"github.com/vitessio/vitess-releaser/go/interactive/post_release"
@@ -30,6 +28,7 @@ import (
 	"github.com/vitessio/vitess-releaser/go/releaser"
 	"github.com/vitessio/vitess-releaser/go/releaser/github"
 	"github.com/vitessio/vitess-releaser/go/releaser/steps"
+	"os"
 )
 
 func blankLineMenu() *ui.MenuItem {
@@ -38,15 +37,17 @@ func blankLineMenu() *ui.MenuItem {
 
 func getCobraDocsItemContent(state *releaser.State) []string {
 	return []string{
-		"Regenerate vtctldclient docs by running the following script in the website directory",
-		fmt.Sprintf("go run ./tools/cobradocs/ --vitess-dir \"<vitess_dir>\" --version-pairs \"%s:%s\" vtctldclient", state.VitessRelease.Release, state.VitessRelease.MajorRelease),
+		"Regenerate cobra cli docs by running the following in the root of the website repo:\n",
+		fmt.Sprintf("$> export COBRADOC_VERSION_PAIRS=\"v%s:%s.0\"",
+			releaser.RemoveRCFromReleaseTitle(state.VitessRelease.Release), state.VitessRelease.MajorRelease),
+		fmt.Sprintf("$> make generated-docs"),
 		"",
 	}
 }
 
 func getReleaseArtifactsItemContent(state *releaser.State) []string {
 	return []string{
-		fmt.Sprintf("Check that release artifacts were generated at https://github.com/vitessio/vitess/tree/%s.", state.VitessRelease.Release),
+		fmt.Sprintf("Check that release artifacts were generated: at bottom of https://github.com/vitessio/vitess/releases/tag/%s.", state.GetTag()),
 		"",
 	}
 }
