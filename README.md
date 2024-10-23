@@ -86,3 +86,12 @@ In the meantime you can find the full and original documentation used to run rel
 ## License
 
 This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+
+## Versioning
+
+When one or more new PRs are merged on this repository, we should cut a new release to ensure people keep using the latest version.
+New releases can be published the following way:
+
+1. Merge all opened PRs
+2. Create a new tag, push it, and create an associated release on the GitHub UI
+3. Create another PR that bumps the `VERSION` constant to the next release ([example PR here](https://github.com/vitessio/vitess-releaser/pull/124))
