@@ -40,7 +40,7 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 	hasGoUpgradePR := strings.HasPrefix(state.Issue.VtopUpdateGolang.URL, "https://")
 
 	pl := &logging.ProgressLogging{
-		TotalSteps: 15,
+		TotalSteps: 11,
 	}
 
 	if hasGoUpgradePR {
@@ -148,26 +148,12 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 			git.Push(state.VtOpRelease.Remote, newBranchName)
 		}
 
-		// 10. Tag the latest commit
-		gitTag := fmt.Sprintf("v%s", lowerReleaseName)
-		pl.NewStepf("Tag and push %s", gitTag)
-		git.TagAndPush(state.VtOpRelease.Remote, gitTag)
-
-		// 11. Figure out what is the next vtop release for this branch
-		nextRelease := findNextVtOpVersion(state.VtOpRelease.Release, state.Issue.RC)
-		pl.NewStepf("Go back to dev mode with version = %s", nextRelease)
-		code_freeze.UpdateVtOpVersionGoFile(nextRelease)
-		if !git.CommitAll(fmt.Sprintf("Go back to dev mode")) {
-			commitCount++
-			git.Push(state.VtOpRelease.Remote, newBranchName)
-		}
-
 		if commitCount > 0 {
-			// 12. Create the Pull Request
+			// 10. Create the Pull Request
 			pl.NewStepf("Create Pull Request")
 			pr := github.PR{
 				Title:  releasePRName,
-				Body:   fmt.Sprintf("This Pull Request contains all the code for the %s release of vtop + the back to dev mode. Warning: the tag is made on one of the commits of this PR, you must **not** squash merge this PR.", lowerReleaseName),
+				Body:   fmt.Sprintf("This Pull Request contains all the code for the %s release of vtop. You must must squash merge this PR as the resulting commit SHA will be used to tag the release.", lowerReleaseName),
 				Branch: newBranchName,
 				Base:   state.VtOpRelease.ReleaseBranch,
 				Labels: []github.Label{},
@@ -177,11 +163,6 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 		} else {
 			pl.TotalSteps -= 2
 		}
-
-		// 13. Create the release on the GitHub UI
-		pl.NewStepf("Create the release on the GitHub UI")
-		_ = github.CreateRelease(state.VtOpRelease.Repo, gitTag, "", state.VtOpRelease.IsLatestRelease && state.Issue.RC == 0, state.Issue.RC > 0)
-		pl.NewStepf("Done %s", url)
 
 		done = true
 		return url
