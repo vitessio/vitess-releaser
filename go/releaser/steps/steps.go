@@ -44,7 +44,7 @@ const (
 	// Release
 	MergeReleasePR              = "Merge Release PR"
 	TagRelease                  = "Tag Release"
-	VtopCreateReleasePR         = "Create vitess-operator release PR"
+	VtopCreateReleasePR         = "Create vitess-operator Release PR"
 	JavaRelease                 = "Java Release"
 	ReleaseNotesOnMain          = "Release Notes on main"
 	ReleaseNotesOnReleaseBranch = "Release Notes on release branch"
