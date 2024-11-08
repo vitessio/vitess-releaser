@@ -90,7 +90,6 @@ func MainScreen(ctx context.Context, state *releaser.State) {
 		release.CloseMilestoneItem(ctx),
 		simpleMenuItem(ctx, "ReleaseArtifacts", releaselogic.CheckArtifacts(state), steps.ReleaseArtifacts, false),
 	)
-	releaseMenu.Sequential = true
 
 	postReleaseMenu := ui.NewMenu(
 		ctx,
