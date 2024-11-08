@@ -90,7 +90,7 @@ func MainScreen(ctx context.Context, state *releaser.State) {
 		simpleMenuItem(ctx, "ReleaseArtifacts", releaselogic.CheckArtifacts(state), steps.ReleaseArtifacts, false),
 		// todo: merge pr
 		release.VtopTagReleaseMenuItem(ctx),
-		// todo: back to dev mode
+		release.VtopBackToDevModeItem(ctx),
 		release.VtopManualUpdateItem(ctx),
 	)
 

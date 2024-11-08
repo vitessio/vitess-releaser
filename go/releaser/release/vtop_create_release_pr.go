@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"io/fs"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -265,24 +264,4 @@ func vtopTestFiles() []string {
 		utils.BailOut(err, "failed to walk directory %s", root)
 	}
 	return files
-}
-
-func findNextVtOpVersion(version string, rc int) string {
-	if rc > 0 {
-		return version
-	}
-	segments := strings.Split(version, ".")
-	if len(segments) != 3 {
-		utils.BailOut(nil, "expected three segments when looking at the vtop version, got: %s", version)
-	}
-
-	segmentInts := make([]int, 0, len(segments))
-	for _, segment := range segments {
-		v, err := strconv.Atoi(segment)
-		if err != nil {
-			utils.BailOut(err, "failed to convert segment of the vtop version to an int: %s", segment)
-		}
-		segmentInts = append(segmentInts, v)
-	}
-	return fmt.Sprintf("%d.%d.%d", segmentInts[0], segmentInts[1], segmentInts[2]+1)
 }
