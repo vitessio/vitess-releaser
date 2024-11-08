@@ -152,7 +152,7 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 		// 10. Tag the latest commit
 		gitTag := fmt.Sprintf("v%s", lowerReleaseName)
 		pl.NewStepf("Tag and push %s", gitTag)
-		git.TagAndPush(state.VitessRelease.Remote, gitTag)
+		git.TagAndPush(state.VtOpRelease.Remote, gitTag)
 
 		// 11. Figure out what is the next vtop release for this branch
 		nextRelease := findNextVtOpVersion(state.VtOpRelease.Release, state.Issue.RC)

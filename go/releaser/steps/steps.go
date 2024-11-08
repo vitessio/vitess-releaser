@@ -45,7 +45,6 @@ const (
 	MergeReleasePR              = "Merge Release PR"
 	TagRelease                  = "Tag Release"
 	VtopCreateReleasePR         = "Create vitess-operator release PR"
-	VtopManualUpdate            = "Manual update of vitess-operator tests"
 	JavaRelease                 = "Java Release"
 	ReleaseNotesOnMain          = "Release Notes on main"
 	ReleaseNotesOnReleaseBranch = "Release Notes on release branch"
@@ -57,6 +56,10 @@ const (
 	DockerImages                = "Docker Images"
 	CloseMilestone              = "Close Milestone"
 	ReleaseArtifacts            = "Release Artifacts"
+	VtopMergeReleasePR          = "Merge the vitess-operator Release PR"
+	VtopTagRelease              = "Tag the vitess-operator release"
+	VtopBackToDev               = "Back To Dev Mode vitess-operator"
+	VtopManualUpdate            = "Manual update of vitess-operator tests"
 
 	// Post-Release
 	SlackAnnouncementPost  = "Slack Announcement Post-Release"

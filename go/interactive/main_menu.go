@@ -80,7 +80,6 @@ func MainScreen(ctx context.Context, state *releaser.State) {
 		release.TagReleaseItem(ctx),
 		release.JavaReleaseItem(ctx),
 		release.VtopCreateReleasePRMenuItem(ctx),
-		release.VtopManualUpdateItem(ctx),
 		release.ReleaseNotesOnMainItem(ctx),
 		release.BackToDevModeItem(ctx),
 		mergeBlogPostPRMenuItem(ctx),
@@ -89,6 +88,10 @@ func MainScreen(ctx context.Context, state *releaser.State) {
 		dockerImagesItem(ctx),
 		release.CloseMilestoneItem(ctx),
 		simpleMenuItem(ctx, "ReleaseArtifacts", releaselogic.CheckArtifacts(state), steps.ReleaseArtifacts, false),
+		// todo: merge pr
+		release.VtopTagReleaseMenuItem(ctx),
+		// todo: back to dev mode
+		release.VtopManualUpdateItem(ctx),
 	)
 
 	postReleaseMenu := ui.NewMenu(
