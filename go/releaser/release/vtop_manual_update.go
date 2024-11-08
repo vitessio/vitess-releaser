@@ -27,19 +27,10 @@ func VtopManualUpdateMessage(state *releaser.State) []string {
 	var urlVtopReleasePRMsg string
 	var vtopHeadReleaseBranch string
 
-	for _, url := range state.Issue.VtopCreateReleasePR.URLs {
-		// In VtopCreateReleasePR there are usually two links: one to the release page and another to the release PR.
-		// We are trying to find the URL that links to a PR page.
-		if strings.Contains(url, "/pull/") {
-			urlVtopReleasePRMsg = url
-			vtopHeadReleaseBranch = url
-			break
-		}
-	}
 	// The steps in the 'release' section are sequential, it is therefor not possible to not have a release PR.
 	// Unless, there was a bug/issue or the release team manually modified the release issue.
 	// In which case we might fail to find the release PR, and thus defaulting to the following message:
-	if urlVtopReleasePRMsg == "" {
+	if state.Issue.VtopCreateReleasePR.URL == "" {
 		urlVtopReleasePRMsg = fmt.Sprintf("the '%s' release branch by creating a new PR", state.VtOpRelease.ReleaseBranch)
 		vtopHeadReleaseBranch = state.VtOpRelease.ReleaseBranch
 

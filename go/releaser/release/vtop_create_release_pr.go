@@ -49,12 +49,12 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 	}
 
 	var done bool
-	var urls []string
+	var url string
 	var commitCount int
 	return pl, func() string {
 		defer func() {
 			state.Issue.VtopCreateReleasePR.Done = done
-			state.Issue.VtopCreateReleasePR.URLs = urls
+			state.Issue.VtopCreateReleasePR.URL = url
 			pl.NewStepf("Update Issue %s on GitHub", state.IssueLink)
 			_, fn := state.UploadIssue()
 			issueLink := fn()
@@ -101,14 +101,14 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 
 		// 4. Look for existing PRs
 		pl.NewStepf("Look for an existing Release Pull Request named '%s'", releasePRName)
-		if _, url := github.FindPR(state.VtOpRelease.Repo, releasePRName); url != "" {
+		if _, url = github.FindPR(state.VtOpRelease.Repo, releasePRName); url != "" {
 			pl.TotalSteps = 5
 			if hasGoUpgradePR {
 				pl.TotalSteps += 2
 			}
 			pl.NewStepf("An opened Release Pull Request was found: %s", url)
 			done = true
-			urls = append(urls, url)
+
 			return url
 		}
 
@@ -173,18 +173,16 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 				Base:   state.VtOpRelease.ReleaseBranch,
 				Labels: []github.Label{},
 			}
-			_, url := pr.Create(state.VtOpRelease.Repo)
+			_, url = pr.Create(state.VtOpRelease.Repo)
 			pl.NewStepf("Pull Request created %s", url)
-			urls = append(urls, url)
 		} else {
 			pl.TotalSteps -= 2
 		}
 
 		// 13. Create the release on the GitHub UI
 		pl.NewStepf("Create the release on the GitHub UI")
-		url := github.CreateRelease(state.VtOpRelease.Repo, gitTag, "", state.VtOpRelease.IsLatestRelease && state.Issue.RC == 0, state.Issue.RC > 0)
+		_ = github.CreateRelease(state.VtOpRelease.Repo, gitTag, "", state.VtOpRelease.IsLatestRelease && state.Issue.RC == 0, state.Issue.RC > 0)
 		pl.NewStepf("Done %s", url)
-		urls = append(urls, url)
 
 		done = true
 		return url

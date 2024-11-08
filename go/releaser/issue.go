@@ -50,6 +50,9 @@ const (
 	stateReadingVtopUpdateGo
 	stateReadingVtopCreateReleasePR
 	stateReadingVtopBumpVersionOnMainPR
+	stateReadingVtopMergeReleasePR
+	stateReadingVtopTagRelease
+	stateReadingVtopBackToDev
 )
 
 const (
@@ -86,7 +89,6 @@ const (
 	tagReleaseItem                = "Tag the release."
 	javaRelease                   = "Java release."
 	vtopCreateReleasePRItem       = "Create vitess-operator Release PR."
-	vtopManualUpdateItem          = "Manual update of vitess-operator test code."
 	releaseNotesMainItem          = "Update release notes on main."
 	releaseNotesReleaseBranchItem = "Update release notes on the release branch."
 	backToDevItem                 = "Go back to dev mode on the release branch."
@@ -97,6 +99,10 @@ const (
 	closeMilestoneItem            = "Close current GitHub Milestone."
 	mergeBlogPostItem             = "Merge the blog post Pull Request on the website repository."
 	ReleaseArtifactsItem          = "Check that release artifacts were generated."
+	vtopMergeReleasePRItem        = "Merge the vitess-operator Release PR."
+	vtopTagReleaseItem            = "Tag the vitess-operator release."
+	vtopBackToDevItem             = "Go back to dev mode on vitess-operator."
+	vtopManualUpdateItem          = "Manual update of vitess-operator test code."
 
 	// Post-Release
 	postSlackAnnouncementItem = "Notify the community on Slack for the new release."
@@ -113,11 +119,6 @@ type (
 		// 	- GH links:		"#111"
 		//  - HTTP links:	"https://github.com...."
 		URL string
-	}
-
-	ItemWithLinks struct {
-		Done bool
-		URLs []string
 	}
 
 	ParentOfItems struct {
@@ -151,8 +152,6 @@ type (
 		VtopBumpMainVersion          ItemWithLink
 		VtopUpdateGolang             ItemWithLink
 		VtopUpdateCompatibilityTable bool
-		VtopCreateReleasePR          ItemWithLinks
-		VtopManualUpdate             bool
 		CreateBlogPostPR             bool
 		UpdateCobraDocs              bool
 
@@ -160,6 +159,7 @@ type (
 		MergeReleasePR              ItemWithLink
 		TagRelease                  ItemWithLink
 		JavaRelease                 bool
+		VtopCreateReleasePR         ItemWithLink
 		ReleaseNotesOnMain          ItemWithLink
 		ReleaseNotesOnReleaseBranch ItemWithLink
 		BackToDevMode               ItemWithLink
@@ -170,6 +170,10 @@ type (
 		DockerImages                bool
 		CloseMilestone              ItemWithLink
 		ReleaseArtifacts            bool
+		VtopMergeReleasePR          ItemWithLink
+		VtopTagRelease              ItemWithLink
+		VtopBackToDevMode           ItemWithLink
+		VtopManualUpdate            bool
 
 		// Post-Release
 		SlackPostRelease       bool
@@ -283,7 +287,6 @@ const (
 {{- range $item := .VtopCreateReleasePR.URLs }}
   - {{$item}}
 {{- end }}
-- [{{fmtStatus .VtopManualUpdate}}] Manual update of vitess-operator test code.
 {{- end }}
 - [{{fmtStatus .ReleaseNotesOnMain.Done}}] Update release notes on main.
 {{- if .ReleaseNotesOnMain.URL }}
@@ -306,6 +309,21 @@ const (
 {{- end }}
 {{- end }}
 - [{{fmtStatus .ReleaseArtifacts}}] Check that release artifacts were generated.
+{{- if .DoVtOp }}
+- [{{fmtStatus .VtopMergeReleasePR.Done}}] Merge the vitess-operator Release PR.
+{{- if .VtopMergeReleasePR.URL }}
+  - {{ .VtopMergeReleasePR.URL }}
+{{- end }}
+- [{{fmtStatus .VtopTagRelease.Done}}] Tag the vitess-operator release.
+{{- if .VtopTagRelease.URL }}
+  - {{ .VtopTagRelease.URL }}
+{{- end }}
+- [{{fmtStatus .VtopBackToDevMode.Done}}] Go back to dev mode on vitess-operator.
+{{- if .VtopBackToDevMode.URL }}
+  - {{ .VtopBackToDevMode.URL }}
+{{- end }}
+- [{{fmtStatus .VtopManualUpdate}}] Manual update of vitess-operator test code.
+{{- end }}
 
 ### Post-Release _({{fmtShortDate .Date }})_
 - [{{fmtStatus .SlackPostRelease}}] Notify the community on Slack for the new release.
@@ -453,6 +471,21 @@ func (s *State) LoadIssue() {
 				}
 			case strings.Contains(line, vtopManualUpdateItem):
 				newIssue.VtopManualUpdate = strings.HasPrefix(line, markdownItemDone)
+			case strings.Contains(line, vtopMergeReleasePRItem):
+				newIssue.VtopMergeReleasePR.Done = strings.HasPrefix(line, markdownItemDone)
+				if isNextLineAList(lines, i) {
+					st = stateReadingVtopMergeReleasePR
+				}
+			case strings.Contains(line, vtopTagReleaseItem):
+				newIssue.VtopTagRelease.Done = strings.HasPrefix(line, markdownItemDone)
+				if isNextLineAList(lines, i) {
+					st = stateReadingVtopTagRelease
+				}
+			case strings.Contains(line, vtopBackToDevItem):
+				newIssue.VtopBackToDevMode.Done = strings.HasPrefix(line, markdownItemDone)
+				if isNextLineAList(lines, i) {
+					st = stateReadingVtopBackToDev
+				}
 			case strings.Contains(line, mergeReleasePRItem):
 				newIssue.MergeReleasePR.Done = strings.HasPrefix(line, markdownItemDone)
 				if isNextLineAList(lines, i) {
@@ -546,26 +579,18 @@ func (s *State) LoadIssue() {
 		case stateReadingVtopUpdateGo:
 			newIssue.VtopUpdateGolang.URL = handleSingleTextItem(line, &st)
 		case stateReadingVtopCreateReleasePR:
-			newLine := handleMultipleTextItem(lines, i, &st)
-			if newLine != "" {
-				newIssue.VtopCreateReleasePR.URLs = append(newIssue.VtopCreateReleasePR.URLs, newLine)
-			}
+			newIssue.VtopCreateReleasePR.URL = handleSingleTextItem(line, &st)
 		case stateReadingVtopBumpVersionOnMainPR:
 			newIssue.VtopBumpMainVersion.URL = handleSingleTextItem(line, &st)
+		case stateReadingVtopMergeReleasePR:
+			newIssue.VtopMergeReleasePR.URL = handleSingleTextItem(line, &st)
+		case stateReadingVtopTagRelease:
+			newIssue.VtopTagRelease.URL = handleSingleTextItem(line, &st)
+		case stateReadingVtopBackToDev:
+			newIssue.VtopBackToDevMode.URL = handleSingleTextItem(line, &st)
 		}
 	}
 	s.Issue = newIssue
-}
-
-func handleMultipleTextItem(lines []string, i int, s *int) string {
-	line := strings.TrimSpace(lines[i])
-	if line[0] == '-' {
-		line = strings.TrimSpace(line[1:])
-	}
-	if i+1 == len(lines) || !strings.HasPrefix(lines[i+1], "  -") {
-		*s = stateReadingItem
-	}
-	return line
 }
 
 func handleNewListItem(lines []string, i int, s *int) ItemWithLink {
