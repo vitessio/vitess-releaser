@@ -30,10 +30,9 @@ func VtopManualUpdateMessage(state *releaser.State) []string {
 	// The steps in the 'release' section are sequential, it is therefor not possible to not have a release PR.
 	// Unless, there was a bug/issue or the release team manually modified the release issue.
 	// In which case we might fail to find the release PR, and thus defaulting to the following message:
-	if state.Issue.VtopCreateReleasePR.URL == "" {
+	if state.Issue.VtopBackToDevMode.URL == "" {
 		urlVtopReleasePRMsg = fmt.Sprintf("the '%s' release branch by creating a new PR", state.VtOpRelease.ReleaseBranch)
 		vtopHeadReleaseBranch = state.VtOpRelease.ReleaseBranch
-
 	}
 
 	previousVitessRelease := releaser.FindPreviousRelease(state.VitessRelease.Remote, state.VitessRelease.MajorRelease)

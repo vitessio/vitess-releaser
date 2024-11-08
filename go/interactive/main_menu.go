@@ -88,7 +88,7 @@ func MainScreen(ctx context.Context, state *releaser.State) {
 		dockerImagesItem(ctx),
 		release.CloseMilestoneItem(ctx),
 		simpleMenuItem(ctx, "ReleaseArtifacts", releaselogic.CheckArtifacts(state), steps.ReleaseArtifacts, false),
-		// todo: merge pr
+		release.VtopMergeReleasePRItem(ctx),
 		release.VtopTagReleaseMenuItem(ctx),
 		release.VtopBackToDevModeItem(ctx),
 		release.VtopManualUpdateItem(ctx),
