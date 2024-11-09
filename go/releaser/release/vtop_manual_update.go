@@ -24,8 +24,8 @@ import (
 )
 
 func VtopManualUpdateMessage(state *releaser.State) []string {
-	var urlVtopReleasePRMsg string
-	var vtopHeadReleaseBranch string
+	urlVtopReleasePRMsg := state.Issue.VtopBackToDevMode.URL
+	vtopHeadReleaseBranch := state.Issue.VtopBackToDevMode.URL
 
 	// The steps in the 'release' section are sequential, it is therefor not possible to not have a release PR.
 	// Unless, there was a bug/issue or the release team manually modified the release issue.

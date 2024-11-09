@@ -284,8 +284,8 @@ const (
 {{- end }}
 {{- if .DoVtOp }}
 - [{{fmtStatus .VtopCreateReleasePR.Done}}] Create vitess-operator Release PR.
-{{- range $item := .VtopCreateReleasePR.URLs }}
-  - {{$item}}
+{{- if .VtopCreateReleasePR.URL }}
+  - {{ .VtopCreateReleasePR.URL }}
 {{- end }}
 {{- end }}
 - [{{fmtStatus .ReleaseNotesOnMain.Done}}] Update release notes on main.

@@ -17,8 +17,6 @@ limitations under the License.
 package release
 
 import (
-	"os"
-	"os/signal"
 	"strconv"
 	"strings"
 	"time"
@@ -31,7 +29,7 @@ import (
 
 func VtopMergeReleasePR(state *releaser.State) (*logging.ProgressLogging, func() string) {
 	pl := &logging.ProgressLogging{
-		TotalSteps: 6,
+		TotalSteps: 5,
 	}
 
 	return pl, func() string {
@@ -47,17 +45,6 @@ func VtopMergeReleasePR(state *releaser.State) (*logging.ProgressLogging, func()
 
 		pl.NewStepf("Waiting for %s to be merged", url)
 
-		// The vtop release PR is created at the very last minute when the Vitess release just
-		// get released, in this case, CI may not have time to complete before reaching the
-		// 'vitess-operator merge release PR'. If the release team runs this step, but the PR
-		// is not green or ready to be merged yet, then they will be forced to 'kill' the vitess-releaser
-		// process in order to get out of the current step, for this specific situation we are catching
-		// interruption signals to allow the release team to cancel this step if they realize they're not ready.
-		c := make(chan os.Signal, 1)
-		signal.Notify(c, os.Interrupt)
-		defer signal.Stop(c)
-		pl.NewStepf("If the PR is not ready, this step may be canceled cleanly by doing 'CMD+C'/'CTRL+C'.")
-
 	outer:
 		for {
 			select {
@@ -65,10 +52,6 @@ func VtopMergeReleasePR(state *releaser.State) (*logging.ProgressLogging, func()
 				if github.IsPRMerged(state.VtOpRelease.Repo, nb) {
 					break outer
 				}
-			case <-c:
-				pl.TotalSteps -= 2
-				pl.NewStepf("Interruption detected, canceling the step.")
-				return url
 			}
 		}
 
