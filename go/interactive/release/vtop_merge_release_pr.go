@@ -26,40 +26,50 @@ import (
 	"github.com/vitessio/vitess-releaser/go/releaser/steps"
 )
 
-func VtopCreateReleasePRMenuItem(ctx context.Context) *ui.MenuItem {
+func VtopMergeReleasePRItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
-	act := vtopCreateReleasePRAct
-	if state.Issue.VtopCreateReleasePR.Done {
+	act := vtopMergeReleasePRAct
+	if state.Issue.VtopMergeReleasePR.Done {
 		act = nil
 	}
+
+	info := "Run this step once the Release Pull Request was created."
+	if state.Issue.VtopCreateReleasePR.URL != "" {
+		info = state.Issue.VtopCreateReleasePR.URL
+	}
+
 	return &ui.MenuItem{
 		State:  state,
-		Name:   steps.VtopCreateReleasePR,
+		Name:   steps.VtopMergeReleasePR,
 		Act:    act,
-		Update: vtopCreateReleasePRUpdate,
-		IsDone: state.Issue.VtopCreateReleasePR.Done,
-		Info:   state.Issue.VtopCreateReleasePR.URL,
+		Update: vtopMergeReleasePRUpdate,
+		IsDone: state.Issue.VtopMergeReleasePR.Done,
+		Info:   info,
 
 		Ignore: state.VtOpRelease.Release == "",
 	}
 }
 
-type vtopCreateReleasePRUrl string
+type vtopMergeReleasePRUrl string
 
-func vtopCreateReleasePRUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
-	_, ok := msg.(vtopCreateReleasePRUrl)
+func vtopMergeReleasePRUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
+	_, ok := msg.(vtopMergeReleasePRUrl)
 	if !ok {
 		return mi, nil
 	}
 
-	mi.IsDone = mi.State.Issue.VtopCreateReleasePR.Done
-	mi.Info = mi.State.Issue.VtopCreateReleasePR.URL
+	mi.IsDone = mi.State.Issue.VtopMergeReleasePR.Done
+	mi.Info = mi.State.Issue.VtopMergeReleasePR.URL
 	return mi, nil
 }
 
-func vtopCreateReleasePRAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
-	pl, freeze := release.VtopCreateReleasePR(mi.State)
+func vtopMergeReleasePRAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
+	if mi.State.Issue.VtopCreateReleasePR.URL == "" {
+		return mi, nil
+	}
+
+	pl, act := release.VtopMergeReleasePR(mi.State)
 	return mi, tea.Batch(func() tea.Msg {
-		return vtopCreateReleasePRUrl(freeze())
-	}, ui.PushDialog(ui.NewProgressDialog(steps.VtopCreateReleasePR, pl)))
+		return vtopMergeReleasePRUrl(act())
+	}, ui.PushDialog(ui.NewProgressDialog(steps.VtopMergeReleasePR, pl)))
 }

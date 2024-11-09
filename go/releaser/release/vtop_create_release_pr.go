@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"io/fs"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -41,7 +40,7 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 	hasGoUpgradePR := strings.HasPrefix(state.Issue.VtopUpdateGolang.URL, "https://")
 
 	pl := &logging.ProgressLogging{
-		TotalSteps: 15,
+		TotalSteps: 11,
 	}
 
 	if hasGoUpgradePR {
@@ -49,12 +48,12 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 	}
 
 	var done bool
-	var urls []string
+	var url string
 	var commitCount int
 	return pl, func() string {
 		defer func() {
 			state.Issue.VtopCreateReleasePR.Done = done
-			state.Issue.VtopCreateReleasePR.URLs = urls
+			state.Issue.VtopCreateReleasePR.URL = url
 			pl.NewStepf("Update Issue %s on GitHub", state.IssueLink)
 			_, fn := state.UploadIssue()
 			issueLink := fn()
@@ -101,14 +100,14 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 
 		// 4. Look for existing PRs
 		pl.NewStepf("Look for an existing Release Pull Request named '%s'", releasePRName)
-		if _, url := github.FindPR(state.VtOpRelease.Repo, releasePRName); url != "" {
+		if _, url = github.FindPR(state.VtOpRelease.Repo, releasePRName); url != "" {
 			pl.TotalSteps = 5
 			if hasGoUpgradePR {
 				pl.TotalSteps += 2
 			}
 			pl.NewStepf("An opened Release Pull Request was found: %s", url)
 			done = true
-			urls = append(urls, url)
+
 			return url
 		}
 
@@ -149,42 +148,21 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 			git.Push(state.VtOpRelease.Remote, newBranchName)
 		}
 
-		// 10. Tag the latest commit
-		gitTag := fmt.Sprintf("v%s", lowerReleaseName)
-		pl.NewStepf("Tag and push %s", gitTag)
-		git.TagAndPush(state.VitessRelease.Remote, gitTag)
-
-		// 11. Figure out what is the next vtop release for this branch
-		nextRelease := findNextVtOpVersion(state.VtOpRelease.Release, state.Issue.RC)
-		pl.NewStepf("Go back to dev mode with version = %s", nextRelease)
-		code_freeze.UpdateVtOpVersionGoFile(nextRelease)
-		if !git.CommitAll(fmt.Sprintf("Go back to dev mode")) {
-			commitCount++
-			git.Push(state.VtOpRelease.Remote, newBranchName)
-		}
-
 		if commitCount > 0 {
-			// 12. Create the Pull Request
+			// 10. Create the Pull Request
 			pl.NewStepf("Create Pull Request")
 			pr := github.PR{
 				Title:  releasePRName,
-				Body:   fmt.Sprintf("This Pull Request contains all the code for the %s release of vtop + the back to dev mode. Warning: the tag is made on one of the commits of this PR, you must **not** squash merge this PR.", lowerReleaseName),
+				Body:   fmt.Sprintf("This Pull Request contains all the code for the %s release of vtop. You must must squash merge this PR as the resulting commit SHA will be used to tag the release.", lowerReleaseName),
 				Branch: newBranchName,
 				Base:   state.VtOpRelease.ReleaseBranch,
 				Labels: []github.Label{},
 			}
-			_, url := pr.Create(state.VtOpRelease.Repo)
+			_, url = pr.Create(state.VtOpRelease.Repo)
 			pl.NewStepf("Pull Request created %s", url)
-			urls = append(urls, url)
 		} else {
 			pl.TotalSteps -= 2
 		}
-
-		// 13. Create the release on the GitHub UI
-		pl.NewStepf("Create the release on the GitHub UI")
-		url := github.CreateRelease(state.VtOpRelease.Repo, gitTag, "", state.VtOpRelease.IsLatestRelease && state.Issue.RC == 0, state.Issue.RC > 0)
-		pl.NewStepf("Done %s", url)
-		urls = append(urls, url)
 
 		done = true
 		return url
@@ -267,24 +245,4 @@ func vtopTestFiles() []string {
 		utils.BailOut(err, "failed to walk directory %s", root)
 	}
 	return files
-}
-
-func findNextVtOpVersion(version string, rc int) string {
-	if rc > 0 {
-		return version
-	}
-	segments := strings.Split(version, ".")
-	if len(segments) != 3 {
-		utils.BailOut(nil, "expected three segments when looking at the vtop version, got: %s", version)
-	}
-
-	segmentInts := make([]int, 0, len(segments))
-	for _, segment := range segments {
-		v, err := strconv.Atoi(segment)
-		if err != nil {
-			utils.BailOut(err, "failed to convert segment of the vtop version to an int: %s", segment)
-		}
-		segmentInts = append(segmentInts, v)
-	}
-	return fmt.Sprintf("%d.%d.%d", segmentInts[0], segmentInts[1], segmentInts[2]+1)
 }

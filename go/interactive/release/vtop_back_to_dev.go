@@ -26,40 +26,40 @@ import (
 	"github.com/vitessio/vitess-releaser/go/releaser/steps"
 )
 
-func VtopCreateReleasePRMenuItem(ctx context.Context) *ui.MenuItem {
+func VtopBackToDevModeItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
-	act := vtopCreateReleasePRAct
-	if state.Issue.VtopCreateReleasePR.Done {
+	act := vtopBackToDevAct
+	if state.Issue.VtopBackToDevMode.Done {
 		act = nil
 	}
 	return &ui.MenuItem{
 		State:  state,
-		Name:   steps.VtopCreateReleasePR,
+		Name:   steps.VtopBackToDev,
 		Act:    act,
-		Update: vtopCreateReleasePRUpdate,
-		IsDone: state.Issue.VtopCreateReleasePR.Done,
-		Info:   state.Issue.VtopCreateReleasePR.URL,
+		Update: vtopBackToDevUpdate,
+		IsDone: state.Issue.VtopBackToDevMode.Done,
+		Info:   state.Issue.VtopBackToDevMode.URL,
 
 		Ignore: state.VtOpRelease.Release == "",
 	}
 }
 
-type vtopCreateReleasePRUrl string
+type vtopBackToDevUrl string
 
-func vtopCreateReleasePRUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
-	_, ok := msg.(vtopCreateReleasePRUrl)
+func vtopBackToDevUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
+	_, ok := msg.(vtopBackToDevUrl)
 	if !ok {
 		return mi, nil
 	}
 
-	mi.IsDone = mi.State.Issue.VtopCreateReleasePR.Done
-	mi.Info = mi.State.Issue.VtopCreateReleasePR.URL
+	mi.IsDone = mi.State.Issue.VtopBackToDevMode.Done
+	mi.Info = mi.State.Issue.VtopBackToDevMode.URL
 	return mi, nil
 }
 
-func vtopCreateReleasePRAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
-	pl, freeze := release.VtopCreateReleasePR(mi.State)
+func vtopBackToDevAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
+	pl, act := release.VtopBackToDev(mi.State)
 	return mi, tea.Batch(func() tea.Msg {
-		return vtopCreateReleasePRUrl(freeze())
-	}, ui.PushDialog(ui.NewProgressDialog(steps.VtopCreateReleasePR, pl)))
+		return vtopBackToDevUrl(act())
+	}, ui.PushDialog(ui.NewProgressDialog(steps.VtopBackToDev, pl)))
 }
