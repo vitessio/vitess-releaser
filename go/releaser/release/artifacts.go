@@ -26,5 +26,7 @@ func CheckArtifacts(state *releaser.State) []string {
 	return []string{
 		fmt.Sprintf("Check that release artifacts were generated: at bottom of https://github.com/vitessio/vitess/releases/tag/%s.", state.GetTag()),
 		"",
+		"The workflow that builds the artifacts can be found here: https://github.com/vitessio/vitess/actions/workflows/create_release.yml",
+		"This workflow must be green.",
 	}
 }
