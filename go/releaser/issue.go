@@ -279,7 +279,7 @@ const (
 {{- if .TagRelease.URL }}
   - {{ .TagRelease.URL }}
 {{- end }}
-{{- if .GA }}
+{{- if or (gt .RC 0) (.GA) }}
 - [{{fmtStatus .JavaRelease}}] Java release.
 {{- end }}
 {{- if .DoVtOp }}

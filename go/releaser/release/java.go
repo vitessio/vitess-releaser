@@ -42,7 +42,15 @@ func JavaRelease(state *releaser.State) (*logging.ProgressLogging, func() string
 
 		if strings.Contains(state.VitessRelease.Repo, "vitessio/vitess") {
 			pl.NewStepf("Do the Java release")
-			cmd := exec.Command("/bin/sh", "-c", "eval $(gpg-agent --daemon --no-grab --write-env-file $HOME/.gpg-agent-info); export GPG_TTY=$(tty); export GPG_AGENT_INFO; export MAVEN_OPTS=\"--add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.text=ALL-UNNAMED --add-opens=java.desktop/java.awt.font=ALL-UNNAMED\"; mvn clean deploy -P release -DskipTests;")
+
+			// For <= v21.0, we must add the -DskipTests argument to mvn. For >= v22.0 it can be omitted.
+			script := "eval $(gpg-agent --daemon --no-grab --write-env-file $HOME/.gpg-agent-info); export GPG_TTY=$(tty); export GPG_AGENT_INFO; export MAVEN_OPTS=\"--add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.text=ALL-UNNAMED --add-opens=java.desktop/java.awt.font=ALL-UNNAMED\"; mvn clean deploy -P release "
+			if state.VitessRelease.MajorReleaseNb <= 21 {
+				script += "-DskipTests"
+			}
+			script += ";"
+
+			cmd := exec.Command("/bin/sh", "-c", script)
 			pwd, err := os.Getwd()
 			if err != nil {
 				utils.BailOut(err, "failed to get current working directory")
