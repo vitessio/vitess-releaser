@@ -110,26 +110,24 @@ func (m UI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m UI) View() string {
-	_, isMenu := m.Active.(*Menu)
-	if !isMenu {
+	if _, ok := m.Active.(ProgressDialog); ok {
 		return m.Active.View()
 	}
-	title := "Vitess Releaser: 'q' = back, 'enter' = action"
-	width := m.Size.Width
-	if width == 0 {
-		width = 100
-	}
-	lft := bgStyle.Render(title)
-	width -= len(title)
-	s := bgStyle.Copy().Width(width).Align(lipgloss.Right)
-	rgt := fmt.Sprintf("Vitess repo: %s | Vitess release: v%s | Release Date: %s", m.State.VitessRelease.Repo, m.State.VitessRelease.Release, m.State.Issue.Date.Format(time.DateOnly))
-	if m.State.VtOpRelease.Release != "" {
-		rgt = fmt.Sprintf("Vitess repo: %s | Vtop repo: %s | Vitess release: v%s | Vtop release: v%s | Release Date: %s", m.State.VitessRelease.Repo, m.State.VtOpRelease.Repo, m.State.VitessRelease.Release, releaser.AddRCToReleaseTitle(m.State.VtOpRelease.Release, m.State.Issue.RC), m.State.Issue.Date.Format(time.DateOnly))
-	}
-	statusBar := lft + s.Render(rgt)
-	return lipgloss.JoinVertical(
-		lipgloss.Right,
+
+	elems := []string{
 		m.Active.View(),
-		statusBar,
+		"",
+	}
+
+	elems = append(elems, bgStyle.Render("Vitess Releaser: 'q' = back, 'enter' = action"))
+	elems = append(elems, bgStyle.Render(fmt.Sprintf("Vitess repo: %s | Vitess release: v%s", m.State.VitessRelease.Repo, m.State.VitessRelease.Release)))
+	if m.State.VtOpRelease.Release != "" {
+		elems = append(elems, bgStyle.Render(fmt.Sprintf("Vtop repo: %s | Vtop release: v%s", m.State.VtOpRelease.Repo, releaser.AddRCToReleaseTitle(m.State.VtOpRelease.Release, m.State.Issue.RC))))
+	}
+	elems = append(elems, bgStyle.Render(fmt.Sprintf("Release Date: %s", m.State.Issue.Date.Format(time.DateOnly))))
+
+	return lipgloss.JoinVertical(
+		lipgloss.Left,
+		elems...,
 	)
 }
