@@ -18,8 +18,9 @@ package release
 
 import (
 	"fmt"
-	"github.com/vitessio/vitess-releaser/go/releaser"
 	"strings"
+
+	"github.com/vitessio/vitess-releaser/go/releaser"
 )
 
 func CheckDockerMessage(state *releaser.State) []string {
@@ -45,7 +46,7 @@ func CheckDockerMessage(state *releaser.State) []string {
 		msg = append(msg, fmt.Sprintf("\t- https://github.com/%s/actions/workflows/docker_build_images.yml", repo))
 	} else {
 		// this links to the newer GitHub Actions workflow that was introduced in v21 by https://github.com/vitessio/vitess/pull/16339
-		msg = append(msg, fmt.Sprintf("\t- https://github.com/%s/vitess/actions/workflows/build_docker_images.yml", repo))
+		msg = append(msg, fmt.Sprintf("\t- https://github.com/%s/actions/workflows/build_docker_images.yml", repo))
 		msg = append(msg, fmt.Sprintf("\nCheck that the vttestserver image is pushed at https://hub.docker.com/r/vitess/vttestserver/tags?name=%s.", release))
 	}
 
