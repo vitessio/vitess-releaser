@@ -88,7 +88,7 @@ func UpdateSnapshotOnMain(state *releaser.State) (*logging.ProgressLogging, func
 			Base:   "main",
 			Labels: []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}},
 		}
-		_, url = pr.Create(state.VitessRelease.Repo)
+		_, url = pr.Create(state.IssueLink, state.VitessRelease.Repo)
 		pl.NewStepf("Pull Request created %s", url)
 		done = true
 		return ""

@@ -140,7 +140,7 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 			Base:   state.VitessRelease.ReleaseBranch,
 			Labels: []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}},
 		}
-		nb, url = pr.Create(state.VitessRelease.Repo)
+		nb, url = pr.Create(state.IssueLink, state.VitessRelease.Repo)
 		pl.NewStepf("Pull Request created %s", url)
 		waitForPRToBeMerged(nb)
 		done = true

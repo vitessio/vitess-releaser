@@ -88,7 +88,7 @@ func VtopBackToDev(state *releaser.State) (*logging.ProgressLogging, func() stri
 			Base:   state.VtOpRelease.ReleaseBranch,
 			Labels: []github.Label{},
 		}
-		_, url = pr.Create(state.VtOpRelease.Repo)
+		_, url = pr.Create(state.IssueLink, state.VtOpRelease.Repo)
 		pl.NewStepf("Pull Request created %s", url)
 
 		done = true
