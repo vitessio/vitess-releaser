@@ -85,7 +85,7 @@ func CopyReleaseNotesToBranch(state *releaser.State, itemToUpdate *releaser.Item
 			Base:   branch,
 			Labels: []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}},
 		}
-		_, url = pr.Create(state.VitessRelease.Repo)
+		_, url = pr.Create(state.IssueLink, state.VitessRelease.Repo)
 		pl.NewStepf("Pull Request created %s", url)
 		done = true
 		return url

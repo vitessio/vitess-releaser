@@ -1,6 +1,6 @@
 module github.com/vitessio/vitess-releaser
 
-go 1.21.0
+go 1.24.1
 
 require (
 	github.com/charmbracelet/bubbles v0.16.1

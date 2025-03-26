@@ -95,7 +95,7 @@ func BackToDevModeOnBranch(state *releaser.State, itemToUpdate *releaser.ItemWit
 			Base:   branch,
 			Labels: []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}},
 		}
-		_, url = pr.Create(state.VitessRelease.Repo)
+		_, url = pr.Create(state.IssueLink, state.VitessRelease.Repo)
 		pl.NewStepf("Pull Request created %s", url)
 		done = true
 		return ""

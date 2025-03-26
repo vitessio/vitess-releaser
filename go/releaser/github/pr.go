@@ -46,11 +46,14 @@ type PR struct {
 	Number int     `json:"number"`
 }
 
-func (p *PR) Create(repo string) (nb int, url string) {
+func (p *PR) Create(issueLink string, repo string) (nb int, url string) {
 	var labels []string
 	for _, label := range p.Labels {
 		labels = append(labels, label.Name)
 	}
+
+	p.Body = fmt.Sprintf("%s\n\n> This Pull Request is part of %s", p.Body, issueLink)
+
 	stdOut := execGh(
 		"pr", "create",
 		"--repo", repo,

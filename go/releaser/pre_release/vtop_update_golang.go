@@ -120,7 +120,7 @@ func VtopUpdateGolang(state *releaser.State) (*logging.ProgressLogging, func() s
 			Branch: newBranchName,
 			Base:   state.VtOpRelease.ReleaseBranch,
 		}
-		_, url = pr.Create(state.VtOpRelease.Repo)
+		_, url = pr.Create(state.IssueLink, state.VtOpRelease.Repo)
 		pl.NewStepf("Pull Request created %s", url)
 		done = true
 		return url

@@ -133,7 +133,7 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 			Base:   state.VitessRelease.ReleaseBranch,
 			Labels: []github.Label{{Name: "Component: General"}, {Name: "Type: Release"}, {Name: "Do Not Merge"}},
 		}
-		_, url = pr.Create(state.VitessRelease.Repo)
+		_, url = pr.Create(state.IssueLink, state.VitessRelease.Repo)
 		pl.NewStepf("Pull Request created %s", url)
 		done = true
 		return url
