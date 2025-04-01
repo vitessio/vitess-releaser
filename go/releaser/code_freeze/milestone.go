@@ -36,7 +36,35 @@ func NewMilestone(state *releaser.State) (*logging.ProgressLogging, func() strin
 
 	return pl, func() string {
 		var link string
+
+		pl.NewStepf("Finding the next Milestone")
+		nextNextRelease := releaser.FindVersionAfterNextRelease(state)
+		newMilestone := fmt.Sprintf("v%s", nextNextRelease)
+
 		defer func() {
+			// Let's assume we release v20.0.0, the current milestone is v20.0.0, and new milestone which we
+			// just created is v21.0.0:
+			//
+			// During the RC-1, we want to move all opened PRs from the v20.0.0 milestone to the v21.0.0 milestone.
+			// All the PRs that are still opened on the v20.0.0 milestone are based on main, and thus need to be
+			// assigned the new milestone for main: v21.0.0. We might decide to backport an opened PR to the release
+			// branch, in which case GitHub Actions will assign the v20.0.0 milestone to the backport.
+			//
+			// This only applies to RC-1 releases. For patch releases, since the branch is frozen, the risk of
+			// merging a PR in a release that don't match the milestone is very slim.
+			if state.Issue.RC == 1 {
+				currentMilestone := fmt.Sprintf("v%s", releaser.RemoveRCFromReleaseTitle(state.VitessRelease.Release))
+				pl.NewStepf("Get opened Pull Requests for Milestone %s", currentMilestone)
+				prs := github.GetOpenedPRsByMilestone(state.VitessRelease.Repo, currentMilestone)
+
+				if len(prs) > 0 {
+					pl.NewStepf("Move %d Pull Requests to the %s Milestone", len(prs), newMilestone)
+					github.AssignMilestoneToPRs(state.VitessRelease.Repo, newMilestone, prs)
+				} else {
+					pl.NewStepf("No opened Pull Request found for Milestone %s, nothing to move", currentMilestone)
+				}
+			}
+
 			if link == "" {
 				return
 			}
@@ -50,13 +78,9 @@ func NewMilestone(state *releaser.State) (*logging.ProgressLogging, func() strin
 			pl.NewStepf("Issue updated, see: %s", issueLink)
 		}()
 
-		pl.NewStepf("Finding the next Milestone")
-		nextNextRelease := releaser.FindVersionAfterNextRelease(state)
-		newMilestone := fmt.Sprintf("v%s", nextNextRelease)
-
 		ms := github.GetMilestonesByName(state.VitessRelease.Repo, newMilestone)
 		if len(ms) > 0 {
-			pl.SetTotalStep(4) // we do one lest step if the milestone already exist
+			pl.TotalSteps -= 1 // we have one less step in this situation (not creating a new milestone)
 			link = ms[0].URL
 			pl.NewStepf("Found an existing Milestone: %s", link)
 			return link
@@ -65,29 +89,6 @@ func NewMilestone(state *releaser.State) (*logging.ProgressLogging, func() strin
 		pl.NewStepf("Creating Milestone %s on GitHub", newMilestone)
 		link = github.CreateNewMilestone(state.VitessRelease.Repo, newMilestone)
 		pl.NewStepf("New Milestone %s created: %s", newMilestone, link)
-
-		// Let's assume we release v20.0.0, the current milestone is v20.0.0, and new milestone which we
-		// just created is v21.0.0:
-		//
-		// During the RC-1, we want to move all opened PRs from the v20.0.0 milestone to the v21.0.0 milestone.
-		// All the PRs that are still opened on the v20.0.0 milestone are based on main, and thus need to be
-		// assigned the new milestone for main: v21.0.0. We might decide to backport an opened PR to the release
-		// branch, in which case GitHub Actions will assign the v20.0.0 milestone to the backport.
-		//
-		// This only applies to RC-1 releases. For patch releases, since the branch is frozen, the risk of
-		// merging a PR in a release that don't match the milestone is very slim.
-		if state.Issue.RC == 1 {
-			currentMilestone := fmt.Sprintf("v%s", releaser.RemoveRCFromReleaseTitle(state.VitessRelease.Release))
-			pl.NewStepf("Get opened Pull Requests for Milestone %s", currentMilestone)
-			prs := github.GetOpenedPRsByMilestone(state.VitessRelease.Repo, currentMilestone)
-
-			if len(prs) > 0 {
-				pl.NewStepf("Move %d Pull Requests to the %s Milestone", len(prs), newMilestone)
-				github.AssignMilestoneToPRs(state.VitessRelease.Repo, newMilestone, prs)
-			} else {
-				pl.NewStepf("No opened Pull Request found for Milestone %s, nothing to move", currentMilestone)
-			}
-		}
 		return link
 	}
 }
