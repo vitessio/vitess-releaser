@@ -31,6 +31,7 @@ func BailOut(err error, msg string, args ...interface{}) {
 	} else {
 		log.Println(err.Error(), "\n", fullMsg, "\n", string(debug.Stack()))
 	}
+
 	os.Exit(1)
 }
 
@@ -45,6 +46,7 @@ func Exec(cmd string, args ...string) string {
 	if err != nil {
 		BailOut(err, "failed to execute: %s, got: %s", command.String(), string(out))
 	}
+
 	return string(out)
 }
 
@@ -54,6 +56,7 @@ func ExecWithError(cmd string, args ...string) (string, error) {
 	if err != nil {
 		return string(out), fmt.Errorf("%w: failed to execute: %s", err, command.String())
 	}
+
 	return string(out), nil
 }
 
@@ -61,11 +64,13 @@ func SetGHUser() func() {
 	ghToken := os.Getenv("VITESS_RELEASER_GH_TOKEN")
 	if ghToken != "" {
 		currentGHToken := os.Getenv("GH_TOKEN")
-		os.Setenv("GH_TOKEN", ghToken)
+		_ = os.Setenv("GH_TOKEN", ghToken) // ignore error - if it fails, GitHub operations will fail and we'll catch it then
 		fmt.Println("Setting GH_TOKEN to VITESS_RELEASER_GH_TOKEN")
+
 		return func() {
-			os.Setenv("GH_TOKEN", currentGHToken)
+			_ = os.Setenv("GH_TOKEN", currentGHToken) // ignore error - this is cleanup, failure is not critical
 		}
 	}
+
 	return func() {}
 }

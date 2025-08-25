@@ -24,3 +24,15 @@ install:
 # serves for local testing with mods, as well as quick documentation on how to use the tool
 test: build
 	./vitess-releaser --date 2024-10-23 --rc 2 -r 21 # --live --vtop-release 2.14
+
+# lint runs golangci-lint on the codebase
+lint:
+	golangci-lint run
+
+# lint-fix runs golangci-lint and automatically fixes issues where possible
+lint-fix:
+	golangci-lint run --fix
+
+# fmt formats the code using gofumpt (included in golangci-lint)
+fmt:
+	golangci-lint run --fix --disable-all --enable=gofumpt,goimports

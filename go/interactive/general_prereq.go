@@ -20,6 +20,7 @@ import (
 	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
+
 	"github.com/vitessio/vitess-releaser/go/interactive/ui"
 	"github.com/vitessio/vitess-releaser/go/releaser"
 	"github.com/vitessio/vitess-releaser/go/releaser/prerequisite"
@@ -32,6 +33,7 @@ type (
 
 func generalPrerequisiteMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
+
 	return &ui.MenuItem{
 		State:  state,
 		Name:   steps.GeneralPrerequisite,
@@ -60,17 +62,21 @@ func generalPrerequisiteUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.
 		if string(msg) != mi.Name {
 			return mi, nil
 		}
+
 		if mi.IsDone {
 			mi.State.Issue.General.MarkAllAsNotDone()
 		} else {
 			mi.State.Issue.General.MarkAllAsDone()
 		}
+
 		mi.IsDone = !mi.IsDone
 		pl, fn := mi.State.UploadIssue()
+
 		return mi, tea.Batch(func() tea.Msg {
 			fn()
 			return tea.Msg("")
 		}, ui.PushDialog(ui.NewProgressDialog("Updating the Release Issue", pl)))
 	}
+
 	return mi, nil
 }

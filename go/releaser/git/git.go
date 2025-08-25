@@ -25,9 +25,7 @@ import (
 	"github.com/vitessio/vitess-releaser/go/releaser/utils"
 )
 
-var (
-	errBranchExists = fmt.Errorf("branch already exists")
-)
+var errBranchExists = fmt.Errorf("branch already exists")
 
 func checkCurrentRepo(repoWanted string) bool {
 	out := utils.Exec("git", "remote", "-v")
@@ -54,8 +52,10 @@ func CreateBranchAndCheckout(branch, base string) error {
 		if strings.Contains(out, fmt.Sprintf("a branch named '%s' already exists", branch)) {
 			return errBranchExists
 		}
+
 		utils.BailOut(err, "got: %s", out)
 	}
+
 	return nil
 }
 
@@ -82,8 +82,10 @@ func CommitAll(msg string) (empty bool) {
 		if strings.Contains(out, "nothing to commit, working tree clean") {
 			return true
 		}
+
 		utils.BailOut(err, "got: %s", out)
 	}
+
 	return false
 }
 
@@ -92,6 +94,7 @@ func CommitAll(msg string) (empty bool) {
 // If no remote is found, an empty string is returned.
 func FindRemoteName(repository string) string {
 	out := utils.Exec("git", "remote", "-v")
+
 	lines := strings.Split(out, "\n")
 	for _, line := range lines {
 		parts := strings.Fields(line)
@@ -102,6 +105,7 @@ func FindRemoteName(repository string) string {
 			}
 		}
 	}
+
 	return ""
 }
 
@@ -109,6 +113,7 @@ func CorrectCleanRepo(repo string) {
 	if !checkCurrentRepo(repo + ".git") {
 		utils.BailOut(nil, "failed to find remote %s in %s", repo, getWorkingDir())
 	}
+
 	if !cleanLocalState() {
 		utils.BailOut(nil, "the %s repository should have a clean state", getWorkingDir())
 	}
@@ -119,6 +124,7 @@ func getWorkingDir() string {
 	if err != nil {
 		utils.BailOut(err, "failed to find the current working dir")
 	}
+
 	return dir
 }
 
@@ -126,17 +132,22 @@ func FindNewGeneratedBranch(remote, baseBranch, branchName string) string {
 	remoteAndBase := fmt.Sprintf("%s/%s", remote, baseBranch)
 
 	var newBranch string
+
 	for i := 1; ; i++ {
 		newBranch = fmt.Sprintf("%s-%s-%d", baseBranch, branchName, i)
+
 		err := CreateBranchAndCheckout(newBranch, remoteAndBase)
 		if err != nil {
 			if errors.Is(err, errBranchExists) {
 				continue
 			}
+
 			utils.BailOut(err, "bug should not get here")
 		}
+
 		break
 	}
+
 	return newBranch
 }
 
@@ -146,10 +157,12 @@ func TagAndPush(remote, tag string) (exists bool) {
 		if strings.Contains(out, "already exists") {
 			return true
 		}
+
 		utils.BailOut(err, "got: %s", out)
 	}
 
 	utils.Exec("git", "push", remote, tag)
+
 	return false
 }
 

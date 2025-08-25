@@ -20,6 +20,7 @@ import (
 	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
+
 	"github.com/vitessio/vitess-releaser/go/interactive/ui"
 	"github.com/vitessio/vitess-releaser/go/releaser"
 	"github.com/vitessio/vitess-releaser/go/releaser/steps"
@@ -27,6 +28,7 @@ import (
 
 func CloseIssueItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
+
 	return &ui.MenuItem{
 		State:  state,
 		Name:   steps.CloseIssue,
@@ -46,11 +48,13 @@ func closeIssueUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
 	}
 
 	mi.IsDone = mi.State.Issue.CloseIssue
+
 	return mi, nil
 }
 
 func closeIssueAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
 	pl, fn := releaser.CloseReleaseIssue(mi.State)
+
 	return mi, tea.Batch(func() tea.Msg {
 		return closeIssueUrl(fn())
 	}, ui.PushDialog(ui.NewProgressDialog("Close Issue", pl)))

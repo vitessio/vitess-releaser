@@ -63,7 +63,9 @@ func VtopBumpMainVersion(state *releaser.State) (*logging.ProgressLogging, func(
 	}
 
 	var done bool
+
 	var url string
+
 	return pl, func() string {
 		state.GoToVtOp()
 		defer state.GoToVitess()
@@ -84,22 +86,28 @@ func VtopBumpMainVersion(state *releaser.State) (*logging.ProgressLogging, func(
 
 		bumpPRName := fmt.Sprintf("[main] Bump version.go to %s", state.VtOpRelease.Release)
 		pl.NewStepf("Look for an existing Release Pull Request named '%s'", bumpPRName)
+
 		if _, url = github.FindPR(state.VtOpRelease.Repo, bumpPRName); url != "" {
 			pl.TotalSteps = 5
 			pl.NewStepf("An opened Release Pull Request was found: %s", url)
+
 			done = true
+
 			return url
 		}
 
 		pl.NewStepf("Create temporary branch from main")
+
 		newBranchName := git.FindNewGeneratedBranch(state.VtOpRelease.Remote, "main", "bump-main-version")
 
 		pl.NewStepf("Bump version.go to %s", state.VtOpRelease.Release)
 		UpdateVtOpVersionGoFile(state.VtOpRelease.Release)
-		if !git.CommitAll(fmt.Sprintf("Go back to dev mode")) {
+
+		if !git.CommitAll("Go back to dev mode") {
 			git.Push(state.VtOpRelease.Remote, newBranchName)
 
 			pl.NewStepf("Create Pull Request")
+
 			pr := github.PR{
 				Title:  bumpPRName,
 				Body:   fmt.Sprintf("This Pull Request bumps the version/version.go file to %s", state.VtOpRelease.Release),
@@ -114,6 +122,7 @@ func VtopBumpMainVersion(state *releaser.State) (*logging.ProgressLogging, func(
 		}
 
 		done = true
+
 		return ""
 	}
 }

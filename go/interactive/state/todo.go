@@ -25,6 +25,7 @@ func Fmt(b bool) string {
 	if b {
 		return "Done"
 	}
+
 	return "To do"
 }
 
@@ -32,5 +33,6 @@ func FmtMd(b bool) string {
 	if b {
 		return "x"
 	}
+
 	return " "
 }

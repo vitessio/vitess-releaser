@@ -59,6 +59,7 @@ func CreateNewLabels(state *releaser.State) (*logging.ProgressLogging, func() st
 		_, fn := state.UploadIssue()
 		issueLink := fn()
 		pl.NewStepf("Issue updated, see: %s", issueLink)
+
 		return ""
 	}
 }

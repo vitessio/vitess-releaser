@@ -28,5 +28,6 @@ func statusColor(style lipgloss.Style, condition bool) lipgloss.Style {
 	if condition {
 		return style.Foreground(lipgloss.Color(COLOR_GREEN))
 	}
+
 	return style.Foreground(lipgloss.Color(COLOR_RED))
 }

@@ -20,6 +20,7 @@ import (
 	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
+
 	"github.com/vitessio/vitess-releaser/go/interactive/ui"
 	"github.com/vitessio/vitess-releaser/go/releaser"
 	"github.com/vitessio/vitess-releaser/go/releaser/code_freeze"
@@ -29,9 +30,11 @@ import (
 func CreateNewLabelsMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
 	act := createNewLabelsAct
+
 	if state.Issue.CreateNewLabels.Done {
 		act = nil
 	}
+
 	return &ui.MenuItem{
 		State:  state,
 		Name:   steps.CreateNewLabels,
@@ -55,11 +58,13 @@ func createNewLabelsUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd)
 
 	mi.IsDone = mi.State.Issue.CreateNewLabels.Done
 	mi.Info = mi.State.Issue.CreateNewLabels.URL
+
 	return mi, nil
 }
 
 func createNewLabelsAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
 	pl, create := code_freeze.CreateNewLabels(mi.State)
+
 	return mi, tea.Batch(func() tea.Msg {
 		return createNewLabelsUrl(create())
 	}, ui.PushDialog(ui.NewProgressDialog("Create New Labels", pl)))

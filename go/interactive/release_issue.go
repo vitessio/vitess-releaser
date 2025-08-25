@@ -20,6 +20,7 @@ import (
 	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
+
 	"github.com/vitessio/vitess-releaser/go/interactive/state"
 	"github.com/vitessio/vitess-releaser/go/interactive/ui"
 	"github.com/vitessio/vitess-releaser/go/releaser"
@@ -35,9 +36,11 @@ func createIssueMenuItem(ctx context.Context) *ui.MenuItem {
 		Init:   createIssue,
 		Update: issueUpdate,
 	}
+
 	if s.IssueLink != "" {
 		gotIssueURL(i)
 	}
+
 	return i
 }
 
@@ -49,6 +52,7 @@ type releaseIssue struct {
 func createIssue(mi *ui.MenuItem) tea.Cmd {
 	_, createIssueFn := releaser.CreateReleaseIssue(mi.State)
 	nb, url := createIssueFn()
+
 	return func() tea.Msg {
 		return releaseIssue{
 			url: url,
@@ -62,9 +66,11 @@ func issueUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
 	if !ok {
 		return mi, nil
 	}
+
 	if len(ri.url) != 0 && ri.nb != 0 {
 		return gotIssueURL(mi), nil
 	}
+
 	return mi, nil
 }
 
@@ -74,5 +80,6 @@ func gotIssueURL(item *ui.MenuItem) *ui.MenuItem {
 	item.IsDone = state.Done
 	item.Act = nil  // We don't want to accidentally create a second one
 	item.Init = nil // So we cancel the init function if we already have the issue
+
 	return item
 }

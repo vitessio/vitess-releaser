@@ -37,6 +37,7 @@ func VtopMergeReleasePR(state *releaser.State) (*logging.ProgressLogging, func()
 		defer state.GoToVitess()
 
 		pl.NewStepf("Resolve Release Pull Request URL")
+
 		url := state.Issue.VtopCreateReleasePR.URL
 		nb, err := strconv.Atoi(url[strings.LastIndex(url, "/")+1:])
 		if err != nil {
@@ -56,6 +57,7 @@ func VtopMergeReleasePR(state *releaser.State) (*logging.ProgressLogging, func()
 		}
 
 		pl.NewStepf("Pull Request has been merged")
+
 		state.Issue.VtopMergeReleasePR.Done = true
 		state.Issue.VtopMergeReleasePR.URL = url
 		pl.NewStepf("Update Issue %s on GitHub", state.IssueLink)
@@ -63,6 +65,7 @@ func VtopMergeReleasePR(state *releaser.State) (*logging.ProgressLogging, func()
 		issueLink := fn()
 
 		pl.NewStepf("Issue updated, see: %s", issueLink)
+
 		return url
 	}
 }

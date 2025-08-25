@@ -40,11 +40,14 @@ func GetMilestonesByName(repo, name string) []Milestone {
 	)
 
 	str = str[strings.Index(str, "]")+1:]
+
 	var ms []Milestone
+
 	err := json.Unmarshal([]byte(str), &ms)
 	if err != nil {
 		utils.BailOut(err, "failed to parse milestone, got: %s", str)
 	}
+
 	return ms
 }
 
@@ -56,6 +59,7 @@ func CreateNewMilestone(repo, name string) string {
 	)
 	out := strings.ReplaceAll(stdOut, "\n", "")
 	idx := strings.LastIndex(out, fmt.Sprintf("https://github.com/%s/milestone/", repo))
+
 	return out[idx:]
 }
 
@@ -73,5 +77,6 @@ func CloseMilestone(repo, name string) string {
 	)
 	out := strings.ReplaceAll(stdOut, "\n", "")
 	idx := strings.LastIndex(out, fmt.Sprintf("https://github.com/%s/milestone/", repo))
+
 	return out[idx:]
 }

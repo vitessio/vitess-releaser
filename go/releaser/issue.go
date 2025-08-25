@@ -58,10 +58,10 @@ const (
 const (
 	markdownItemDone = "- [x]"
 
-	// Divers
+	// Divers.
 	dateItem = "> This release is scheduled for"
 
-	// Prerequisites
+	// Prerequisites.
 	generalPrerequisitesItem = "General prerequisites."
 	preSlackAnnouncementItem = "Notify the community on Slack."
 	checkSummaryItem         = "Make sure the release notes summary is prepared and clean."
@@ -70,7 +70,7 @@ const (
 	draftBlogPostItem        = "Draft the release blog post."
 	crossBlogPostItem        = "Send requests to cross-post the blog post (CNCF, PlanetScale)."
 
-	// Pre-Release
+	// Pre-Release.
 	codeFreezeItem                = "Code Freeze."
 	copyBranchProtectionRulesItem = "Copy branch protection rules."
 	createNewLabelsItem           = "Create new labels."
@@ -84,7 +84,7 @@ const (
 	createBlogPostPRItem          = "Open a Pull Request on the website repository for the blog post."
 	UpdateCobraDocs               = "Update Cobra Docs."
 
-	// Release
+	// Release.
 	mergeReleasePRItem            = "Merge the Release PR."
 	tagReleaseItem                = "Tag the release."
 	javaRelease                   = "Java release."
@@ -104,7 +104,7 @@ const (
 	vtopBackToDevItem             = "Go back to dev mode on vitess-operator."
 	vtopManualUpdateItem          = "Manual update of vitess-operator test code."
 
-	// Post-Release
+	// Post-Release.
 	postSlackAnnouncementItem = "Notify the community on Slack for the new release."
 	twitterItem               = "Twitter announcement."
 	RemoveBypassProtection    = "Remove bypass branch protection rules, if required."
@@ -336,22 +336,24 @@ const (
 
 func (pi *ParentOfItems) ItemsLeft() int {
 	nb := 0
+
 	for _, item := range pi.Items {
 		if !item.Done {
 			nb++
 		}
 	}
+
 	return nb
 }
 
 func (pi *ParentOfItems) MarkAllAsDone() {
-	for i, _ := range pi.Items {
+	for i := range pi.Items {
 		pi.Items[i].Done = true
 	}
 }
 
 func (pi *ParentOfItems) MarkAllAsNotDone() {
-	for i, _ := range pi.Items {
+	for i := range pi.Items {
 		pi.Items[i].Done = false
 	}
 }
@@ -362,6 +364,7 @@ func (pi *ParentOfItems) Done() bool {
 			return false
 		}
 	}
+
 	return true
 }
 
@@ -386,6 +389,7 @@ func (s *State) LoadIssue() {
 		if err != nil {
 			utils.BailOut(err, "failed to parse the RC number from the release issue title (%s)", title)
 		}
+
 		newIssue.RC = rc
 	}
 
@@ -405,6 +409,7 @@ func (s *State) LoadIssue() {
 				if err != nil {
 					utils.BailOut(err, "failed to parse the date from the release issue body (%s)", nline)
 				}
+
 				newIssue.Date = parsedDate
 			}
 
@@ -425,6 +430,7 @@ func (s *State) LoadIssue() {
 				st = stateReadingReleaseBlockerIssue
 			case strings.Contains(line, codeFreezeItem):
 				newIssue.CodeFreeze.Done = strings.HasPrefix(line, markdownItemDone)
+
 				if isNextLineAList(lines, i) {
 					st = stateReadingCodeFreezeItem
 				}
@@ -432,21 +438,25 @@ func (s *State) LoadIssue() {
 				newIssue.CopyBranchProtectionRules = strings.HasPrefix(line, markdownItemDone)
 			case strings.Contains(line, createNewLabelsItem):
 				newIssue.CreateNewLabels.Done = strings.HasPrefix(line, markdownItemDone)
+
 				if isNextLineAList(lines, i) {
 					st = stateReadingCreateNewLabelsItem
 				}
 			case strings.Contains(line, updateSnapshotOnMainItem):
 				newIssue.UpdateSnapshotOnMain.Done = strings.HasPrefix(line, markdownItemDone)
+
 				if isNextLineAList(lines, i) {
 					st = stateReadingUpdateSnapshotOnMainItem
 				}
 			case strings.Contains(line, createReleasePRItem):
 				newIssue.CreateReleasePR.Done = strings.HasPrefix(line, markdownItemDone)
+
 				if isNextLineAList(lines, i) {
 					st = stateReadingCreateReleasePRItem
 				}
 			case strings.Contains(line, newMilestoneItem):
 				newIssue.NewGitHubMilestone.Done = strings.HasPrefix(line, markdownItemDone)
+
 				if isNextLineAList(lines, i) {
 					st = stateReadingNewMilestoneItem
 				}
@@ -454,11 +464,13 @@ func (s *State) LoadIssue() {
 				newIssue.VtopCreateBranch = strings.HasPrefix(line, markdownItemDone)
 			case strings.Contains(line, vtopBumpVersionOnMain):
 				newIssue.VtopBumpMainVersion.Done = strings.HasPrefix(line, markdownItemDone)
+
 				if isNextLineAList(lines, i) {
 					st = stateReadingVtopBumpVersionOnMainPR
 				}
 			case strings.Contains(line, vtopUpdateGoItem):
 				newIssue.VtopUpdateGolang.Done = strings.HasPrefix(line, markdownItemDone)
+
 				if isNextLineAList(lines, i) {
 					st = stateReadingVtopUpdateGo
 				}
@@ -466,6 +478,7 @@ func (s *State) LoadIssue() {
 				newIssue.VtopUpdateCompatibilityTable = strings.HasPrefix(line, markdownItemDone)
 			case strings.Contains(line, vtopCreateReleasePRItem):
 				newIssue.VtopCreateReleasePR.Done = strings.HasPrefix(line, markdownItemDone)
+
 				if isNextLineAList(lines, i) {
 					st = stateReadingVtopCreateReleasePR
 				}
@@ -473,46 +486,55 @@ func (s *State) LoadIssue() {
 				newIssue.VtopManualUpdate = strings.HasPrefix(line, markdownItemDone)
 			case strings.Contains(line, vtopMergeReleasePRItem):
 				newIssue.VtopMergeReleasePR.Done = strings.HasPrefix(line, markdownItemDone)
+
 				if isNextLineAList(lines, i) {
 					st = stateReadingVtopMergeReleasePR
 				}
 			case strings.Contains(line, vtopTagReleaseItem):
 				newIssue.VtopTagRelease.Done = strings.HasPrefix(line, markdownItemDone)
+
 				if isNextLineAList(lines, i) {
 					st = stateReadingVtopTagRelease
 				}
 			case strings.Contains(line, vtopBackToDevItem):
 				newIssue.VtopBackToDevMode.Done = strings.HasPrefix(line, markdownItemDone)
+
 				if isNextLineAList(lines, i) {
 					st = stateReadingVtopBackToDev
 				}
 			case strings.Contains(line, mergeReleasePRItem):
 				newIssue.MergeReleasePR.Done = strings.HasPrefix(line, markdownItemDone)
+
 				if isNextLineAList(lines, i) {
 					st = stateReadingMergedReleasePRItem
 				}
 			case strings.Contains(line, tagReleaseItem):
 				newIssue.TagRelease.Done = strings.HasPrefix(line, markdownItemDone)
+
 				if isNextLineAList(lines, i) {
 					st = stateReadingTagReleaseItem
 				}
 			case strings.Contains(line, releaseNotesMainItem):
 				newIssue.ReleaseNotesOnMain.Done = strings.HasPrefix(line, markdownItemDone)
+
 				if isNextLineAList(lines, i) {
 					st = stateReadingReleaseNotesMainItem
 				}
 			case strings.Contains(line, releaseNotesReleaseBranchItem):
 				newIssue.ReleaseNotesOnReleaseBranch.Done = strings.HasPrefix(line, markdownItemDone)
+
 				if isNextLineAList(lines, i) {
 					st = stateReadingReleaseNotesReleaseBranchItem
 				}
 			case strings.Contains(line, backToDevItem):
 				newIssue.BackToDevMode.Done = strings.HasPrefix(line, markdownItemDone)
+
 				if isNextLineAList(lines, i) {
 					st = stateReadingBackToDevModeItem
 				}
 			case strings.Contains(line, backToDevBaseBranchItem):
 				newIssue.BackToDevModeBaseBranch.Done = strings.HasPrefix(line, markdownItemDone)
+
 				if isNextLineAList(lines, i) {
 					st = stateReadingBackToDevModeBaseBranchItem
 				}
@@ -524,6 +546,7 @@ func (s *State) LoadIssue() {
 				newIssue.DockerImages = strings.HasPrefix(line, markdownItemDone)
 			case strings.Contains(line, closeMilestoneItem):
 				newIssue.CloseMilestone.Done = strings.HasPrefix(line, markdownItemDone)
+
 				if isNextLineAList(lines, i) {
 					st = stateReadingCloseMilestoneItem
 				}
@@ -590,6 +613,7 @@ func (s *State) LoadIssue() {
 			newIssue.VtopBackToDevMode.URL = handleSingleTextItem(line, &st)
 		}
 	}
+
 	s.Issue = newIssue
 }
 
@@ -599,9 +623,11 @@ func handleNewListItem(lines []string, i int, s *int) ItemWithLink {
 		Done: strings.HasPrefix(line, markdownItemDone),
 		URL:  strings.TrimSpace(line[len(markdownItemDone):]),
 	}
+
 	if i+1 == len(lines) || !strings.HasPrefix(lines[i+1], "  -") {
 		*s = stateReadingItem
 	}
+
 	return newItem
 }
 
@@ -610,7 +636,9 @@ func handleSingleTextItem(line string, s *int) string {
 	if line[0] == '-' {
 		line = strings.TrimSpace(line[1:])
 	}
+
 	*s = stateReadingItem
+
 	return line
 }
 
@@ -629,6 +657,7 @@ func (s *State) UploadIssue() (*logging.ProgressLogging, func() string) {
 		issue := github.Issue{Body: body, Number: s.IssueNbGH}
 		link := issue.UpdateBody(s.VitessRelease.Repo)
 		pl.NewStepf("Issue updated: %s", link)
+
 		return link
 	}
 }
@@ -647,6 +676,7 @@ func CreateReleaseIssue(state *State) (*logging.ProgressLogging, func() (int, st
 		)
 
 		pl.NewStepf("Create Release Issue on GitHub")
+
 		issueTitle := fmt.Sprintf("Release of `v%s`", state.VitessRelease.Release)
 		newIssue := github.Issue{
 			Title:    issueTitle,
@@ -659,7 +689,9 @@ func CreateReleaseIssue(state *State) (*logging.ProgressLogging, func() (int, st
 		nb := github.URLToNb(link)
 		state.IssueLink = link
 		state.IssueNbGH = nb
+
 		pl.NewStepf("Issue created: %s", link)
+
 		return nb, link
 	}
 }
@@ -680,11 +712,14 @@ func (i *Issue) toString() string {
 	if err != nil {
 		utils.BailOut(err, "failed to parse the release issue template")
 	}
+
 	b := bytes.NewBufferString("")
+
 	err = parsed.Execute(b, i)
 	if err != nil {
 		utils.BailOut(err, "failed to execute/write the release issue template")
 	}
+
 	return b.String()
 }
 
@@ -703,6 +738,7 @@ func CloseReleaseIssue(state *State) (*logging.ProgressLogging, func() string) {
 		_, fn := state.UploadIssue()
 		issueLink := fn()
 		pl.NewStepf("Issue updated, see: %s", issueLink)
+
 		return state.IssueLink
 	}
 }
@@ -712,6 +748,7 @@ func RemoveRCFromReleaseTitle(release string) string {
 	if index < 0 {
 		return release
 	}
+
 	return release[:index]
 }
 
@@ -719,5 +756,6 @@ func AddRCToReleaseTitle(release string, rc int) string {
 	if rc == 0 {
 		return release
 	}
+
 	return fmt.Sprintf("%s-RC%d", release, rc)
 }

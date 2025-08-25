@@ -54,6 +54,7 @@ func CloseMilestone(state *releaser.State) (*logging.ProgressLogging, func() str
 		issueLink := fn()
 
 		pl.NewStepf("Issue updated, see: %s", issueLink)
+
 		return url
 	}
 }

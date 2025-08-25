@@ -1,0 +1,260 @@
+run:
+  timeout: 5m
+  modules-download-mode: readonly
+  go: "1.24"
+  
+linters:
+  enable:
+    # Default linters
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
+    
+    # Additional useful linters
+    - bodyclose
+    - contextcheck
+    - errname
+    - errorlint
+    - exhaustive
+    - copyloopvar
+    - forcetypeassert
+    - goconst
+    - godot
+    - gofmt
+    - gofumpt
+    - goimports
+    - gomodguard
+    - gosec
+    - misspell
+    - nakedret
+    - nilnil
+    - nolintlint
+    - prealloc
+    - predeclared
+    - revive
+    - stylecheck
+    - usetesting
+    - testifylint
+    - unconvert
+    - unparam
+    - whitespace
+    - wsl
+
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+    
+  exhaustive:
+    default-signifies-exhaustive: false
+    
+  goconst:
+    min-len: 3
+    min-occurrences: 3
+    
+  godot:
+    scope: declarations
+    exclude:
+      - "^fixme:"
+      - "^todo:"
+    period: true
+    capital: false
+    
+  gofmt:
+    simplify: true
+    
+  gofumpt:
+    # Configuration now handled by global run.go setting
+    
+  goimports:
+    local-prefixes: github.com/vitessio/vitess-releaser
+    
+  gosec:
+    excludes:
+      - G204  # Subprocess launched with variable - common in CLI tools
+      
+  misspell:
+    locale: US
+    
+  nakedret:
+    max-func-lines: 30
+    
+  revive:
+    rules:
+      - name: exported
+        severity: warning
+        disabled: false
+        arguments:
+          - "checkPrivateReceivers"
+          - "sayRepetitiveInsteadOfStutters"
+      - name: package-comments
+        severity: warning
+        disabled: false
+      - name: var-naming
+        severity: warning
+        disabled: false
+      - name: indent-error-flow
+        severity: warning
+        disabled: false
+      - name: blank-imports
+        severity: warning
+        disabled: false
+      - name: range-val-in-closure
+        severity: warning
+        disabled: false
+      - name: range-val-address
+        severity: warning
+        disabled: false
+        
+  stylecheck:
+    checks: ["all"]
+    
+  wsl:
+    strict-append: true
+    allow-assign-and-call: true
+    allow-multiline-assign: true
+    allow-cuddle-declarations: false
+    allow-trailing-comment: false
+    force-case-trailing-whitespace: 0
+
+issues:
+  exclude-use-default: false
+  exclude-rules:
+    # Exclude some linters from running on tests files
+    - path: _test\.go
+      linters:
+        - gosec
+        - unparam
+        - forcetypeassert
+    
+    # Exclude known linter issues
+    - text: "Use of weak random number generator"
+      linters:
+        - gosec
+    
+    - text: "G304: Potential file inclusion via variable"
+      linters:
+        - gosec
+
+    # Exclude gosec issues that are false positives for this release tool
+    - text: "G101: Potential hardcoded credentials"
+      linters:
+        - gosec
+        
+    # Exclude some package comment requirements for now
+    - text: "should have a package comment"
+      linters:
+        - revive
+        - stylecheck
+        
+    # Exclude exported comment requirements for now 
+    - text: "exported.*should have comment"
+      linters:
+        - revive
+        
+    # Exclude var naming issues for now
+    - text: "var-naming"
+      linters:
+        - revive
+        
+    # Exclude styling issues with underscores in package names - this is legacy code
+    - text: "should not use underscores in package names"
+      linters:
+        - stylecheck
+        
+    # Exclude URL naming conventions for JSON structs - external API compatibility
+    - text: "struct field.*should be.*URL"
+      linters:
+        - stylecheck
+        
+    # Exclude prealloc suggestions - premature optimization
+    - text: "Consider pre-allocating"
+      linters:
+        - prealloc
+        
+    # Exclude exhaustive switch - not critical for this CLI tool
+    - text: "missing cases in switch"
+      linters:
+        - exhaustive
+        
+    # Exclude some repetitive name warnings
+    - text: "that is repetitive"
+      linters:
+        - revive
+        
+    # Exclude WSL white-space linter - too pedantic for CLI tool
+    - text: "cuddl"
+      linters:
+        - wsl
+        
+    # Exclude more URL naming issues - external API compatibility  
+    - text: "should be.*URL"
+      linters:
+        - stylecheck
+        
+    # Exclude ALL_CAPS naming - these are constants
+    - text: "should not use ALL_CAPS"
+      linters:
+        - stylecheck
+        
+    # Exclude gosec file permissions - this is a CLI tool that creates files
+    - text: "G30[0-9]: Expect.*permissions"
+      linters:
+        - gosec
+        
+    # Exclude specific errcheck issues that are acceptable
+    - text: "Error return value of.*os.Setenv.*is not checked"
+      linters:
+        - errcheck
+        
+    # Exclude errcheck for certain acceptable patterns
+    - text: "Error return value is not checked"
+      linters:
+        - errcheck
+        
+    # Exclude type assertion checks - these are internal and safe
+    - text: "type assertion must be checked"
+      linters:
+        - forcetypeassert
+        
+    # Exclude unnecessary conversion warnings - these improve readability  
+    - text: "unnecessary conversion"
+      linters:
+        - unconvert
+        
+    # Exclude sleep pattern suggestions - the current pattern is fine
+    - text: "should use time.Sleep"
+      linters:
+        - gosimple
+        - S1037
+        
+    # Exclude for loop suggestions - current pattern is fine
+    - text: "should use for range"
+      linters:
+        - gosimple
+        - S1000
+        
+    # Exclude revive comment format requirements - too pedantic
+    - text: "comment.*should be of the form"
+      linters:
+        - revive
+        - stylecheck
+        
+    # Exclude specific ID naming for external API structs
+    - text: "struct field.*Id.*should be.*ID"
+      linters:
+        - stylecheck
+        
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  uniq-by-line: true
+
+output:
+  formats:
+    - format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true

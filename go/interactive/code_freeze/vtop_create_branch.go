@@ -20,6 +20,7 @@ import (
 	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
+
 	"github.com/vitessio/vitess-releaser/go/interactive/ui"
 	"github.com/vitessio/vitess-releaser/go/releaser"
 	"github.com/vitessio/vitess-releaser/go/releaser/code_freeze"
@@ -29,9 +30,11 @@ import (
 func VtopCreateBranchMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
 	act := vtopCreateBranchAct
+
 	if state.Issue.VtopCreateBranch {
 		act = nil
 	}
+
 	return &ui.MenuItem{
 		State:  state,
 		Name:   steps.VtopCreateBranch,
@@ -52,11 +55,13 @@ func vtopCreateBranchUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd
 	}
 
 	mi.IsDone = mi.State.Issue.VtopCreateBranch
+
 	return mi, nil
 }
 
 func vtopCreateBranchAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
 	pl, freeze := code_freeze.VtopCreateBranch(mi.State)
+
 	return mi, tea.Batch(func() tea.Msg {
 		return vtopCreateBranchUrl(freeze())
 	}, ui.PushDialog(ui.NewProgressDialog(steps.VtopCreateBranch, pl)))

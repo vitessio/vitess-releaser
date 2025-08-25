@@ -20,6 +20,7 @@ import (
 	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
+
 	"github.com/vitessio/vitess-releaser/go/interactive/ui"
 	"github.com/vitessio/vitess-releaser/go/releaser"
 	"github.com/vitessio/vitess-releaser/go/releaser/code_freeze"
@@ -31,9 +32,11 @@ type createMilestone string
 func CreateMilestoneMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
 	act := createMilestoneAct
+
 	if state.Issue.NewGitHubMilestone.Done {
 		act = nil
 	}
+
 	return &ui.MenuItem{
 		State:  state,
 		Name:   steps.CreateMilestone,
@@ -56,11 +59,13 @@ func createMilestoneUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd)
 	mi.Info = mi.State.Issue.NewGitHubMilestone.URL
 	mi.IsDone = mi.State.Issue.NewGitHubMilestone.Done
 	mi.Act = nil // We don't want to accidentally create a second one
+
 	return mi, nil
 }
 
 func createMilestoneAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
 	pl, create := code_freeze.NewMilestone(mi.State)
+
 	return mi, tea.Batch(func() tea.Msg {
 		return createMilestone(create())
 	}, ui.PushDialog(ui.NewProgressDialog("Creating new GitHub Milestone", pl)))

@@ -20,6 +20,7 @@ import (
 	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
+
 	"github.com/vitessio/vitess-releaser/go/interactive/ui"
 	"github.com/vitessio/vitess-releaser/go/releaser"
 )
@@ -44,6 +45,7 @@ func newBooleanMenu(ctx context.Context, rawMsg []string, stepName string, setIn
 			if msg.name != stepName {
 				return mi, nil
 			}
+
 			return mi, ui.PushDialog(&ui.DoneDialog{
 				Title:    stepName,
 				Message:  msg.msg,
@@ -54,14 +56,18 @@ func newBooleanMenu(ctx context.Context, rawMsg []string, stepName string, setIn
 			if string(msg) != stepName {
 				return mi, nil
 			}
+
 			setInverse()
+
 			mi.IsDone = !mi.IsDone
 			pl, fn := mi.State.UploadIssue()
+
 			return mi, tea.Batch(func() tea.Msg {
 				fn()
 				return tea.Msg("")
 			}, ui.PushDialog(ui.NewProgressDialog("Updating the Release Issue", pl)))
 		}
+
 		return mi, nil
 	}
 

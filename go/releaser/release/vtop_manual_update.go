@@ -73,5 +73,6 @@ func VtopManualUpdateMessage(state *releaser.State) []string {
 			fmt.Sprintf("\t\t- The second one must use '%s'.", nextVitessMajorRelease),
 		}...)
 	}
+
 	return msg
 }

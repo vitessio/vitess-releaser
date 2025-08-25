@@ -41,6 +41,7 @@ func WebsiteDocs(state *releaser.State) []string {
 			"The script creates a new entry in the sidebar which represents the next version on main and mark the version we are releasing as RC.",
 		}...)
 	}
+
 	if state.Issue.GA {
 		msg = append(msg, []string{
 			"",
@@ -48,5 +49,6 @@ func WebsiteDocs(state *releaser.State) []string {
 			"The script will update the RC version as Stable.",
 		}...)
 	}
+
 	return msg
 }

@@ -20,6 +20,7 @@ import (
 	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
+
 	"github.com/vitessio/vitess-releaser/go/interactive/ui"
 	"github.com/vitessio/vitess-releaser/go/releaser"
 	"github.com/vitessio/vitess-releaser/go/releaser/release"
@@ -29,9 +30,11 @@ import (
 func TagReleaseItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
 	act := tagReleaseAct
+
 	if state.Issue.TagRelease.Done {
 		act = nil
 	}
+
 	return &ui.MenuItem{
 		State:  state,
 		Name:   steps.TagRelease,
@@ -52,11 +55,13 @@ func tagReleaseUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
 
 	mi.Info = mi.State.Issue.TagRelease.URL
 	mi.IsDone = mi.State.Issue.TagRelease.Done
+
 	return mi, nil
 }
 
 func tagReleaseAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
 	pl, tag := release.TagRelease(mi.State)
+
 	return mi, tea.Batch(func() tea.Msg {
 		return tagReleaseUrl(tag())
 	}, ui.PushDialog(ui.NewProgressDialog("Tag Release", pl)))

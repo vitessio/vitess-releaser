@@ -20,6 +20,7 @@ import (
 	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
+
 	"github.com/vitessio/vitess-releaser/go/interactive/ui"
 	"github.com/vitessio/vitess-releaser/go/releaser"
 	"github.com/vitessio/vitess-releaser/go/releaser/release"
@@ -29,9 +30,11 @@ import (
 func BackToDevModeBaseBranchItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
 	act := backToDevModeBaseBranchAct
+
 	if state.Issue.BackToDevModeBaseBranch.Done {
 		act = nil
 	}
+
 	return &ui.MenuItem{
 		State:  state,
 		Name:   steps.BackToDevOnBaseBranch,
@@ -55,11 +58,13 @@ func backToDevModeBaseBranchUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, 
 
 	mi.Info = mi.State.Issue.BackToDevModeBaseBranch.URL
 	mi.IsDone = mi.State.Issue.BackToDevModeBaseBranch.Done
+
 	return mi, nil
 }
 
 func backToDevModeBaseBranchAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
 	pl, back := release.BackToDevModeOnBranch(mi.State, &mi.State.Issue.BackToDevModeBaseBranch, mi.State.VitessRelease.BaseReleaseBranch)
+
 	return mi, tea.Batch(func() tea.Msg {
 		return backToDevModeBaseBranchUrl(back())
 	}, ui.PushDialog(ui.NewProgressDialog("Back To Dev Mode on Base Branch", pl)))

@@ -20,6 +20,7 @@ import (
 	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
+
 	"github.com/vitessio/vitess-releaser/go/interactive/ui"
 	"github.com/vitessio/vitess-releaser/go/releaser"
 	"github.com/vitessio/vitess-releaser/go/releaser/release"
@@ -28,6 +29,7 @@ import (
 
 func JavaReleaseItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
+
 	return &ui.MenuItem{
 		State:  state,
 		Name:   steps.JavaRelease,
@@ -47,11 +49,13 @@ func javaReleaseUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
 	}
 
 	mi.IsDone = mi.State.Issue.JavaRelease
+
 	return mi, nil
 }
 
 func javaReleaseAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
 	pl, j := release.JavaRelease(mi.State)
+
 	return mi, tea.Batch(func() tea.Msg {
 		return javaReleaseUrl(j())
 	}, ui.PushDialog(ui.NewProgressDialog(steps.JavaRelease, pl)))

@@ -61,8 +61,11 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 	}
 
 	var done bool
+
 	var url string
+
 	var nb int
+
 	return pl, func() string {
 		defer func() {
 			state.Issue.CodeFreeze.Done = done
@@ -100,20 +103,26 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 
 		// look for existing code freeze PRs
 		pl.NewStepf("Look for an existing Code Freeze Pull Request named '%s'", codeFreezePRName)
+
 		if nb, url = github.FindPR(state.VitessRelease.Repo, codeFreezePRName); url != "" {
 			pl.TotalSteps = 7 // only 7 total steps in this situation
 			pl.NewStepf("An opened Code Freeze Pull Request was found: %s", url)
 			waitForPRToBeMerged(nb)
+
 			done = true
+
 			return url
 		}
 
 		// check if the branch is already frozen or not
 		pl.NewStepf("Check if branch %s is already frozen", state.VitessRelease.ReleaseBranch)
+
 		if isCurrentBranchFrozen() {
 			pl.TotalSteps = 6 // only 6 total steps in this situation
 			pl.NewStepf("Branch %s is already frozen, no action needed", state.VitessRelease.ReleaseBranch)
+
 			done = true
+
 			return ""
 		}
 
@@ -124,15 +133,20 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 		activateCodeFreeze()
 
 		pl.NewStepf("Commit and push to branch %s", newBranchName)
+
 		if git.CommitAll(fmt.Sprintf("Code Freeze of %s", state.VitessRelease.ReleaseBranch)) {
 			pl.TotalSteps = 9 // only 9 total steps in this situation
 			pl.NewStepf("Nothing to commit, seems like code freeze is already done")
+
 			done = true
+
 			return ""
 		}
+
 		git.Push(state.VitessRelease.Remote, newBranchName)
 
 		pl.NewStepf("Create Pull Request")
+
 		pr := github.PR{
 			Title:  codeFreezePRName,
 			Body:   fmt.Sprintf("This Pull Request freezes the branch `%s` for `v%s`", state.VitessRelease.ReleaseBranch, state.VitessRelease.Release),
@@ -143,7 +157,9 @@ func CodeFreeze(state *releaser.State) (*logging.ProgressLogging, func() string)
 		nb, url = pr.Create(state.IssueLink, state.VitessRelease.Repo)
 		pl.NewStepf("Pull Request created %s", url)
 		waitForPRToBeMerged(nb)
+
 		done = true
+
 		return url
 	}
 }
@@ -153,7 +169,9 @@ func isCurrentBranchFrozen() bool {
 	if err != nil {
 		utils.BailOut(err, "failed to read file %s", codeFreezeWorkflowFile)
 	}
+
 	str := string(b)
+
 	return strings.Contains(str, "exit 1")
 }
 

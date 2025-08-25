@@ -34,6 +34,7 @@ func MergeReleasePR(state *releaser.State) (*logging.ProgressLogging, func() str
 
 	return pl, func() string {
 		pl.NewStepf("Resolve Release Pull Request URL")
+
 		url := state.Issue.CreateReleasePR.URL
 		nb, err := strconv.Atoi(url[strings.LastIndex(url, "/")+1:])
 		if err != nil {
@@ -51,6 +52,7 @@ func MergeReleasePR(state *releaser.State) (*logging.ProgressLogging, func() str
 			}
 		}
 		pl.NewStepf("Pull Request has been merged")
+
 		state.Issue.MergeReleasePR.Done = true
 		state.Issue.MergeReleasePR.URL = url
 		pl.NewStepf("Update Issue %s on GitHub", state.IssueLink)
@@ -58,6 +60,7 @@ func MergeReleasePR(state *releaser.State) (*logging.ProgressLogging, func() str
 		issueLink := fn()
 
 		pl.NewStepf("Issue updated, see: %s", issueLink)
+
 		return url
 	}
 }

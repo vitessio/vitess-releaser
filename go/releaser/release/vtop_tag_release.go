@@ -49,6 +49,7 @@ func VtopTagRelease(state *releaser.State) (*logging.ProgressLogging, func() str
 
 		// 3. Create the release on the GitHub UI
 		pl.NewStepf("Create the release on the GitHub UI")
+
 		url := github.CreateRelease(
 			state.VtOpRelease.Repo,
 			gitTag,
@@ -65,6 +66,7 @@ func VtopTagRelease(state *releaser.State) (*logging.ProgressLogging, func() str
 		issueLink := fn()
 
 		pl.NewStepf("Issue updated, see: %s", issueLink)
+
 		return url
 	}
 }

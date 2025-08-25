@@ -142,10 +142,12 @@ func getBranchProtectionRules(repo string) fetchBranchProtectionRules {
 	stdOut := execGh("api", fmt.Sprintf("repos/%s/branches/main/protection", repo))
 
 	var bpr fetchBranchProtectionRules
+
 	err := json.Unmarshal([]byte(stdOut), &bpr)
 	if err != nil {
 		utils.BailOut(err, "failed to parse the branch protection rules")
 	}
+
 	return bpr
 }
 
@@ -184,6 +186,7 @@ func transformBranchProtectionRules(bpr fetchBranchProtectionRules) updateUpdate
 	for _, team := range bpr.Restrictions.Teams {
 		ubpr.Restrictions.Teams = append(ubpr.Restrictions.Teams, team.Name)
 	}
+
 	return ubpr
 }
 
