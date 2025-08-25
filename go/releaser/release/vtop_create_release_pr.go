@@ -48,8 +48,11 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 	}
 
 	var done bool
+
 	var url string
+
 	var commitCount int
+
 	return pl, func() string {
 		defer func() {
 			state.Issue.VtopCreateReleasePR.Done = done
@@ -75,6 +78,7 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 		if hasGoUpgradePR {
 			prNb := github.URLToNb(state.Issue.VtopUpdateGolang.URL)
 			pl.NewStepf("Checking if %s is merged. Please merge it if not already done. This step will timeout in 2 minutes.", state.Issue.VtopUpdateGolang.URL)
+
 			timeout := time.After(2 * time.Minute)
 		outer:
 			for {
@@ -100,12 +104,15 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 
 		// 4. Look for existing PRs
 		pl.NewStepf("Look for an existing Release Pull Request named '%s'", releasePRName)
+
 		if _, url = github.FindPR(state.VtOpRelease.Repo, releasePRName); url != "" {
 			pl.TotalSteps = 5
 			if hasGoUpgradePR {
 				pl.TotalSteps += 2
 			}
+
 			pl.NewStepf("An opened Release Pull Request was found: %s", url)
+
 			done = true
 
 			return url
@@ -118,8 +125,10 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 		// 6. Update the vitess golang dependency with the new vitess tag
 		pl.NewStepf("Update the golang dependency of vitess to tag %s", strings.ToLower(state.VitessRelease.Release))
 		updateVitessDeps(state)
+
 		if !git.CommitAll(fmt.Sprintf("Set vitess golang dependencies to %s", strings.ToLower(state.VitessRelease.Release))) {
 			commitCount++
+
 			git.Push(state.VtOpRelease.Remote, newBranchName)
 		}
 
@@ -129,8 +138,10 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 		// 7. Update the version file of vtop
 		pl.NewStepf("Update version file to %s", lowerReleaseName)
 		code_freeze.UpdateVtOpVersionGoFile(lowerReleaseName)
+
 		if !git.CommitAll(fmt.Sprintf("Update the version file to %s", lowerReleaseName)) {
 			commitCount++
+
 			git.Push(state.VtOpRelease.Remote, newBranchName)
 		}
 
@@ -143,14 +154,17 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 		// 9. Update test code with proper images
 		pl.NewStepf("Update vitess-operator test code to use proper images")
 		updateVtopTests(vitessPreviousRelease, strings.ToLower(state.VitessRelease.Release))
-		if !git.CommitAll(fmt.Sprintf("Update test code to use proper image")) {
+
+		if !git.CommitAll("Update test code to use proper image") {
 			commitCount++
+
 			git.Push(state.VtOpRelease.Remote, newBranchName)
 		}
 
 		if commitCount > 0 {
 			// 10. Create the Pull Request
 			pl.NewStepf("Create Pull Request")
+
 			pr := github.PR{
 				Title:  releasePRName,
 				Body:   fmt.Sprintf("This Pull Request contains all the code for the %s release of vtop. You must must squash merge this PR as the resulting commit SHA will be used to tag the release.", lowerReleaseName),
@@ -165,6 +179,7 @@ func VtopCreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func(
 		}
 
 		done = true
+
 		return url
 	}
 }
@@ -223,6 +238,7 @@ func updateVtopTests(vitessPreviousVersion, vitessNewVersion string) {
 	for _, file := range testFiles {
 		filesBackups = append(filesBackups, fmt.Sprintf("%s.bak", file))
 	}
+
 	filesBackups = append(filesBackups, vtopInitialClusterFile+".bak")
 	filesBackups = append(filesBackups, vtopDefaultsFile+".bak")
 	args = append([]string{"-f"}, filesBackups...)
@@ -231,18 +247,22 @@ func updateVtopTests(vitessPreviousVersion, vitessNewVersion string) {
 
 func vtopTestFiles() []string {
 	var files []string
+
 	root := "./test/endtoend/operator/"
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
+
 		if strings.HasSuffix(path, ".yaml") && !strings.Contains(path, "101_initial_cluster.yaml") {
 			files = append(files, path)
 		}
+
 		return nil
 	})
 	if err != nil {
 		utils.BailOut(err, "failed to walk directory %s", root)
 	}
+
 	return files
 }

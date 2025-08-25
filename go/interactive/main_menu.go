@@ -22,6 +22,7 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
+
 	"github.com/vitessio/vitess-releaser/go/interactive/code_freeze"
 	"github.com/vitessio/vitess-releaser/go/interactive/post_release"
 	"github.com/vitessio/vitess-releaser/go/interactive/pre_release"
@@ -40,7 +41,6 @@ func blankLineMenu() *ui.MenuItem {
 }
 
 func MainScreen(ctx context.Context, state *releaser.State) {
-
 	prereqMenu := ui.NewMenu(
 		ctx,
 		"Prerequisites",

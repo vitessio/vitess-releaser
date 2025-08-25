@@ -31,5 +31,9 @@ func CurrentUser() string {
 		utils.BailOut(err, "failed to parse the current user, got: %s", exec)
 	}
 
-	return x["login"].(string)
+	login, ok := x["login"].(string)
+	if !ok {
+		utils.BailOut(nil, "failed to get login string from GitHub user response")
+	}
+	return login
 }

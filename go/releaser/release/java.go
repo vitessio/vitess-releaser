@@ -48,13 +48,16 @@ func JavaRelease(state *releaser.State) (*logging.ProgressLogging, func() string
 			if state.VitessRelease.MajorReleaseNb <= 21 {
 				script += "-DskipTests"
 			}
+
 			script += ";"
 
 			cmd := exec.Command("/bin/sh", "-c", script)
+
 			pwd, err := os.Getwd()
 			if err != nil {
 				utils.BailOut(err, "failed to get current working directory")
 			}
+
 			cmd.Dir = path.Join(pwd, "/java")
 			out, err := cmd.CombinedOutput()
 			if err != nil {
@@ -63,6 +66,7 @@ func JavaRelease(state *releaser.State) (*logging.ProgressLogging, func() string
 		} else {
 			pl.NewStepf("Running in non-live mode, skipping the actual Java release.")
 		}
+
 		pl.NewStepf("Done")
 
 		state.Issue.JavaRelease = true
@@ -71,6 +75,7 @@ func JavaRelease(state *releaser.State) (*logging.ProgressLogging, func() string
 		issueLink := fn()
 
 		pl.NewStepf("Issue updated, see: %s", issueLink)
+
 		return ""
 	}
 }

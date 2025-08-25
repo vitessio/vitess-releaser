@@ -27,7 +27,7 @@ func CobraDocs(state *releaser.State) []string {
 		"Regenerate cobra cli docs by running the following in the root of the website repo:\n",
 		fmt.Sprintf("\t$> export COBRADOC_VERSION_PAIRS=\"v%s:%s.0\"",
 			releaser.RemoveRCFromReleaseTitle(state.VitessRelease.Release), state.VitessRelease.MajorRelease),
-		fmt.Sprintf("\t$> make generated-docs"),
+		"\t$> make generated-docs",
 		"",
 	}
 }

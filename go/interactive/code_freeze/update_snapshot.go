@@ -20,6 +20,7 @@ import (
 	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
+
 	"github.com/vitessio/vitess-releaser/go/interactive/ui"
 	"github.com/vitessio/vitess-releaser/go/releaser"
 	"github.com/vitessio/vitess-releaser/go/releaser/code_freeze"
@@ -29,9 +30,11 @@ import (
 func UpdateSnapshotOnMainMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
 	act := updateSnapshotOnMainAct
+
 	if state.Issue.UpdateSnapshotOnMain.Done {
 		act = nil
 	}
+
 	return &ui.MenuItem{
 		State:  state,
 		Name:   steps.UpdateSnapshotOnMain,
@@ -56,11 +59,13 @@ func updateSnapshotOnMainUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea
 
 	mi.Info = mi.State.Issue.UpdateSnapshotOnMain.URL
 	mi.IsDone = mi.State.Issue.UpdateSnapshotOnMain.Done
+
 	return mi, nil
 }
 
 func updateSnapshotOnMainAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
 	pl, update := code_freeze.UpdateSnapshotOnMain(mi.State)
+
 	return mi, tea.Batch(func() tea.Msg {
 		return updateSnapshotOnMainUrl(update())
 	}, ui.PushDialog(ui.NewProgressDialog("Update SNAPSHOT on main", pl)))

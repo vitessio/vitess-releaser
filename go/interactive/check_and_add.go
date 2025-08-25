@@ -20,6 +20,7 @@ import (
 	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
+
 	"github.com/vitessio/vitess-releaser/go/interactive/ui"
 	"github.com/vitessio/vitess-releaser/go/releaser"
 	"github.com/vitessio/vitess-releaser/go/releaser/prerequisite"
@@ -30,6 +31,7 @@ type checkAndAdd string
 
 func checkAndAddMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
+
 	return &ui.MenuItem{
 		State:               state,
 		Name:                steps.CheckAndAdd,
@@ -46,7 +48,9 @@ func initCheckAndAdd(mi *ui.MenuItem) tea.Cmd {
 	if mi.State.IssueLink == "" {
 		return nil
 	}
+
 	_, add := prerequisite.CheckAndAddPRsIssues(mi.State)
+
 	return func() tea.Msg {
 		return checkAndAdd(add())
 	}
@@ -56,7 +60,9 @@ func actCheckAndAdd(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
 	if mi.State.IssueLink == "" {
 		return mi, nil
 	}
+
 	pl, add := prerequisite.CheckAndAddPRsIssues(mi.State)
+
 	return mi, tea.Batch(func() tea.Msg {
 		return checkAndAdd(add())
 	}, ui.PushDialog(ui.NewProgressDialog("", pl)))
@@ -71,5 +77,6 @@ func checkAndAddUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
 	outStr := string(out)
 	mi.Info = outStr
 	mi.IsDone = mi.State.Issue.CheckBackport.Done() && mi.State.Issue.ReleaseBlocker.Done()
+
 	return mi, nil
 }

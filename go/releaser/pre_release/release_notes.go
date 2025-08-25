@@ -59,9 +59,7 @@ type (
 	}
 )
 
-var (
-	releaseNotesPathPrefix = `changelog/`
-)
+var releaseNotesPathPrefix = `changelog/`
 
 const (
 	releaseNotesPathGitHub = `https://github.com/%s/blob/main/`
@@ -128,6 +126,7 @@ func GetReleaseNotesDirPathForMajor(version string) string {
 func getSegmentOfReleaseNotesDir(version string) (prefix string, major string, patch string) {
 	// There should be 4 sub-matches, input: "14.0.0", output: ["14.0.0", "14", "0", "0"].
 	rx := regexp.MustCompile(`([0-9]+)\.([0-9]+)\.([0-9]+)`)
+
 	versionMatch := rx.FindStringSubmatch(version)
 	if len(versionMatch) != 4 {
 		utils.BailOut(nil, "could not parse the release version when generating the release notes")
@@ -135,6 +134,7 @@ func getSegmentOfReleaseNotesDir(version string) (prefix string, major string, p
 
 	majorVersion := versionMatch[1] + "." + versionMatch[2]
 	patchVersion := versionMatch[1] + "." + versionMatch[2] + "." + versionMatch[3]
+
 	return releaseNotesPathPrefix, majorVersion, patchVersion
 }
 
@@ -193,23 +193,27 @@ func (rn *releaseNote) generate() {
 	changeLogPath := path.Join(rn.SubDirPath, "changelog.md")
 	releaseNotesPath := path.Join(rn.SubDirPath, "release_notes.md")
 	rn.PathToChangeLogFileOnGH = fmt.Sprintf(releaseNotesPathGitHub, rn.ctx.VitessRelease.Repo) + changeLogPath
-	rnFile, err := os.OpenFile(releaseNotesPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+
+	rnFile, err := os.OpenFile(releaseNotesPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o666)
 	if err != nil {
 		utils.BailOut(err, "could not open file %s", releaseNotesPath)
 	}
 
 	t := template.Must(template.New("release_notes").Parse(markdownTemplate))
+
 	err = t.ExecuteTemplate(rnFile, "release_notes", rn)
 	if err != nil {
 		utils.BailOut(err, "could not execute the release notes template")
 	}
 
 	// Generate the changelog
-	changelogFile, err := os.OpenFile(changeLogPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+	changelogFile, err := os.OpenFile(changeLogPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o666)
 	if err != nil {
 		utils.BailOut(err, "could not open changelog file %s", changeLogPath)
 	}
+
 	t = template.Must(template.New("release_notes_changelog").Parse(markdownTemplateChangelog))
+
 	err = t.ExecuteTemplate(changelogFile, "release_notes_changelog", rn)
 	if err != nil {
 		utils.BailOut(err, "could not execute the changelog template")
@@ -221,6 +225,7 @@ func groupPRs(prs []github.PR) prsByType {
 
 	for _, info := range prs {
 		var typ, component string
+
 		for _, lbl := range info.Labels {
 			switch {
 			case strings.HasPrefix(lbl.Name, prefixType):
@@ -229,6 +234,7 @@ func groupPRs(prs []github.PR) prsByType {
 				component = strings.TrimPrefix(lbl.Name, prefixComponent)
 			}
 		}
+
 		switch typ {
 		case "":
 			typ = "Other"
@@ -239,6 +245,7 @@ func groupPRs(prs []github.PR) prsByType {
 		if component == "" {
 			component = "Other"
 		}
+
 		components, exists := prPerType[typ]
 		if !exists {
 			components = prsByComponent{}
@@ -248,15 +255,18 @@ func groupPRs(prs []github.PR) prsByType {
 		prsPerComponentAndType := components[component]
 		components[component] = append(prsPerComponentAndType, info)
 	}
+
 	return prPerType
 }
 
 func createSortedPrTypeSlice(prPerType prsByType) []sortedPRType {
 	var data []sortedPRType
+
 	for typeKey, typeElem := range prPerType {
 		newPrType := sortedPRType{
 			Name: typeKey,
 		}
+
 		for componentKey, prInfos := range typeElem {
 			newComponent := sortedPRComponent{
 				Name:    componentKey,
@@ -265,16 +275,21 @@ func createSortedPrTypeSlice(prPerType prsByType) []sortedPRType {
 			sort.Slice(newComponent.PrInfos, func(i, j int) bool {
 				return newComponent.PrInfos[i].Number < newComponent.PrInfos[j].Number
 			})
+
 			newPrType.Components = append(newPrType.Components, newComponent)
 		}
+
 		sort.Slice(newPrType.Components, func(i, j int) bool {
 			return newPrType.Components[i].Name < newPrType.Components[j].Name
 		})
+
 		data = append(data, newPrType)
 	}
+
 	sort.Slice(data, func(i, j int) bool {
 		return data[i].Name < data[j].Name
 	})
+
 	return data
 }
 
@@ -283,6 +298,7 @@ func releaseSummary(summaryFile string) string {
 	if err != nil {
 		utils.BailOut(err, "failed to read file %s", summaryFile)
 	}
+
 	return string(contentSummary)
 }
 
@@ -291,9 +307,11 @@ func getStringForPullRequestInfos(repo string, prPerType prsByType) string {
 
 	t := template.Must(template.New("markdownTemplatePR").Parse(fmt.Sprintf(markdownTemplatePR, repo)))
 	buff := bytes.Buffer{}
+
 	if err := t.ExecuteTemplate(&buff, "markdownTemplatePR", data); err != nil {
 		utils.BailOut(err, "failed to execute the pull request list template")
 	}
+
 	return buff.String()
 }
 
@@ -301,11 +319,14 @@ func getStringForKnownIssues(issues []github.Issue) string {
 	if len(issues) == 0 {
 		return ""
 	}
+
 	t := template.Must(template.New("markdownTemplateKnownIssues").Parse(markdownTemplateKnownIssues))
 	buff := bytes.Buffer{}
+
 	if err := t.ExecuteTemplate(&buff, "markdownTemplateKnownIssues", issues); err != nil {
 		utils.BailOut(err, "failed to execute the known issues template")
 	}
+
 	return buff.String()
 }
 
@@ -315,5 +336,6 @@ func groupAndStringifyPullRequest(repo string, prs []github.PR) string {
 	}
 
 	prPerType := groupPRs(prs)
+
 	return getStringForPullRequestInfos(repo, prPerType)
 }

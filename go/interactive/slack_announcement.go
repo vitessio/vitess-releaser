@@ -20,6 +20,7 @@ import (
 	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
+
 	"github.com/vitessio/vitess-releaser/go/interactive/ui"
 	"github.com/vitessio/vitess-releaser/go/releaser"
 	"github.com/vitessio/vitess-releaser/go/releaser/slack"
@@ -40,8 +41,11 @@ func slackAnnouncementMenuItem(ctx context.Context, announcementType slackAnnoun
 	state := releaser.UnwrapState(ctx)
 
 	var name string
+
 	var act func(*ui.MenuItem) (*ui.MenuItem, tea.Cmd)
+
 	var isDone bool
+
 	switch announcementType {
 	case slackAnnouncementPreRequisite:
 		act = slackAnnouncementPreRequisiteAct
@@ -87,17 +91,21 @@ func slackAnnouncementUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cm
 		if string(msg) != mi.Name {
 			return mi, nil
 		}
+
 		if mi.Name == steps.SlackAnnouncement {
 			mi.State.Issue.SlackPreRequisite = !mi.State.Issue.SlackPreRequisite
 		} else if mi.Name == steps.SlackAnnouncementPost {
 			mi.State.Issue.SlackPostRelease = !mi.State.Issue.SlackPostRelease
 		}
+
 		mi.IsDone = !mi.IsDone
 		pl, fn := mi.State.UploadIssue()
+
 		return mi, tea.Batch(func() tea.Msg {
 			fn()
 			return tea.Msg("")
 		}, ui.PushDialog(ui.NewProgressDialog("Updating the Release Issue", pl)))
 	}
+
 	return mi, nil
 }

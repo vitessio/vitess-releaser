@@ -23,6 +23,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	tbl "github.com/charmbracelet/lipgloss/table"
+
 	"github.com/vitessio/vitess-releaser/go/interactive/state"
 	"github.com/vitessio/vitess-releaser/go/releaser"
 	"github.com/vitessio/vitess-releaser/go/releaser/steps"
@@ -62,15 +63,19 @@ var columns = []string{"TASK", "STATUS", "INFO"}
 
 func NewMenu(ctx context.Context, title string, items ...*MenuItem) *Menu {
 	var mi []*MenuItem
+
 	for i, item := range items {
 		if item.Ignore {
 			continue
 		}
+
 		if i > 0 && len(mi) > 0 {
 			item.previous = mi[len(mi)-1]
 		}
+
 		mi = append(mi, item)
 	}
+
 	return &Menu{
 		state:   releaser.UnwrapState(ctx),
 		columns: columns,
@@ -99,9 +104,11 @@ func (m *Menu) isNextTaskDone(i int) bool {
 			break
 		}
 	}
+
 	if i == len(m.Items) {
 		return true
 	}
+
 	return m.Items[i].IsDone
 }
 
@@ -110,25 +117,31 @@ func (m *Menu) At(row, cell int) string {
 	if item.Name == "" {
 		return ""
 	}
+
 	if cell == 1 {
 		if len(item.SubItems) > 0 {
 			done := 0
+
 			for _, subItem := range item.SubItems {
 				if subItem.IsDone {
 					done++
 				}
 			}
+
 			nb := len(item.SubItems)
 			if done == nb {
 				item.IsDone = state.Done
 			}
+
 			if !item.IsDone {
 				return fmt.Sprintf("%s %d/%d", state.Fmt(item.IsDone), done, nb)
 			}
+
 			msg := fmt.Sprintf("%s %d/%d", state.Fmt(item.IsDone), done, nb)
 			if item.IsDone {
 				msg += " \U0001f44d"
 			}
+
 			return msg
 		}
 
@@ -137,13 +150,16 @@ func (m *Menu) At(row, cell int) string {
 		if item.IsDone {
 			msg += " \U0001f44d"
 		}
+
 		return msg
 	}
+
 	if cell == 2 {
 		return item.Info
 	}
 
 	var prefix string
+
 	switch {
 	case m.idx != row:
 		prefix = "   " // this is not the line we are standing on
@@ -166,17 +182,20 @@ func (m *Menu) Columns() int {
 
 func (m *Menu) Init() tea.Cmd {
 	var cmds []tea.Cmd
+
 	for idx, mi := range m.Items {
 		if mi.Init != nil {
 			cmds = append(cmds, mi.Init(mi))
 			m.Items[idx].Init = nil
 		}
 	}
+
 	return tea.Batch(cmds...)
 }
 
 func (m *Menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	size := len(m.Items)
+
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
@@ -203,21 +222,26 @@ func (m *Menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if selected.isActBlocked(m.Sequential) {
 				return m, nil
 			}
+
 			var cmd tea.Cmd
 			m.Items[m.idx], cmd = selected.Act(selected)
+
 			return m, cmd
 		}
 	default:
 		var cmds []tea.Cmd
+
 		for idx, mi := range m.Items {
 			if mi.Update != nil {
 				newMi, cmd := mi.Update(mi, msg)
 				m.Items[idx] = newMi
+
 				if cmd != nil {
 					cmds = append(cmds, cmd)
 				}
 			}
 		}
+
 		return m, tea.Batch(cmds...)
 	}
 
@@ -228,6 +252,7 @@ func (mi *MenuItem) isActBlocked(sequential bool) bool {
 	if mi.Act == nil {
 		return true
 	}
+
 	if !sequential {
 		return false
 	}
@@ -240,6 +265,7 @@ func (mi *MenuItem) isActBlocked(sequential bool) bool {
 			break
 		}
 	}
+
 	return currMenuItem != nil && !currMenuItem.IsDone
 }
 
@@ -282,5 +308,6 @@ func (m *Menu) Done() bool {
 			return state.ToDo
 		}
 	}
+
 	return state.Done
 }

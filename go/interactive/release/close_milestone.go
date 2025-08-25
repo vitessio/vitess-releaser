@@ -20,6 +20,7 @@ import (
 	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
+
 	"github.com/vitessio/vitess-releaser/go/interactive/ui"
 	"github.com/vitessio/vitess-releaser/go/releaser"
 	"github.com/vitessio/vitess-releaser/go/releaser/release"
@@ -29,9 +30,11 @@ import (
 func CloseMilestoneItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
 	act := closeMilestoneAct
+
 	if state.Issue.CloseMilestone.Done {
 		act = nil
 	}
+
 	return &ui.MenuItem{
 		State:  state,
 		Name:   steps.CloseMilestone,
@@ -55,11 +58,13 @@ func closeMilestoneUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) 
 
 	mi.Info = mi.State.Issue.CloseMilestone.URL
 	mi.IsDone = mi.State.Issue.CloseMilestone.Done
+
 	return mi, nil
 }
 
 func closeMilestoneAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
 	pl, back := release.CloseMilestone(mi.State)
+
 	return mi, tea.Batch(func() tea.Msg {
 		return closeMilestoneUrl(back())
 	}, ui.PushDialog(ui.NewProgressDialog("Close Milestone", pl)))

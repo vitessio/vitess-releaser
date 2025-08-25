@@ -31,11 +31,14 @@ func BackToDevModeOnBranch(state *releaser.State, itemToUpdate *releaser.ItemWit
 	}
 
 	var done bool
+
 	var url string
+
 	return pl, func() string {
 		defer func() {
 			itemToUpdate.Done = done
 			itemToUpdate.URL = url
+
 			pl.NewStepf("Update Issue %s on GitHub", state.IssueLink)
 			_, fn := state.UploadIssue()
 			issueLink := fn()
@@ -62,10 +65,13 @@ func BackToDevModeOnBranch(state *releaser.State, itemToUpdate *releaser.ItemWit
 
 		// look for existing PRs
 		pl.NewStepf("Look for an existing Pull Request named '%s'", backToDevModePRName)
+
 		if _, url = github.FindPR(state.VitessRelease.Repo, backToDevModePRName); url != "" {
 			pl.TotalSteps = 5 // only 5 total steps in this situation
 			pl.NewStepf("An opened Pull Request was found: %s", url)
+
 			done = true
+
 			return url
 		}
 
@@ -79,15 +85,20 @@ func BackToDevModeOnBranch(state *releaser.State, itemToUpdate *releaser.ItemWit
 		releaser.UpdateJavaDir(devModeRelease)
 
 		pl.NewStepf("Commit and push to branch %s", newBranchName)
+
 		if git.CommitAll(fmt.Sprintf("Back to dev mode: %s", backToDevModePRName)) {
 			pl.TotalSteps = 9 // only 9 total steps in this situation
 			pl.NewStepf("Nothing to commit, seems like back to dev mode is already done")
+
 			done = true
+
 			return ""
 		}
+
 		git.Push(state.VitessRelease.Remote, newBranchName)
 
 		pl.NewStepf("Create Pull Request")
+
 		pr := github.PR{
 			Title:  backToDevModePRName,
 			Body:   fmt.Sprintf("Includes the changes required to go back into dev mode (v%s) after the release of v%s.", devModeRelease, state.VitessRelease.Release),
@@ -97,7 +108,9 @@ func BackToDevModeOnBranch(state *releaser.State, itemToUpdate *releaser.ItemWit
 		}
 		_, url = pr.Create(state.IssueLink, state.VitessRelease.Repo)
 		pl.NewStepf("Pull Request created %s", url)
+
 		done = true
+
 		return ""
 	}
 }

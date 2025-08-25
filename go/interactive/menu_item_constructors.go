@@ -19,6 +19,8 @@ package interactive
 import (
 	"context"
 	"fmt"
+	"reflect"
+
 	"github.com/vitessio/vitess-releaser/go/interactive/ui"
 	"github.com/vitessio/vitess-releaser/go/releaser"
 	"github.com/vitessio/vitess-releaser/go/releaser/code_freeze"
@@ -27,11 +29,11 @@ import (
 	"github.com/vitessio/vitess-releaser/go/releaser/release"
 	"github.com/vitessio/vitess-releaser/go/releaser/steps"
 	"github.com/vitessio/vitess-releaser/go/releaser/utils"
-	"reflect"
 )
 
 func checkSummaryMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
+
 	return newBooleanMenu(
 		ctx,
 		prerequisite.CheckSummary(state),
@@ -43,6 +45,7 @@ func checkSummaryMenuItem(ctx context.Context) *ui.MenuItem {
 
 func draftBlogPostMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
+
 	return newBooleanMenu(
 		ctx,
 		releaser.DraftBlogPost(),
@@ -54,6 +57,7 @@ func draftBlogPostMenuItem(ctx context.Context) *ui.MenuItem {
 
 func requestCrossPostBlogPostMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
+
 	return newBooleanMenu(
 		ctx,
 		releaser.RequestCrossPostBlogPost(),
@@ -65,6 +69,7 @@ func requestCrossPostBlogPostMenuItem(ctx context.Context) *ui.MenuItem {
 
 func vtopUpdateCompatibilityTableMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
+
 	return newBooleanMenu(
 		ctx,
 		code_freeze.VtopUpdateCompatibilityTable(state),
@@ -76,6 +81,7 @@ func vtopUpdateCompatibilityTableMenuItem(ctx context.Context) *ui.MenuItem {
 
 func websiteDocumentationItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
+
 	return newBooleanMenu(
 		ctx,
 		release.WebsiteDocs(state),
@@ -87,6 +93,7 @@ func websiteDocumentationItem(ctx context.Context) *ui.MenuItem {
 
 func benchmarkedItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
+
 	return newBooleanMenu(
 		ctx,
 		release.BenchmarkedMessage(),
@@ -98,6 +105,7 @@ func benchmarkedItem(ctx context.Context) *ui.MenuItem {
 
 func dockerImagesItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
+
 	return newBooleanMenu(
 		ctx,
 		release.CheckDockerMessage(state),
@@ -109,6 +117,7 @@ func dockerImagesItem(ctx context.Context) *ui.MenuItem {
 
 func twitterMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
+
 	return newBooleanMenu(
 		ctx,
 		post_release.TwitterAnnouncement(),
@@ -120,6 +129,7 @@ func twitterMenuItem(ctx context.Context) *ui.MenuItem {
 
 func createBlogPostPRMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
+
 	return newBooleanMenu(
 		ctx,
 		releaser.CreateBlogPostPR(),
@@ -131,6 +141,7 @@ func createBlogPostPRMenuItem(ctx context.Context) *ui.MenuItem {
 
 func mergeBlogPostPRMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
+
 	return newBooleanMenu(
 		ctx,
 		releaser.MergeBlogPostPR(),
@@ -165,16 +176,19 @@ func simpleMenuItem(ctx context.Context, issueFieldName string, msgs []string, s
 
 func getFieldVal(issue *releaser.Issue, issueFieldName string, logMsg string) reflect.Value {
 	v := reflect.ValueOf(issue).Elem()
+
 	fieldVal := v.FieldByName(issueFieldName)
 	if !fieldVal.IsValid() {
-		utils.BailOut(fmt.Errorf("no such field: %s", issueFieldName), logMsg)
+		utils.BailOut(fmt.Errorf("no such field: %s", issueFieldName), "%s", logMsg)
 	}
+
 	if fieldVal.Kind() != reflect.Bool {
-		utils.BailOut(fmt.Errorf("field %s is not of type bool", issueFieldName), logMsg)
+		utils.BailOut(fmt.Errorf("field %s is not of type bool", issueFieldName), "%s", logMsg)
 	}
 
 	if !fieldVal.CanSet() {
-		utils.BailOut(fmt.Errorf("cannot set field: %s", issueFieldName), logMsg)
+		utils.BailOut(fmt.Errorf("cannot set field: %s", issueFieldName), "%s", logMsg)
 	}
+
 	return fieldVal
 }

@@ -20,6 +20,7 @@ import (
 	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
+
 	"github.com/vitessio/vitess-releaser/go/interactive/ui"
 	"github.com/vitessio/vitess-releaser/go/releaser"
 	"github.com/vitessio/vitess-releaser/go/releaser/code_freeze"
@@ -29,9 +30,11 @@ import (
 func CodeFreezeMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
 	act := codeFreezeAct
+
 	if state.Issue.CodeFreeze.Done {
 		act = nil
 	}
+
 	return &ui.MenuItem{
 		State:  state,
 		Name:   steps.CodeFreeze,
@@ -56,11 +59,13 @@ func codeFreezeUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
 
 	mi.Info = mi.State.Issue.CodeFreeze.URL
 	mi.IsDone = mi.State.Issue.CodeFreeze.Done
+
 	return mi, nil
 }
 
 func codeFreezeAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
 	pl, freeze := code_freeze.CodeFreeze(mi.State)
+
 	return mi, tea.Batch(func() tea.Msg {
 		return codeFreezeUrl(freeze())
 	}, ui.PushDialog(ui.NewProgressDialog("Code freeze", pl)))

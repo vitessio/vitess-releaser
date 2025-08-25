@@ -20,6 +20,7 @@ import (
 	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
+
 	"github.com/vitessio/vitess-releaser/go/interactive/ui"
 	"github.com/vitessio/vitess-releaser/go/releaser"
 	"github.com/vitessio/vitess-releaser/go/releaser/pre_release"
@@ -29,9 +30,11 @@ import (
 func CreateReleasePRMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
 	act := createReleasePRAct
+
 	if state.Issue.CreateReleasePR.Done {
 		act = nil
 	}
+
 	return &ui.MenuItem{
 		State:  state,
 		Name:   steps.CreateReleasePR,
@@ -52,11 +55,13 @@ func createReleasePRUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd)
 
 	mi.Info = mi.State.Issue.CreateReleasePR.URL
 	mi.IsDone = mi.State.Issue.CreateReleasePR.Done
+
 	return mi, nil
 }
 
 func createReleasePRAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
 	pl, fn := pre_release.CreateReleasePR(mi.State)
+
 	return mi, tea.Batch(func() tea.Msg {
 		return createReleasePRUrl(fn())
 	}, ui.PushDialog(ui.NewProgressDialog("Create the Release Pull Request", pl)))

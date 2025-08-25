@@ -27,15 +27,16 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-version"
+
 	"github.com/vitessio/vitess-releaser/go/cmd"
 )
 
-// Struct to hold the GitHub API response
+// Struct to hold the GitHub API response.
 type githubRelease struct {
 	TagName string `json:"tag_name"`
 }
 
-// getLatestVersionFromGitHub queries the GitHub API for the latest release version
+// getLatestVersionFromGitHub queries the GitHub API for the latest release version.
 func getLatestVersionFromGitHub() (string, error) {
 	const url = "https://api.github.com/repos/vitessio/vitess-releaser/releases/latest"
 
@@ -47,7 +48,12 @@ func getLatestVersionFromGitHub() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("error fetching latest release info: %w", err)
 	}
-	defer resp.Body.Close()
+
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Printf("Failed to close response body: %v", err)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("failed to fetch latest version, status code: %d", resp.StatusCode)
@@ -61,7 +67,7 @@ func getLatestVersionFromGitHub() (string, error) {
 	return release.TagName, nil
 }
 
-// compareVersions checks if the current version is the latest and prints a message
+// compareVersions checks if the current version is the latest and prints a message.
 func compareVersions() {
 	latestVersionStr, err := getLatestVersionFromGitHub()
 	if err != nil {
@@ -82,7 +88,7 @@ func compareVersions() {
 	if currentVersion.LessThan(latestVersion) {
 		fmt.Printf("A new version of the tool is available: %s (you have %s)\n", latestVersionStr, cmd.VERSION)
 		fmt.Println("Please update to the latest version.")
-		fmt.Println("\n\tgo install github.com/vitessio/vitess-releaser@latest\n")
+		fmt.Println("\n\tgo install github.com/vitessio/vitess-releaser@latest")
 		os.Exit(1)
 	}
 }
@@ -92,6 +98,7 @@ func compareVersions() {
 func restoreTerminal() {
 	cmdSane := exec.Command("stty", "sane")
 	cmdSane.Stdin = os.Stdin
+
 	if err := cmdSane.Run(); err != nil {
 		fmt.Println("Failed to restore terminal to sane state:", err)
 	}

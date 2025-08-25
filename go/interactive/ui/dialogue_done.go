@@ -22,6 +22,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
+
 	"github.com/vitessio/vitess-releaser/go/interactive/state"
 )
 
@@ -46,6 +47,7 @@ func (c *DoneDialog) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		c.height = msg.Height
 		c.width = msg.Width
+
 		return c, nil
 
 	case tea.KeyMsg:

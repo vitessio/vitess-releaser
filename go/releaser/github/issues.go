@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	gh "github.com/cli/go-gh"
+
 	"github.com/vitessio/vitess-releaser/go/releaser/git"
 	"github.com/vitessio/vitess-releaser/go/releaser/utils"
 )
@@ -33,6 +34,7 @@ func execGh(args ...string) string {
 		cmd := append([]string{"gh"}, strings.Join(args, " "))
 		utils.BailOut(err, "failed to execute: %s, got: %s", strings.Join(cmd, " "), stdOut.String()+stdErr.String())
 	}
+
 	return stdOut.String()
 }
 
@@ -42,6 +44,7 @@ func execGhWithError(args ...string) (string, error) {
 		cmd := append([]string{"gh"}, strings.Join(args, " "))
 		return stdOut.String(), fmt.Errorf("%w: failed to execute: %s, got: %s", err, strings.Join(cmd, " "), stdOut.String()+stdErr.String())
 	}
+
 	return stdOut.String(), nil
 }
 
@@ -60,16 +63,17 @@ func CloseReleaseIssue(repo string, nb int) {
 		"--repo", repo,
 		strconv.Itoa(nb),
 		"--reason", "completed",
-		"--comment", fmt.Sprintf("Release completed."),
+		"--comment", "Release completed.",
 	)
 }
 
-// Create will open the issue on GitHub and return the link of the newly created issue
+// Create will open the issue on GitHub and return the link of the newly created issue.
 func (i *Issue) Create(repo string) string {
 	var labels []string
 	for _, label := range i.Labels {
 		labels = append(labels, label.Name)
 	}
+
 	stdOut := execGh(
 		"issue", "create",
 		"--repo", repo,
@@ -78,6 +82,7 @@ func (i *Issue) Create(repo string) string {
 		"--label", strings.Join(labels, ","),
 		"--assignee", i.Assignee,
 	)
+
 	return strings.ReplaceAll(stdOut, "\n", "")
 }
 
@@ -87,6 +92,7 @@ func (i *Issue) UpdateBody(repo string) string {
 		"--repo", repo,
 		strconv.Itoa(i.Number), "-b", i.Body,
 	)
+
 	return strings.ReplaceAll(stdOut, "\n", "")
 }
 
@@ -98,11 +104,14 @@ func GetIssueTitleAndBody(repo string, nb int) (string, string) {
 		"--json",
 		"title,body",
 	)
+
 	var i Issue
+
 	err := json.Unmarshal([]byte(stdOut), &i)
 	if err != nil {
 		utils.BailOut(err, "failed to parse the issue number %d, got: %s", nb, stdOut)
 	}
+
 	return i.Title, i.Body
 }
 
@@ -115,6 +124,7 @@ func GetReleaseIssue(repo, release string, rcIncrement int) (string, string) {
 	)
 
 	var issues []map[string]string
+
 	err := json.Unmarshal([]byte(stdOut), &issues)
 	if err != nil {
 		utils.BailOut(err, "failed to parse the release issue, got: %s", stdOut)
@@ -123,6 +133,7 @@ func GetReleaseIssue(repo, release string, rcIncrement int) (string, string) {
 	for _, issue := range issues {
 		title := issue["title"]
 		prefix := "Release of `v"
+
 		if strings.HasPrefix(title, fmt.Sprintf("%s%s", prefix, release)) {
 			// If we have an RC increment but the title does not match the RC increment we skip this issue
 			if rcIncrement > 0 && !strings.Contains(title, fmt.Sprintf("-RC%d", rcIncrement)) {
@@ -132,6 +143,7 @@ func GetReleaseIssue(repo, release string, rcIncrement int) (string, string) {
 			return issue["url"], strings.ReplaceAll(title[len(prefix):], "`", "")
 		}
 	}
+
 	return "", ""
 }
 
@@ -141,7 +153,9 @@ func GetReleaseIssueInfo(repo, majorRelease string, rcIncrement int) (nb int, ur
 		// no issue found
 		return 0, "", ""
 	}
+
 	nb = URLToNb(url)
+
 	return
 }
 
@@ -152,6 +166,7 @@ func URLToNb(url string) int {
 	if err != nil {
 		utils.BailOut(err, "failed to convert the end of the GitHub URL to a number, got: %s", issueNbStr)
 	}
+
 	return nb
 }
 
@@ -160,6 +175,7 @@ func FormatIssues(issues []Issue) []string {
 	for _, issue := range issues {
 		prFmt = append(prFmt, fmt.Sprintf(" -> %s  %s", issue.URL, issue.Title))
 	}
+
 	return prFmt
 }
 
@@ -167,7 +183,9 @@ func CheckReleaseBlockerIssues(repo, majorRelease string) map[string]any {
 	git.CorrectCleanRepo(repo)
 
 	stdOut := execGh("issue", "list", "--json", "title,url,labels", "--repo", repo)
+
 	var issues []Issue
+
 	err := json.Unmarshal([]byte(stdOut), &issues)
 	if err != nil {
 		utils.BailOut(err, "failed to parse the release blocker issue, got: %s", stdOut)
@@ -176,6 +194,7 @@ func CheckReleaseBlockerIssues(repo, majorRelease string) map[string]any {
 	var mustClose []Issue
 
 	branchName := fmt.Sprintf("release-%s.0", majorRelease)
+
 	for _, i := range issues {
 		for _, l := range i.Labels {
 			if strings.HasPrefix(l.Name, "Release Blocker: ") && strings.Contains(l.Name, branchName) {
@@ -185,11 +204,13 @@ func CheckReleaseBlockerIssues(repo, majorRelease string) map[string]any {
 	}
 
 	m := make(map[string]any, len(mustClose))
+
 	for _, pr := range mustClose {
 		nb := pr.URL[strings.LastIndex(pr.URL, "/")+1:]
 		markdownURL := fmt.Sprintf("#%s", nb)
 		m[markdownURL] = nil
 	}
+
 	return m
 }
 
@@ -204,9 +225,11 @@ func LoadKnownIssues(repo, majorRelease string) []Issue {
 	)
 
 	var knownIssues []Issue
+
 	err := json.Unmarshal([]byte(stdOut), &knownIssues)
 	if err != nil {
 		utils.BailOut(err, "failed to parse known issues, got: %s", stdOut)
 	}
+
 	return knownIssues
 }

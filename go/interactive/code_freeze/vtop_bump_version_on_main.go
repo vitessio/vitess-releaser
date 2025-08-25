@@ -20,6 +20,7 @@ import (
 	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
+
 	"github.com/vitessio/vitess-releaser/go/interactive/ui"
 	"github.com/vitessio/vitess-releaser/go/releaser"
 	"github.com/vitessio/vitess-releaser/go/releaser/code_freeze"
@@ -29,9 +30,11 @@ import (
 func VtopBumpMainVersionMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
 	act := vtopBumpMainVersionAct
+
 	if state.Issue.VtopBumpMainVersion.Done {
 		act = nil
 	}
+
 	return &ui.MenuItem{
 		State:  state,
 		Name:   steps.VtopBumpMainVersion,
@@ -54,11 +57,13 @@ func vtopBumpMainVersionUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.
 
 	mi.IsDone = mi.State.Issue.VtopBumpMainVersion.Done
 	mi.Info = mi.State.Issue.VtopBumpMainVersion.URL
+
 	return mi, nil
 }
 
 func vtopBumpMainVersionAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
 	pl, fn := code_freeze.VtopBumpMainVersion(mi.State)
+
 	return mi, tea.Batch(func() tea.Msg {
 		return vtopBumpMainVersionUrl(fn())
 	}, ui.PushDialog(ui.NewProgressDialog(steps.VtopBumpMainVersion, pl)))

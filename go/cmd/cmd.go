@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+
 	"github.com/vitessio/vitess-releaser/go/cmd/flags"
 	"github.com/vitessio/vitess-releaser/go/interactive"
 	"github.com/vitessio/vitess-releaser/go/releaser"
@@ -33,6 +34,8 @@ import (
 	"github.com/vitessio/vitess-releaser/go/releaser/github"
 	"github.com/vitessio/vitess-releaser/go/releaser/utils"
 )
+
+const unknownValue = "unknown"
 
 const VERSION = "v1.0.5"
 
@@ -83,10 +86,15 @@ func init() {
 
 func Execute() {
 	err := rootCmd.ParseFlags(os.Args)
+
 	if help {
-		_ = rootCmd.Help()
+		if err := rootCmd.Help(); err != nil {
+			fmt.Printf("Error showing help: %v\n", err)
+		}
+
 		os.Exit(0)
 	}
+
 	if err != nil {
 		utils.BailOutE(err)
 	}
@@ -98,7 +106,11 @@ func Execute() {
 	err = rootCmd.ValidateRequiredFlags()
 	if err != nil {
 		fmt.Println(err)
-		_ = rootCmd.Help()
+
+		if err := rootCmd.Help(); err != nil {
+			fmt.Printf("Error showing help: %v\n", err)
+		}
+
 		os.Exit(1)
 	}
 
@@ -166,6 +178,7 @@ func setUpVitessReleaseInformation(s *releaser.State, repo string, rc int) (rele
 	if vitessRelease.Release == "" {
 		vitessRelease.Release = releaser.AddRCToReleaseTitle(release, rcIncrement)
 	}
+
 	return vitessRelease, issueNb, issueLink
 }
 
@@ -189,6 +202,7 @@ func setUpVtOpReleaseInformation(s *releaser.State, repo string, rc int) release
 		ReleaseBranch:   releaseBranch,
 		IsLatestRelease: isLatestRelease,
 	}
+
 	return vtopRelease
 }
 
@@ -198,15 +212,22 @@ func setUpIssueDate(s *releaser.State) {
 	if s.IssueLink != "" {
 		return
 	}
+
 	if releaseDate == "" {
 		fmt.Println("--date flag missing")
-		_ = rootCmd.Help()
+
+		if err := rootCmd.Help(); err != nil {
+			fmt.Printf("Error showing help: %v\n", err)
+		}
+
 		os.Exit(1)
 	}
+
 	parsedReleaseDate, err := time.Parse(time.DateOnly, releaseDate)
 	if err != nil {
 		utils.BailOutE(err)
 	}
+
 	s.Issue.Date = parsedReleaseDate
 }
 
@@ -219,11 +240,13 @@ func getGitRepos() (vitessRepo, vtopRepo string) {
 		vitessRepo = currentGitHubUser + "/vitess"
 		vtopRepo = currentGitHubUser + "/vitess-operator"
 	}
+
 	return
 }
 
 func printVersionAndExit() {
 	fmt.Printf("\nvitess-releaser Version: %s\n", VERSION)
+
 	msg, _ := getGitCommit()
 	fmt.Printf("\nLast Commit: %s\n", msg)
 	os.Exit(0)
@@ -231,18 +254,22 @@ func printVersionAndExit() {
 
 func getGitCommit() (string, string) {
 	cmd := exec.Command("git", "show", "-s", "--format=%H%n%an%n%ae%n%ad%n%s", "HEAD")
+
 	out, err := cmd.Output()
 	if err != nil {
-		return "unknown", "unknown"
+		return unknownValue, unknownValue
 	}
+
 	parts := strings.SplitN(string(out), "\n", 5)
 	if len(parts) < 5 {
-		return "unknown", "unknown"
+		return unknownValue, unknownValue
 	}
+
 	commitHash := parts[0]
 	authorName := parts[1]
 	authorEmail := parts[2]
 	authorDate := parts[3]
 	commitMessage := parts[4]
+
 	return fmt.Sprintf("%s\nAuthor: %s <%s>\nDate: %s\n\n    %s", commitHash, authorName, authorEmail, authorDate, commitMessage), commitHash[:7]
 }

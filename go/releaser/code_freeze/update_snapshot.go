@@ -31,7 +31,9 @@ func UpdateSnapshotOnMain(state *releaser.State) (*logging.ProgressLogging, func
 	}
 
 	var done bool
+
 	var url string
+
 	return pl, func() string {
 		defer func() {
 			state.Issue.UpdateSnapshotOnMain.Done = done
@@ -55,10 +57,13 @@ func UpdateSnapshotOnMain(state *releaser.State) (*logging.ProgressLogging, func
 
 		// look for existing PRs
 		pl.NewStepf("Look for an existing Pull Request named '%s'", snapshotUpdatePRName)
+
 		if _, url = github.FindPR(state.VitessRelease.Repo, snapshotUpdatePRName); url != "" {
 			pl.TotalSteps = 5 // only 5 total steps in this situation
 			pl.NewStepf("An opened Pull Request was found: %s", url)
+
 			done = true
+
 			return url
 		}
 
@@ -72,15 +77,20 @@ func UpdateSnapshotOnMain(state *releaser.State) (*logging.ProgressLogging, func
 		releaser.UpdateJavaDir(snapshotRelease)
 
 		pl.NewStepf("Commit and push to branch %s", newBranchName)
+
 		if git.CommitAll(fmt.Sprintf("Snapshot update: %s", snapshotUpdatePRName)) {
 			pl.TotalSteps = 9 // only 9 total steps in this situation
 			pl.NewStepf("Nothing to commit, seems like back to dev mode is already done")
+
 			done = true
+
 			return ""
 		}
+
 		git.Push(state.VitessRelease.Remote, newBranchName)
 
 		pl.NewStepf("Create Pull Request")
+
 		pr := github.PR{
 			Title:  snapshotUpdatePRName,
 			Body:   fmt.Sprintf("Includes the changes required to update the SNAPSHOT version (v%s) after the release of v%s.", snapshotRelease, state.VitessRelease.Release),
@@ -90,7 +100,9 @@ func UpdateSnapshotOnMain(state *releaser.State) (*logging.ProgressLogging, func
 		}
 		_, url = pr.Create(state.IssueLink, state.VitessRelease.Repo)
 		pl.NewStepf("Pull Request created %s", url)
+
 		done = true
+
 		return ""
 	}
 }

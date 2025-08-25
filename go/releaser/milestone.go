@@ -31,11 +31,13 @@ func FindVersionAfterNextRelease(state *State) string {
 	}
 
 	segmentInts := make([]int, 0, len(segments))
+
 	for _, segment := range segments {
 		v, err := strconv.Atoi(segment)
 		if err != nil {
 			utils.BailOut(err, "failed to convert release number segment to number (%s)", segment)
 		}
+
 		segmentInts = append(segmentInts, v)
 	}
 

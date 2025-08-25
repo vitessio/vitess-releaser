@@ -44,6 +44,7 @@ func TagRelease(state *releaser.State) (*logging.ProgressLogging, func() string)
 		lowerCaseRelease := strings.ToLower(state.VitessRelease.Release)
 
 		pl.NewStepf("Create and push the tags")
+
 		gitTag := fmt.Sprintf("v%s", lowerCaseRelease)
 		git.TagAndPush(state.VitessRelease.Remote, gitTag)
 
@@ -53,14 +54,17 @@ func TagRelease(state *releaser.State) (*logging.ProgressLogging, func() string)
 		if len(nextReleaseSplit) != 3 {
 			utils.BailOut(nil, "%s was not formated x.x.x", state.VitessRelease.Release)
 		}
+
 		gdocGitTag := fmt.Sprintf("v0.%s.%s", nextReleaseSplit[0], nextReleaseSplit[2])
 		git.TagAndPush(state.VitessRelease.Remote, gdocGitTag)
 
 		pl.NewStepf("Create the release on the GitHub UI")
+
 		releaseNotesPath := path.Join(pre_release.GetReleaseNotesDirPath(releaser.RemoveRCFromReleaseTitle(state.VitessRelease.Release)), "release_notes.md")
 		url := github.CreateRelease(state.VitessRelease.Repo, gitTag, releaseNotesPath, state.VitessRelease.IsLatestRelease && state.Issue.RC == 0, state.Issue.RC > 0)
 
 		pl.NewStepf("Done %s", url)
+
 		state.Issue.TagRelease.Done = true
 		state.Issue.TagRelease.URL = url
 		pl.NewStepf("Update Issue %s on GitHub", state.IssueLink)
@@ -68,6 +72,7 @@ func TagRelease(state *releaser.State) (*logging.ProgressLogging, func() string)
 		issueLink := fn()
 
 		pl.NewStepf("Issue updated, see: %s", issueLink)
+
 		return url
 	}
 }

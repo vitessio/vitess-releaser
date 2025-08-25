@@ -20,6 +20,7 @@ import (
 	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
+
 	"github.com/vitessio/vitess-releaser/go/interactive/ui"
 	"github.com/vitessio/vitess-releaser/go/releaser"
 	"github.com/vitessio/vitess-releaser/go/releaser/steps"
@@ -34,9 +35,11 @@ import (
 func VtopUpdateGolangMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
 	act := vtopUpdateGolangAct
+
 	if state.Issue.VtopUpdateGolang.Done {
 		act = nil
 	}
+
 	return &ui.MenuItem{
 		State:  state,
 		Name:   steps.VtopUpdateGolang,
@@ -59,11 +62,13 @@ func vtopUpdateGolangUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd
 
 	mi.IsDone = mi.State.Issue.VtopUpdateGolang.Done
 	mi.Info = mi.State.Issue.VtopUpdateGolang.URL
+
 	return mi, nil
 }
 
 func vtopUpdateGolangAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
 	pl, freeze := pre_release.VtopUpdateGolang(mi.State)
+
 	return mi, tea.Batch(func() tea.Msg {
 		return vtopUpdateGolangUrl(freeze())
 	}, ui.PushDialog(ui.NewProgressDialog(steps.VtopUpdateGolang, pl)))

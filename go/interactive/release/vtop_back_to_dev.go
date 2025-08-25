@@ -20,6 +20,7 @@ import (
 	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
+
 	"github.com/vitessio/vitess-releaser/go/interactive/ui"
 	"github.com/vitessio/vitess-releaser/go/releaser"
 	"github.com/vitessio/vitess-releaser/go/releaser/release"
@@ -29,9 +30,11 @@ import (
 func VtopBackToDevModeItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
 	act := vtopBackToDevAct
+
 	if state.Issue.VtopBackToDevMode.Done {
 		act = nil
 	}
+
 	return &ui.MenuItem{
 		State:  state,
 		Name:   steps.VtopBackToDev,
@@ -54,11 +57,13 @@ func vtopBackToDevUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.Cmd) {
 
 	mi.IsDone = mi.State.Issue.VtopBackToDevMode.Done
 	mi.Info = mi.State.Issue.VtopBackToDevMode.URL
+
 	return mi, nil
 }
 
 func vtopBackToDevAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
 	pl, act := release.VtopBackToDev(mi.State)
+
 	return mi, tea.Batch(func() tea.Msg {
 		return vtopBackToDevUrl(act())
 	}, ui.PushDialog(ui.NewProgressDialog(steps.VtopBackToDev, pl)))

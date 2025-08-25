@@ -39,6 +39,7 @@ func (c warningDialog) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		c.height = msg.Height
 		c.width = msg.Width
+
 		return c, nil
 
 	case tea.KeyMsg:

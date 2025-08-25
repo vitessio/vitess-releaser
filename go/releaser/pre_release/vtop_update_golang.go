@@ -25,6 +25,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-version"
+
 	"github.com/vitessio/vitess-releaser/go/releaser"
 	"github.com/vitessio/vitess-releaser/go/releaser/git"
 	"github.com/vitessio/vitess-releaser/go/releaser/github"
@@ -43,7 +44,9 @@ func VtopUpdateGolang(state *releaser.State) (*logging.ProgressLogging, func() s
 	}
 
 	var done bool
+
 	var url string
+
 	return pl, func() string {
 		defer func() {
 			state.Issue.VtopUpdateGolang.Done = done
@@ -60,6 +63,7 @@ func VtopUpdateGolang(state *releaser.State) (*logging.ProgressLogging, func() s
 		git.ResetHard(state.VitessRelease.Remote, state.VitessRelease.ReleaseBranch)
 
 		pl.NewStepf("Get Go version of vitess")
+
 		vitessGoVersion := currentGolangVersionInVitess()
 
 		state.GoToVtOp()
@@ -70,20 +74,25 @@ func VtopUpdateGolang(state *releaser.State) (*logging.ProgressLogging, func() s
 		git.ResetHard(state.VtOpRelease.Remote, state.VtOpRelease.ReleaseBranch)
 
 		pl.NewStepf("Get Go version of vitess-operator")
+
 		vtopGoVersion := currentGolangVersionInVtop()
 
 		if len(vitessGoVersion.Segments()) < 2 || len(vtopGoVersion.Segments()) < 2 {
 			pl.TotalSteps = 7
 			pl.NewStepf("Unable to use the golang version, vitess=%s, vtop=%s", vitessGoVersion.String(), vtopGoVersion.String())
+
 			done = true
 			url = "Unable to parse the Golang version"
+
 			return ""
 		}
 
 		if vitessGoVersion.Original() == vtopGoVersion.Original() {
 			pl.TotalSteps = 7
 			pl.NewStepf("Nothing to update, both Golang version share the same minor version: vitess=%s, vtop=%s", vitessGoVersion.String(), vtopGoVersion.String())
+
 			done = true
+
 			return ""
 		}
 
@@ -91,10 +100,13 @@ func VtopUpdateGolang(state *releaser.State) (*logging.ProgressLogging, func() s
 
 		// look for existing code freeze PRs
 		pl.NewStepf("Look for an existing Go update Pull Request named '%s'", goUpdatePRName)
+
 		if _, url = github.FindPR(state.VtOpRelease.Repo, goUpdatePRName); url != "" {
 			pl.TotalSteps = 8
 			pl.NewStepf("An opened Go update Request was found: %s", url)
+
 			done = true
+
 			return url
 		}
 
@@ -105,15 +117,20 @@ func VtopUpdateGolang(state *releaser.State) (*logging.ProgressLogging, func() s
 		updateGolangVersionForVtop(vitessGoVersion)
 
 		pl.NewStepf("Commit and push to branch %s", newBranchName)
+
 		if git.CommitAll(fmt.Sprintf("Update Go version to %s", vitessGoVersion.String())) {
 			pl.TotalSteps = 11
 			pl.NewStepf("Nothing to commit, seems like the update is already done")
+
 			done = true
+
 			return ""
 		}
+
 		git.Push(state.VtOpRelease.Remote, newBranchName)
 
 		pl.NewStepf("Create Pull Request")
+
 		pr := github.PR{
 			Title:  goUpdatePRName,
 			Body:   fmt.Sprintf("This Pull Request updates the Golang version to %s.", vitessGoVersion.String()),
@@ -122,7 +139,9 @@ func VtopUpdateGolang(state *releaser.State) (*logging.ProgressLogging, func() s
 		}
 		_, url = pr.Create(state.IssueLink, state.VtOpRelease.Repo)
 		pl.NewStepf("Pull Request created %s", url)
+
 		done = true
+
 		return url
 	}
 }
@@ -140,6 +159,7 @@ func updateGolangVersionForVtop(targetGoVersion *version.Version) {
 	workflowFiles := findVtopWorkflowFiles()
 	args := append([]string{"-i.bak", "-E", fmt.Sprintf("s/go-version: (.*)/go-version: %s/g", targetGoVersion.String())}, workflowFiles...)
 	utils.Exec("sed", args...)
+
 	for _, file := range workflowFiles {
 		utils.Exec("rm", "-f", fmt.Sprintf("%s.bak", file))
 	}
@@ -147,19 +167,23 @@ func updateGolangVersionForVtop(targetGoVersion *version.Version) {
 
 func findVtopWorkflowFiles() []string {
 	var files []string
+
 	root := ".github/workflows/"
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
+
 		if strings.HasSuffix(path, ".yaml") {
 			files = append(files, path)
 		}
+
 		return nil
 	})
 	if err != nil {
 		utils.BailOut(err, "failed to walk the directory %s", root)
 	}
+
 	return files
 }
 
@@ -169,17 +193,21 @@ func currentGolangVersionInVitess() *version.Version {
 	if err != nil {
 		utils.BailOut(err, "failed to read the file %s", buildFile)
 	}
+
 	content := string(contentRaw)
 
 	versre := regexp.MustCompile(regexpFindGolangVersionInVitess)
+
 	versionStr := versre.FindStringSubmatch(content)
 	if len(versionStr) != 2 {
 		utils.BailOut(nil, "malformatted error, got: %v", versionStr)
 	}
+
 	v, err := version.NewVersion(versionStr[1])
 	if err != nil {
 		utils.BailOut(err, "failed to create new version with %s", versionStr[1])
 	}
+
 	return v
 }
 
@@ -189,21 +217,27 @@ func currentGolangVersionInVtop() *version.Version {
 	if err != nil {
 		utils.BailOut(err, "failed to read file %s", gomodFile)
 	}
+
 	content := string(contentRaw)
 
 	versre := regexp.MustCompile(regexpFindGolangVersionInVtop)
 	lines := strings.Split(content, "\n")
+
 	for _, line := range lines {
 		versionStr := versre.FindStringSubmatch(line)
 		if len(versionStr) != 2 {
 			continue
 		}
+
 		v, err := version.NewVersion(versionStr[1])
 		if err != nil {
 			utils.BailOut(err, "failed to create new version with %s", versionStr[1])
 		}
+
 		return v
 	}
+
 	utils.BailOut(nil, "could not parse the %s", gomodFile)
+
 	return nil
 }

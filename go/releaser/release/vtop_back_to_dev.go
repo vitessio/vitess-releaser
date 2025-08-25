@@ -35,7 +35,9 @@ func VtopBackToDev(state *releaser.State) (*logging.ProgressLogging, func() stri
 	}
 
 	var done bool
+
 	var url string
+
 	return pl, func() string {
 		defer func() {
 			state.Issue.VtopBackToDevMode.Done = done
@@ -68,10 +70,12 @@ func VtopBackToDev(state *releaser.State) (*logging.ProgressLogging, func() stri
 		// 4. Back to dev mode and commit
 		pl.NewStepf("Go back to dev mode with version = %s", nextRelease)
 		code_freeze.UpdateVtOpVersionGoFile(nextRelease)
-		noCommit := git.CommitAll(fmt.Sprintf("Go back to dev mode"))
+
+		noCommit := git.CommitAll("Go back to dev mode")
 		if noCommit {
 			done = true
 			pl.TotalSteps -= 3
+
 			return ""
 		}
 
@@ -81,6 +85,7 @@ func VtopBackToDev(state *releaser.State) (*logging.ProgressLogging, func() stri
 
 		// 6. Create the Pull Request
 		pl.NewStepf("Create Pull Request")
+
 		pr := github.PR{
 			Title:  fmt.Sprintf("[%s] Back to dev mode after the release of `v%s`", state.VtOpRelease.ReleaseBranch, lowerReleaseName),
 			Body:   fmt.Sprintf("This Pull Request updates the %s branch to go back to dev mode after the release of v%s.", state.VtOpRelease.ReleaseBranch, lowerReleaseName),
@@ -92,6 +97,7 @@ func VtopBackToDev(state *releaser.State) (*logging.ProgressLogging, func() stri
 		pl.NewStepf("Pull Request created %s", url)
 
 		done = true
+
 		return url
 	}
 }
@@ -100,18 +106,22 @@ func findNextVtOpVersion(version string, rc int) string {
 	if rc > 0 {
 		return version
 	}
+
 	segments := strings.Split(version, ".")
 	if len(segments) != 3 {
 		utils.BailOut(nil, "expected three segments when looking at the vtop version, got: %s", version)
 	}
 
 	segmentInts := make([]int, 0, len(segments))
+
 	for _, segment := range segments {
 		v, err := strconv.Atoi(segment)
 		if err != nil {
 			utils.BailOut(err, "failed to convert segment of the vtop version to an int: %s", segment)
 		}
+
 		segmentInts = append(segmentInts, v)
 	}
+
 	return fmt.Sprintf("%d.%d.%d", segmentInts[0], segmentInts[1], segmentInts[2]+1)
 }

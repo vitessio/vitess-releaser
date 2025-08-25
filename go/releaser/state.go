@@ -31,9 +31,7 @@ const (
 	pathVitessOperator = "vitess-operator"
 )
 
-var (
-	skey = new(string)
-)
+var skey = new(string)
 
 func UnwrapState(ctx context.Context) *State {
 	return ctx.Value(skey).(*State)
@@ -76,7 +74,9 @@ func (s *State) GoToVitess() {
 	if s.currentPath != "" {
 		p = "../" + p
 	}
+
 	s.currentPath = pathVitess
+
 	changeDir(p)
 }
 
@@ -85,7 +85,9 @@ func (s *State) GoToVtOp() {
 	if s.currentPath != "" {
 		p = "../" + p
 	}
+
 	s.currentPath = pathVitessOperator
+
 	changeDir(p)
 }
 
@@ -98,6 +100,7 @@ func changeDir(p string) {
 	if err != nil {
 		utils.BailOut(err, "failed to get current working directory")
 	}
+
 	p = path.Join(cwd, p)
 	err = syscall.Chdir(p)
 	if err != nil {

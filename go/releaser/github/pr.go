@@ -65,6 +65,7 @@ func (p *PR) Create(issueLink string, repo string) (nb int, url string) {
 	)
 	url = strings.ReplaceAll(stdOut, "\n", "")
 	nb = URLToNb(url)
+
 	return nb, url
 }
 
@@ -88,7 +89,9 @@ func CheckBackportToPRs(repo, branch string) map[string]any {
 	git.CorrectCleanRepo(repo)
 
 	stdOut := execGh("pr", "list", "--json", "title,baseRefName,url,labels", "--repo", repo)
+
 	var prs []PR
+
 	err := json.Unmarshal([]byte(stdOut), &prs)
 	if err != nil {
 		utils.BailOut(err, "failed to parse backport PRs, got: %s", stdOut)
@@ -100,6 +103,7 @@ func CheckBackportToPRs(repo, branch string) map[string]any {
 		if pr.Base == branch {
 			mustClose = append(mustClose, pr)
 		}
+
 		for _, l := range pr.Labels {
 			if strings.HasPrefix(l.Name, "Backport to: ") && strings.Contains(l.Name, branch) {
 				mustClose = append(mustClose, pr)
@@ -108,11 +112,13 @@ func CheckBackportToPRs(repo, branch string) map[string]any {
 	}
 
 	m := make(map[string]any, len(mustClose))
+
 	for _, pr := range mustClose {
 		nb := pr.URL[strings.LastIndex(pr.URL, "/")+1:]
 		markdownURL := fmt.Sprintf("#%s", nb)
 		m[markdownURL] = nil
 	}
+
 	return m
 }
 
@@ -120,7 +126,9 @@ func CheckReleaseBlockerPRs(repo, majorRelease string) map[string]any {
 	git.CorrectCleanRepo(repo)
 
 	stdOut := execGh("pr", "list", "--json", "title,url,labels", "--repo", repo)
+
 	var prs []PR
+
 	err := json.Unmarshal([]byte(stdOut), &prs)
 	if err != nil {
 		utils.BailOut(err, "failed to parse the release blocker PRs, got: %s", stdOut)
@@ -129,6 +137,7 @@ func CheckReleaseBlockerPRs(repo, majorRelease string) map[string]any {
 	var mustClose []PR
 
 	branchName := fmt.Sprintf("release-%s.0", majorRelease)
+
 	for _, i := range prs {
 		for _, l := range i.Labels {
 			if strings.HasPrefix(l.Name, "Release Blocker: ") && strings.Contains(l.Name, branchName) {
@@ -138,11 +147,13 @@ func CheckReleaseBlockerPRs(repo, majorRelease string) map[string]any {
 	}
 
 	m := make(map[string]any, len(mustClose))
+
 	for _, pr := range mustClose {
 		nb := pr.URL[strings.LastIndex(pr.URL, "/")+1:]
 		markdownURL := fmt.Sprintf("#%s", nb)
 		m[markdownURL] = nil
 	}
+
 	return m
 }
 
@@ -154,16 +165,20 @@ func FindPR(repo, prTitle string) (nb int, url string) {
 		"--search", prTitle,
 		"--state", "open",
 	)
+
 	var prs []PR
+
 	err := json.Unmarshal([]byte(stdOut), &prs)
 	if err != nil {
 		utils.BailOut(err, "failed to parse PRs, got: %s", stdOut)
 	}
+
 	for _, pr := range prs {
 		if pr.Title == prTitle {
 			return URLToNb(pr.URL), pr.URL
 		}
 	}
+
 	return 0, ""
 }
 
@@ -184,16 +199,20 @@ func GetMergedPRsAndAuthorsByMilestone(repo, milestone string) (prs []PR, author
 
 	// Get the full list of distinct PRs authors and sort them
 	authorMap := map[string]bool{}
+
 	for _, pr := range prs {
 		login := pr.Author.Login
 		if ok := authorMap[login]; !ok {
 			if !strings.HasPrefix(login, "@app/") {
 				authors = append(authors, login)
 			}
+
 			authorMap[login] = true
 		}
 	}
+
 	sort.Strings(authors)
+
 	return prs, authors
 }
 
@@ -208,10 +227,12 @@ func GetOpenedPRsByMilestone(repo, milestone string) []PR {
 	)
 
 	var prs []PR
+
 	err := json.Unmarshal([]byte(stdOut), &prs)
 	if err != nil {
 		utils.BailOut(err, "failed to parse PRs, got: %s", stdOut)
 	}
+
 	return prs
 }
 

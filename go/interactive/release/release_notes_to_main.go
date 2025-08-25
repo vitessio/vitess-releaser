@@ -20,6 +20,7 @@ import (
 	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
+
 	"github.com/vitessio/vitess-releaser/go/interactive/ui"
 	"github.com/vitessio/vitess-releaser/go/releaser"
 	"github.com/vitessio/vitess-releaser/go/releaser/release"
@@ -29,9 +30,11 @@ import (
 func ReleaseNotesOnMainItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
 	act := releaseNotesOnMainAct
+
 	if state.Issue.ReleaseNotesOnMain.Done {
 		act = nil
 	}
+
 	return &ui.MenuItem{
 		State:  state,
 		Name:   steps.ReleaseNotesOnMain,
@@ -52,11 +55,13 @@ func releaseNotesOnMainUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.C
 
 	mi.Info = mi.State.Issue.ReleaseNotesOnMain.URL
 	mi.IsDone = mi.State.Issue.ReleaseNotesOnMain.Done
+
 	return mi, nil
 }
 
 func releaseNotesOnMainAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
 	pl, fn := release.CopyReleaseNotesToBranch(mi.State, &mi.State.Issue.ReleaseNotesOnMain, "main")
+
 	return mi, tea.Batch(func() tea.Msg {
 		return releaseNotesOnMainUrl(fn())
 	}, ui.PushDialog(ui.NewProgressDialog("Release Notes on Main", pl)))

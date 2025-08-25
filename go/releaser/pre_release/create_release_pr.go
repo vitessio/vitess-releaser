@@ -48,8 +48,11 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 	}
 
 	var done bool
+
 	var url string
+
 	var commitCount int
+
 	return pl, func() string {
 		defer func() {
 			state.Issue.CreateReleasePR.Done = done
@@ -70,10 +73,13 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 
 		// look for existing PRs
 		pl.NewStepf("Look for an existing Release Pull Request named '%s'", releasePRName)
+
 		if _, url = github.FindPR(state.VitessRelease.Repo, releasePRName); url != "" {
 			pl.TotalSteps = 5 // only 5 total steps in this situation
 			pl.NewStepf("An opened Release Pull Request was found: %s", url)
+
 			done = true
+
 			return url
 		}
 
@@ -87,8 +93,10 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 			code_freeze.DeactivateCodeFreeze()
 
 			pl.NewStepf("Commit unfreezing the branch %s", state.VitessRelease.ReleaseBranch)
+
 			if !git.CommitAll(fmt.Sprintf("Unfreeze branch %s", state.VitessRelease.ReleaseBranch)) {
 				commitCount++
+
 				git.Push(state.VitessRelease.Remote, newBranchName)
 			}
 		}
@@ -97,12 +105,15 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 		generateReleaseNotes(state, releaser.RemoveRCFromReleaseTitle(state.VitessRelease.Release))
 
 		pl.NewStepf("Commit the release notes")
+
 		if !git.CommitAll("Addition of release notes") {
 			commitCount++
+
 			git.Push(state.VitessRelease.Remote, newBranchName)
 		}
 
 		lowerRelease := strings.ToLower(state.VitessRelease.Release)
+
 		pl.NewStepf("Update the code examples")
 		updateExamples(lowerRelease, strings.ToLower(releaser.AddRCToReleaseTitle(state.VtOpRelease.Release, state.Issue.RC)))
 
@@ -113,19 +124,24 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 		releaser.UpdateJavaDir(lowerRelease)
 
 		pl.NewStepf("Commit the update to the codebase for the v%s release", state.VitessRelease.Release)
+
 		if !git.CommitAll(fmt.Sprintf("Update codebase for the v%s release", state.VitessRelease.Release)) {
 			commitCount++
+
 			git.Push(state.VitessRelease.Remote, newBranchName)
 		}
 
 		if commitCount == 0 {
 			pl.TotalSteps = 14
 			pl.NewStepf("Nothing was commit and pushed, seems like there is no need to create the Release Pull Request")
+
 			done = true
+
 			return ""
 		}
 
 		pl.NewStepf("Create Pull Request")
+
 		pr := github.PR{
 			Title:  releasePRName,
 			Body:   fmt.Sprintf("Includes the release notes and release commit for the `v%s` release. Once this PR is merged, we will be able to tag `v%s` on the merge commit.", state.VitessRelease.Release, state.VitessRelease.Release),
@@ -135,7 +151,9 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 		}
 		_, url = pr.Create(state.IssueLink, state.VitessRelease.Repo)
 		pl.NewStepf("Pull Request created %s", url)
+
 		done = true
+
 		return url
 	}
 }
@@ -149,21 +167,25 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 //	vtop_example_files=$(find -E ./examples/operator -name "*.yaml")
 func findFilesRecursive() []string {
 	var files []string
+
 	dirs := []string{examplesCompose, examplesOperator}
 	for _, dir := range dirs {
 		err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
 			if err != nil {
 				return err
 			}
+
 			if strings.HasSuffix(path, ".go") || strings.HasSuffix(path, ".yml") || strings.HasSuffix(path, ".yaml") {
 				files = append(files, path)
 			}
+
 			return nil
 		})
 		if err != nil {
 			utils.BailOut(err, "failed to find files recursively")
 		}
 	}
+
 	return files
 }
 
@@ -194,6 +216,7 @@ func updateExamples(newVersion, vtopNewVersion string) {
 	for _, file := range files {
 		filesBackups = append(filesBackups, fmt.Sprintf("%s.bak", file))
 	}
+
 	args = append([]string{"-f"}, filesBackups...)
 	utils.Exec("rm", args...)
 }

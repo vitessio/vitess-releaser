@@ -23,6 +23,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
+
 	"github.com/vitessio/vitess-releaser/go/releaser/logging"
 )
 
@@ -62,23 +63,27 @@ func (c ProgressDialog) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		c.height = msg.Height
 		c.width = msg.Width
 		c.progressBar.Width = msg.Width
+
 		return c, nil
 
 	case tickMsg:
 		cmd := c.progressBar.SetPercent(float64(c.pl.GetDone()) / float64(c.pl.GetTotal()))
 		c.progress = c.pl.GetStepInProgress()
+
 		return c, tea.Batch(tickCmd(), cmd)
 
 	case tea.KeyMsg:
 		if c.pl.GetDone() != c.pl.GetTotal() {
 			return c, nil
 		}
+
 		return c, popDialog
 
 	// FrameMsg is sent when the progress bar wants to animate itself
 	case progress.FrameMsg:
 		progressModel, cmd := c.progressBar.Update(msg)
 		c.progressBar = progressModel.(progress.Model)
+
 		return c, cmd
 	}
 

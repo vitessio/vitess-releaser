@@ -20,6 +20,7 @@ import (
 	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
+
 	"github.com/vitessio/vitess-releaser/go/interactive/ui"
 	"github.com/vitessio/vitess-releaser/go/releaser"
 	"github.com/vitessio/vitess-releaser/go/releaser/code_freeze"
@@ -29,9 +30,11 @@ import (
 func CopyBranchProtectionMenuItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
 	act := copyBranchProtectionAct
+
 	if state.Issue.CopyBranchProtectionRules {
 		act = nil
 	}
+
 	return &ui.MenuItem{
 		State:  state,
 		Name:   steps.CopyBranchProtectionRules,
@@ -53,11 +56,13 @@ func copyBranchProtectionUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea
 	}
 
 	mi.IsDone = mi.State.Issue.CopyBranchProtectionRules
+
 	return mi, nil
 }
 
 func copyBranchProtectionAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
 	pl, copyRules := code_freeze.CopyBranchProtectionRules(mi.State)
+
 	return mi, tea.Batch(func() tea.Msg {
 		return copyBranchProtectionUrl(copyRules())
 	}, ui.PushDialog(ui.NewProgressDialog("Copy Branch Protection Rule", pl)))

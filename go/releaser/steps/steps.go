@@ -20,7 +20,7 @@ const (
 	CreateReleaseIssue = "Create Release Issue"
 	ReleaseIssue       = "Release Issue"
 
-	// Prerequisite
+	// Prerequisite.
 	GeneralPrerequisite          = "General"
 	SlackAnnouncement            = "Slack Announcement"
 	CheckAndAdd                  = "Pending PRs/Issues"
@@ -31,7 +31,7 @@ const (
 	VtopUpdateCompatibilityTable = "Update compatibility table in vitess-operator"
 	CrossPostBlogPost            = "Cross-post Blog Post"
 
-	// Pre-Release
+	// Pre-Release.
 	CodeFreeze                = "Code Freeze"
 	CopyBranchProtectionRules = "Copy branch protection rules"
 	CreateNewLabels           = "Create new labels"
@@ -41,7 +41,7 @@ const (
 	VtopUpdateGolang          = "Update Go version in vitess-operator"
 	UpdateCobraDocs           = "Update Cobra Docs"
 
-	// Release
+	// Release.
 	MergeReleasePR              = "Merge Release PR"
 	TagRelease                  = "Tag Release"
 	VtopCreateReleasePR         = "Create vitess-operator Release PR"
@@ -61,7 +61,7 @@ const (
 	VtopBackToDev               = "Back To Dev Mode vitess-operator"
 	VtopManualUpdate            = "Manual update of vitess-operator tests"
 
-	// Post-Release
+	// Post-Release.
 	SlackAnnouncementPost  = "Slack Announcement Post-Release"
 	Twitter                = "Twitter"
 	CloseIssue             = "Close Issue"

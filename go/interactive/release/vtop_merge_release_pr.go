@@ -20,6 +20,7 @@ import (
 	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
+
 	"github.com/vitessio/vitess-releaser/go/interactive/ui"
 	"github.com/vitessio/vitess-releaser/go/releaser"
 	"github.com/vitessio/vitess-releaser/go/releaser/release"
@@ -29,6 +30,7 @@ import (
 func VtopMergeReleasePRItem(ctx context.Context) *ui.MenuItem {
 	state := releaser.UnwrapState(ctx)
 	act := vtopMergeReleasePRAct
+
 	if state.Issue.VtopMergeReleasePR.Done {
 		act = nil
 	}
@@ -60,6 +62,7 @@ func vtopMergeReleasePRUpdate(mi *ui.MenuItem, msg tea.Msg) (*ui.MenuItem, tea.C
 
 	mi.IsDone = mi.State.Issue.VtopMergeReleasePR.Done
 	mi.Info = mi.State.Issue.VtopMergeReleasePR.URL
+
 	return mi, nil
 }
 
@@ -69,6 +72,7 @@ func vtopMergeReleasePRAct(mi *ui.MenuItem) (*ui.MenuItem, tea.Cmd) {
 	}
 
 	pl, act := release.VtopMergeReleasePR(mi.State)
+
 	return mi, tea.Batch(func() tea.Msg {
 		return vtopMergeReleasePRUrl(act())
 	}, ui.PushDialog(ui.NewProgressDialog(steps.VtopMergeReleasePR, pl)))

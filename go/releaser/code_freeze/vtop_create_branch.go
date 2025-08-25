@@ -35,6 +35,7 @@ func VtopCreateBranch(state *releaser.State) (*logging.ProgressLogging, func() s
 
 		git.CorrectCleanRepo(state.VtOpRelease.Repo)
 		pl.NewStepf("Create branch %s", state.VtOpRelease.ReleaseBranch)
+
 		err := git.CreateBranchAndCheckout(state.VtOpRelease.ReleaseBranch, fmt.Sprintf("%s/main", state.VtOpRelease.Remote))
 		if err != nil {
 			git.Checkout(state.VtOpRelease.ReleaseBranch)
@@ -42,12 +43,14 @@ func VtopCreateBranch(state *releaser.State) (*logging.ProgressLogging, func() s
 		} else {
 			git.Push(state.VtOpRelease.Remote, state.VtOpRelease.ReleaseBranch)
 		}
+
 		state.Issue.VtopCreateBranch = true
 		pl.NewStepf("Update Issue %s on GitHub", state.IssueLink)
 		_, fn := state.UploadIssue()
 		issueLink := fn()
 
 		pl.NewStepf("Issue updated, see: %s", issueLink)
+
 		return ""
 	}
 }

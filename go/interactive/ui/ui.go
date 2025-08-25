@@ -22,13 +22,12 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+
 	"github.com/vitessio/vitess-releaser/go/releaser"
 )
 
 type (
-	// UI is an UI with a current Active window,
-	// with the idea that new windows can come to the front,
-	// but the old ones are still there behind
+	// but the old ones are still there behind.
 	UI struct {
 		State  *releaser.State
 		Active tea.Model
@@ -54,14 +53,17 @@ func (m UI) Init() tea.Cmd {
 	for _, m := range m.Stack {
 		cmds = append(cmds, m.Init())
 	}
+
 	cmds = append(cmds, m.Active.Init())
 	cmds = append(cmds, tea.EnterAltScreen)
+
 	return tea.Batch(cmds...)
 }
 
 func (m UI) newActive(d tea.Model) (UI, tea.Cmd) {
 	m.Active = d
 	initCmd := d.Init() // we call Init() every time a UI becomes Active
+
 	var sizeCmd tea.Cmd
 	m.Active, sizeCmd = m.Active.Update(m.Size)
 
@@ -75,9 +77,11 @@ func (m UI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if len(m.Stack) == 0 {
 			return m, tea.Quit
 		}
+
 		lastIndex := len(m.Stack) - 1
 		popped := m.Stack[lastIndex]
 		m.Stack = m.Stack[:lastIndex]
+
 		return m.newActive(popped)
 	case _push:
 		m.Stack = append(m.Stack, m.Active)
@@ -87,8 +91,10 @@ func (m UI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c":
 			return m, tea.Quit
 		}
+
 		newActive, cmd := m.Active.Update(msg)
 		m.Active = newActive
+
 		return m, cmd
 
 	case tea.WindowSizeMsg:
@@ -97,15 +103,19 @@ func (m UI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// Other messages are passed on to all dialogs of the Stack
 	var cmds []tea.Cmd
+
 	newStack := make([]tea.Model, len(m.Stack))
+
 	for i, m := range m.Stack {
 		var cmd tea.Cmd
 		newStack[i], cmd = m.Update(msg)
 		cmds = append(cmds, cmd)
 	}
+
 	newActive, cmd := m.Active.Update(msg)
 	cmds = append(cmds, cmd)
 	m.Active = newActive
+
 	return m, tea.Batch(cmds...)
 }
 
@@ -121,9 +131,11 @@ func (m UI) View() string {
 
 	elems = append(elems, bgStyle.Render("Vitess Releaser: 'q' = back, 'enter' = action"))
 	elems = append(elems, bgStyle.Render(fmt.Sprintf("Vitess repo: %s | Vitess release: v%s", m.State.VitessRelease.Repo, m.State.VitessRelease.Release)))
+
 	if m.State.VtOpRelease.Release != "" {
 		elems = append(elems, bgStyle.Render(fmt.Sprintf("Vtop repo: %s | Vtop release: v%s", m.State.VtOpRelease.Repo, releaser.AddRCToReleaseTitle(m.State.VtOpRelease.Release, m.State.Issue.RC))))
 	}
+
 	elems = append(elems, bgStyle.Render(fmt.Sprintf("Release Date: %s", m.State.Issue.Date.Format(time.DateOnly))))
 
 	return lipgloss.JoinVertical(
