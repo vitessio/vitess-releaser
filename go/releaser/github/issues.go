@@ -22,7 +22,7 @@ import (
 	"strconv"
 	"strings"
 
-	gh "github.com/cli/go-gh"
+	gh "github.com/cli/go-gh/v2"
 
 	"github.com/vitessio/vitess-releaser/go/releaser/git"
 	"github.com/vitessio/vitess-releaser/go/releaser/utils"
