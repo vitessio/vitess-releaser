@@ -34,21 +34,10 @@ func CheckDockerMessage(state *releaser.State) []string {
 		"",
 	}
 
-	// Hack: versions < v20 and versions >= v20 use different GitHub Actions workflows to build the Docker images.
-	if majorRelease < 20 {
-		msg = append(msg,
-			fmt.Sprintf("\t- https://github.com/%s/actions/workflows/docker_build_vttestserver.yml", repo),
-			fmt.Sprintf("\t- https://github.com/%s/actions/workflows/docker_build_base.yml", repo),
-			fmt.Sprintf("\t- https://github.com/%s/actions/workflows/docker_build_lite.yml", repo),
-		)
-	} else if majorRelease == 20 {
-		msg = append(msg, fmt.Sprintf("\t- https://github.com/%s/actions/workflows/docker_build_vttestserver.yml", repo))
-		msg = append(msg, fmt.Sprintf("\t- https://github.com/%s/actions/workflows/docker_build_images.yml", repo))
-	} else {
-		// this links to the newer GitHub Actions workflow that was introduced in v21 by https://github.com/vitessio/vitess/pull/16339
-		msg = append(msg, fmt.Sprintf("\t- https://github.com/%s/actions/workflows/build_docker_images.yml", repo))
-		msg = append(msg, fmt.Sprintf("\nCheck that the vttestserver image is pushed at https://hub.docker.com/r/vitess/vttestserver/tags?name=%s.", release))
-	}
+	msg = append(msg, fmt.Sprintf("\t- https://github.com/%s/actions/workflows/docker_build_vttestserver.yml", repo))
+	msg = append(msg, fmt.Sprintf("\t- https://github.com/%s/actions/workflows/docker_build_images.yml", repo))
+https://github.com/vitessio/vitess/actions/workflows/docker_build_images.yml
+	msg = append(msg, fmt.Sprintf("\nCheck that the vttestserver image is pushed at https://hub.docker.com/r/vitess/vttestserver/tags?name=%s.", release))
 
 	if vtopRepo != "" {
 		msg = append(msg, []string{

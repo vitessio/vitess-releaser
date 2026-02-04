@@ -30,7 +30,6 @@ func WebsiteDocs(state *releaser.State) []string {
 		"List of pages where we must do a 'git checkout':",
 		"\t- https://vitess.io/docs/get-started/operator/#install-the-operator",
 		"\t- https://vitess.io/docs/get-started/local-mac/#install-vitess",
-		"\t- https://vitess.io/docs/get-started/local-docker/#check-out-the-vitessiovitess-repository",
 		"\t- https://vitess.io/docs/get-started/vttestserver-docker-image/#check-out-the-vitessiovitess-repository",
 	}
 
