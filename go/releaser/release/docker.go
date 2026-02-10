@@ -24,7 +24,6 @@ import (
 )
 
 func CheckDockerMessage(state *releaser.State) []string {
-	majorRelease := state.VitessRelease.MajorReleaseNb
 	repo := state.VitessRelease.Repo
 	vtopRepo := state.VtOpRelease.Repo
 	release := strings.ToLower(state.VitessRelease.Release)
@@ -36,7 +35,6 @@ func CheckDockerMessage(state *releaser.State) []string {
 
 	msg = append(msg, fmt.Sprintf("\t- https://github.com/%s/actions/workflows/docker_build_vttestserver.yml", repo))
 	msg = append(msg, fmt.Sprintf("\t- https://github.com/%s/actions/workflows/docker_build_images.yml", repo))
-https://github.com/vitessio/vitess/actions/workflows/docker_build_images.yml
 	msg = append(msg, fmt.Sprintf("\nCheck that the vttestserver image is pushed at https://hub.docker.com/r/vitess/vttestserver/tags?name=%s.", release))
 
 	if vtopRepo != "" {
