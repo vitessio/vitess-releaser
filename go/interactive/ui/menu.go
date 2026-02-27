@@ -279,9 +279,9 @@ func (m *Menu) View() string {
 		BorderStyle(borderStyle).
 		StyleFunc(func(row, col int) (s lipgloss.Style) {
 			switch row {
-			case 0:
+			case tbl.HeaderRow:
 				s = headerStyle
-			case m.idx + 1:
+			case m.idx:
 				s = selectedStyle
 			default:
 				s = cellStyle
