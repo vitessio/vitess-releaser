@@ -32,7 +32,7 @@ import (
 
 const (
 	examplesOperator = "./examples/operator"
-	examplesCompose  = "./examples/compose/"
+	//examplesCompose  = "./examples/compose/"
 )
 
 func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() string) {
@@ -168,7 +168,7 @@ func CreateReleasePR(state *releaser.State) (*logging.ProgressLogging, func() st
 func findFilesRecursive() []string {
 	var files []string
 
-	dirs := []string{examplesCompose, examplesOperator}
+	dirs := []string{examplesOperator}
 	for _, dir := range dirs {
 		err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
 			if err != nil {

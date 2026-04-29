@@ -197,6 +197,35 @@ func GetMergedPRsAndAuthorsByMilestone(repo, milestone string) (prs []PR, author
 		utils.BailOut(err, "failed to parse PRs, got: %s", stdOut)
 	}
 
+	// GitHub's Search API (used by `gh pr list -S "milestone:..."`) has a separately
+	// indexed corpus that can silently return incomplete results. We've observed it
+	// drop ~50 PRs from a milestone that contained ~525, with no error reported.
+	// Cross-check against the milestone REST API (authoritative) and bail out if
+	// they disagree, so the regression is caught at generation time rather than
+	// after the changelog is committed.
+	expected := getMergedPRNumbersInMilestoneViaREST(repo, milestone)
+
+	got := make(map[int]bool, len(prs))
+	for _, p := range prs {
+		got[p.Number] = true
+	}
+
+	var missing []int
+	for n := range expected {
+		if !got[n] {
+			missing = append(missing, n)
+		}
+	}
+
+	if len(missing) > 0 {
+		sort.Ints(missing)
+		utils.BailOut(nil,
+			"GitHub Search API returned %d PRs for milestone %s but the milestone REST API has %d. "+
+				"The Search API index is incomplete and would silently corrupt the changelog. "+
+				"Missing PR numbers: %v. Investigate and retry.",
+			len(prs), milestone, len(expected), missing)
+	}
+
 	// Get the full list of distinct PRs authors and sort them
 	authorMap := map[string]bool{}
 
@@ -214,6 +243,69 @@ func GetMergedPRsAndAuthorsByMilestone(repo, milestone string) (prs []PR, author
 	sort.Strings(authors)
 
 	return prs, authors
+}
+
+// getMergedPRNumbersInMilestoneViaREST returns the set of merged PR numbers
+// belonging to the given milestone, using the issues REST API rather than the
+// Search API. The issues endpoint is authoritative for milestone membership;
+// the Search API can silently lag or drop entries.
+func getMergedPRNumbersInMilestoneViaREST(repo, milestoneTitle string) map[int]bool {
+	msNumber := getMilestoneNumberByTitle(repo, milestoneTitle)
+
+	// `gh api --paginate --jq` runs the jq filter against each page of results
+	// and emits one line per match. Paginates 100 issues at a time.
+	stdOut := execGh(
+		"api",
+		fmt.Sprintf("repos/%s/issues?milestone=%d&state=closed&per_page=100", repo, msNumber),
+		"--paginate",
+		"--jq", ".[] | select(.pull_request != null and .pull_request.merged_at != null) | .number",
+	)
+
+	nums := map[int]bool{}
+	for _, line := range strings.Split(stdOut, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+
+		n, err := strconv.Atoi(line)
+		if err != nil {
+			utils.BailOut(err, "could not parse PR number %q from milestone REST API", line)
+		}
+
+		nums[n] = true
+	}
+
+	return nums
+}
+
+// getMilestoneNumberByTitle resolves a milestone title (e.g. "v24.0.0") to its
+// numeric ID via the REST API. We avoid the `gh milestone` extension here so
+// the sanity check works on a plain `gh` install.
+func getMilestoneNumberByTitle(repo, title string) int {
+	stdOut := execGh(
+		"api",
+		fmt.Sprintf("repos/%s/milestones?state=all&per_page=100", repo),
+		"--paginate",
+		"--jq", fmt.Sprintf(`.[] | select(.title == %q) | .number`, title),
+	)
+
+	line := strings.TrimSpace(stdOut)
+	if line == "" {
+		utils.BailOut(nil, "milestone %q not found in repo %s", title, repo)
+	}
+
+	// If multiple lines came back the title is ambiguous — bail.
+	if strings.Contains(line, "\n") {
+		utils.BailOut(nil, "milestone title %q matched multiple milestones in repo %s: %s", title, repo, line)
+	}
+
+	n, err := strconv.Atoi(line)
+	if err != nil {
+		utils.BailOut(err, "could not parse milestone number %q for title %s", line, title)
+	}
+
+	return n
 }
 
 func GetOpenedPRsByMilestone(repo, milestone string) []PR {
