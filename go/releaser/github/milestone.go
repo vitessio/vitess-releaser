@@ -39,7 +39,14 @@ func GetMilestonesByName(repo, name string) []Milestone {
 		"--state", "all",
 	)
 
-	str = str[strings.Index(str, "]")+1:]
+	// Older versions of the gh-milestone extension print a preamble before the
+	// JSON array, while newer versions print only the JSON. Locate the array by
+	// its opening bracket so we work with both: since we only query the "url"
+	// and "number" fields (which never contain a "["), the last "[" in the
+	// output is always the start of the JSON array.
+	if idx := strings.LastIndex(str, "["); idx >= 0 {
+		str = str[idx:]
+	}
 
 	var ms []Milestone
 
