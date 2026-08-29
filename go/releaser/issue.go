@@ -279,9 +279,7 @@ const (
 {{- if .TagRelease.URL }}
   - {{ .TagRelease.URL }}
 {{- end }}
-{{- if or (gt .RC 0) (.GA) }}
 - [{{fmtStatus .JavaRelease}}] Java release.
-{{- end }}
 {{- if .DoVtOp }}
 - [{{fmtStatus .VtopCreateReleasePR.Done}}] Create vitess-operator Release PR.
 {{- if .VtopCreateReleasePR.URL }}
